@@ -1,0 +1,23 @@
+# Laravel
+backend-laravel/vendor/
+backend-laravel/.env
+backend-laravel/storage/logs/*
+backend-laravel/storage/framework/cache/*
+backend-laravel/storage/framework/sessions/*
+
+# Python
+python-service/__pycache__/
+python-service/.env
+python-service/venv/
+
+# Vue
+frontend-vue/node_modules/
+frontend-vue/dist/
+frontend-vue/.env
+
+# Docker
+.env
+docker/postgres/data/
+
+# OS
+.DS_Store
