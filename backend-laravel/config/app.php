@@ -123,4 +123,9 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+
+    // Custom env
+
+    'instagram_salt' => env('INSTAGRAM_SALT')
+
 ];

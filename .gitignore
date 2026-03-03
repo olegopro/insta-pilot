@@ -21,3 +21,11 @@ docker/postgres/data/
 
 # OS
 .DS_Store
+
+# IDE
+.idea/
+
+# Claude Code
+.claude/
+PLAN.md
+CLAUDE.md

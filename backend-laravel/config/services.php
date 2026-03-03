@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'instagram' => [
+        'python_url' => env('INSTAGRAM_PYTHON_URL', 'http://python:8001'),
+    ]
+
 ];
