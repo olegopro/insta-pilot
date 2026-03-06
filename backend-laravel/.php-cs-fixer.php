@@ -36,6 +36,7 @@ return (new PhpCsFixer\Config())
                 '='  => 'align_single_space_minimal',
             ],
         ],
-        'array_syntax' => ['syntax' => 'short'],
+        'array_syntax'                => ['syntax' => 'short'],
+        'blank_line_before_statement' => ['statements' => ['return']],
     ])
     ->setFinder($finder);

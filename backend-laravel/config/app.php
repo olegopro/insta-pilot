@@ -1,5 +1,8 @@
 <?php
 
+use App\Facades\InstagramClient;
+use Illuminate\Support\Facades\Facade;
+
 return [
 
     /*
@@ -126,6 +129,12 @@ return [
 
     // Custom env
 
-    'instagram_salt' => env('INSTAGRAM_SALT')
+    'instagram_salt' => env('INSTAGRAM_SALT'),
+
+    // Aliases
+    
+    'aliases' => Facade::defaultAliases()->merge([
+        'InstagramClient' => InstagramClient::class
+    ])->toArray()
 
 ];
