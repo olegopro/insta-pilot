@@ -3,6 +3,7 @@ import globals from 'globals'
 import pluginVue from 'eslint-plugin-vue'
 import pluginQuasar from '@quasar/app-vite/eslint'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import stylisticPlugin from '@stylistic/eslint-plugin'
 // import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting';
 
 export default defineConfigWithVueTs(
@@ -34,15 +35,40 @@ export default defineConfigWithVueTs(
    *   -> Above, plus rules to enforce subjective community defaults to ensure consistency.
    */
   pluginVue.configs['flat/strongly-recommended'],
-
+  
   {
     files: ['**/*.ts', '**/*.vue'],
+    plugins: { '@stylistic': stylisticPlugin },
     rules: {
-      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }]
+      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+      '@typescript-eslint/no-confusing-void-expression': 'off',
+      '@stylistic/quotes': ['warn', 'single', { avoidEscape: true }],
+      '@stylistic/arrow-parens': ['error', 'always'],
+      '@stylistic/semi': ['error', 'never']
     }
   },
+
+  {
+    files: ['**/*.ts', '**/*.js'],
+    plugins: { '@stylistic': stylisticPlugin },
+    rules: {
+      '@stylistic/indent': ['warn', 2, { SwitchCase: 1 }]
+    }
+  },
+
+  {
+    files: ['**/*.js'],
+    plugins: { '@stylistic': stylisticPlugin },
+    rules: {
+      '@stylistic/quotes': ['warn', 'single', { avoidEscape: true }],
+      '@stylistic/arrow-parens': ['error', 'always'],
+      '@stylistic/semi': ['error', 'never']
+    }
+  },
+
   // https://github.com/vuejs/eslint-config-typescript
-  vueTsConfigs.recommendedTypeChecked,
+  vueTsConfigs.strictTypeChecked,
+  vueTsConfigs.stylisticTypeChecked,
 
   {
     languageOptions: {
@@ -83,14 +109,32 @@ export default defineConfigWithVueTs(
         ignores: []
       }],
 
-      'arrow-spacing': ['error', { before: true, after: true }],
       'vue/require-explicit-emits': 'error',
-      'space-before-function-paren': 'off',
-      'func-call-spacing': ['error', 'never'],
-      'no-multi-spaces': 'error',
-      'comma-dangle': ['error', 'never'],
-      'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 0, maxBOF: 0 }],
-      'eol-last': ['error', 'always']
+      'vue/max-attributes-per-line': 'off',
+      'vue/attributes-order': ['error', {
+        order: [
+          'DEFINITION',
+          'LIST_RENDERING',
+          'CONDITIONALS',
+          'RENDER_MODIFIERS',
+          ['UNIQUE', 'SLOT'],
+          'GLOBAL',
+          'TWO_WAY_BINDING',
+          'OTHER_DIRECTIVES',
+          'OTHER_ATTR',
+          'CONTENT',
+          'EVENTS'
+        ],
+        alphabetical: false
+      }],
+
+      '@stylistic/arrow-spacing': ['error', { before: true, after: true }],
+      '@stylistic/space-before-function-paren': 'off',
+      '@stylistic/function-call-spacing': ['error', 'never'],
+      '@stylistic/no-multi-spaces': 'error',
+      '@stylistic/comma-dangle': ['error', 'never'],
+      '@stylistic/no-multiple-empty-lines': ['error', { max: 2, maxEOF: 0, maxBOF: 0 }],
+      '@stylistic/eol-last': ['error', 'always']
     }
   },
 
@@ -102,6 +146,5 @@ export default defineConfigWithVueTs(
       }
     }
   }
-
   // prettierSkipFormatting,
 )
