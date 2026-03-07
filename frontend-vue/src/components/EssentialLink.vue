@@ -33,5 +33,5 @@
     caption: '',
     link: '#',
     icon: ''
-  });
+  })
 </script>

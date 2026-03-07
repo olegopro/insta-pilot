@@ -6,17 +6,17 @@
       </div>
 
       <div
-        class="text-h2"
         style="opacity: 0.4"
+        class="text-h2"
       >
         Oops. Nothing here...
       </div>
  
       <q-btn
-        class="q-mt-xl"
         color="white"
         text-color="blue"
         unelevated
+        class="q-mt-xl"
         to="/"
         label="Go Home"
         no-caps

@@ -1,4 +1,4 @@
-import type { Nullable } from "."
+import type { Nullable } from '.'
 
 export interface InstagramProfile {
   id: number

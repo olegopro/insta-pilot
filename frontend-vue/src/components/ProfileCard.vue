@@ -12,7 +12,7 @@
           v-if="profile.profile_pic_url"
           :src="profile.profile_pic_url"
           alt="avatar"
-        />
+        >
         <q-icon
           v-else
           name="account_circle"

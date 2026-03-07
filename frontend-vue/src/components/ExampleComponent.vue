@@ -17,8 +17,8 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue';
-  import type { Todo, Meta } from 'components/models';
+  import { computed, ref } from 'vue'
+  import type { Todo, Meta } from 'components/models'
 
   interface Props {
     title: string;
@@ -29,13 +29,13 @@
 
   const props = withDefaults(defineProps<Props>(), {
     todos: () => []
-  });
+  })
 
-  const clickCount = ref(0);
+  const clickCount = ref(0)
   function increment() {
-    clickCount.value += 1;
-    return clickCount.value;
+    clickCount.value += 1
+    return clickCount.value
   }
 
-  const todoCount = computed(() => props.todos.length);
+  const todoCount = computed(() => props.todos.length)
 </script>

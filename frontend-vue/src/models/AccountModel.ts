@@ -1,4 +1,4 @@
-import type { InstagramProfile } from "src/types/instagram"
+import type { InstagramProfile } from 'src/types/instagram'
 
 export interface LoginRequest {
   instagram_login: string

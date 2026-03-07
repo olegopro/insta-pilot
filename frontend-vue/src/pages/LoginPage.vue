@@ -36,10 +36,7 @@
         <!-- {{ store.login.data.error }} -->
       </q-banner>
 
-      <q-btn
-        type="submit"
-        label="Войти"
-      />
+      <q-btn type="submit" label="Войти" />
     </q-form>
   </q-page>
 </template>
