@@ -10,6 +10,7 @@
 		},
 		"php-cs-fixer.executablePath": "${workspaceFolder}/backend-laravel/vendor/bin/php-cs-fixer",
 		"php-cs-fixer.config": "./backend-laravel/.php-cs-fixer.php",
-		"Laravel.basePath": "backend-laravel"
+		"phpcs.executablePath": "./backend-laravel/vendor/bin/phpcs",
+		"phpcs.standard": "./backend-laravel/phpcs.xml",
 	}
 }

@@ -38,5 +38,6 @@ return (new PhpCsFixer\Config())
         ],
         'array_syntax'                => ['syntax' => 'short'],
         'blank_line_before_statement' => ['statements' => ['return']],
+        'no_extra_blank_lines'        => ['tokens' => ['square_brace_block']],
     ])
     ->setFinder($finder);

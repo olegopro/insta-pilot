@@ -22,13 +22,8 @@ class AppServiceProvider extends ServiceProvider
             InstagramAccountRepository::class
         );
 
-        $this->app->bind(
-            InstagramClientServiceInterface::class,
-            InstagramClientService::class
-        );
-
         $this->app->singleton(
-            'InstagramClient',
+            InstagramClientServiceInterface::class,
             fn() => new InstagramClientService(config('services.instagram.python_url'))
         );
     }

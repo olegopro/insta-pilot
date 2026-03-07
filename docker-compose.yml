@@ -1,4 +1,16 @@
 services:
+  vue:
+    build:
+      context: ./frontend-vue
+      dockerfile: ../docker/vue/Dockerfile
+    ports:
+      - '9000:9000'
+    volumes:
+      - ./frontend-vue:/app
+      - /app/node_modules
+    depends_on:
+      - laravel
+
   laravel:
     build:
       context: .

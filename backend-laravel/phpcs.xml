@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<ruleset name="insta-pilot">
+    <rule ref="PSR12"/>
+    <file>app</file>
+    <file>database</file>
+    <file>tests</file>
+    <exclude-pattern>*.blade.php</exclude-pattern>
+
+    <!-- Открывающая скобка класса/метода на той же строке (стиль проекта) -->
+    <rule ref="PSR2.Classes.ClassDeclaration.OpenBraceNewLine">
+        <exclude name="PSR2.Classes.ClassDeclaration.OpenBraceNewLine"/>
+    </rule>
+    <rule ref="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine">
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine"/>
+    </rule>
+
+    <!-- Пустое тело {} конструктора на одной строке -->
+    <rule ref="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore">
+        <exclude name="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore"/>
+    </rule>
+</ruleset>

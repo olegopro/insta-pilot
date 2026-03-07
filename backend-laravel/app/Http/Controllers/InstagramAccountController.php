@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-declare(strict_types=1);
 use App\Repositories\InstagramAccountRepositoryInterface;
 use App\Services\InstagramClientServiceInterface;
 use Illuminate\Http\JsonResponse;
@@ -34,7 +35,7 @@ final class InstagramAccountController extends Controller {
         $result = $this->instagramClient->login(
             $validated['instagram_login'],
             $validated['instagram_password'],
-            $validated['proxy']
+            $validated['proxy'] ?? null
         );
 
         if (empty($result['success'])) {
