@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import type { InstagramProfile } from 'src/types/instagram'
+  import type { InstagramAccount } from 'src/entities/instagram-account/model/types'
 
-  defineProps<{ profile: InstagramProfile }>()
+  defineProps<{ account: InstagramAccount }>()
 </script>
 
 <template>
@@ -9,8 +9,8 @@
     <q-card-section class="row items-center q-gutter-md">
       <q-avatar size="64px">
         <img
-          v-if="profile.profile_pic_url"
-          :src="profile.profile_pic_url"
+          v-if="account.profile_pic_url"
+          :src="account.profile_pic_url"
           alt="avatar"
         >
         <q-icon
@@ -21,10 +21,10 @@
       </q-avatar>
       <div>
         <div class="text-h6">
-          {{ profile.full_name ?? profile.instagram_login }}
+          {{ account.full_name ?? account.instagram_login }}
         </div>
         <div class="text-caption text-grey">
-          @{{ profile.instagram_login }}
+          @{{ account.instagram_login }}
         </div>
       </div>
     </q-card-section>

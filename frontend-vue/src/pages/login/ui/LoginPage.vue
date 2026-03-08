@@ -1,7 +1,8 @@
 <script setup lang="ts">
-  import type { LoginRequest } from 'src/models/AccountModel'
-  import { useAccountStore } from 'src/stores/AccountsStore'
   import { ref } from 'vue'
+  import { useAccountStore } from 'src/entities/instagram-account/model/accountStore'
+  import type { LoginRequest } from 'src/entities/instagram-account/model/types'
+
   const store = useAccountStore()
 
   const form = ref<LoginRequest>({
@@ -28,7 +29,6 @@
         type="password"
       />
 
-      <!-- ошибка если success = false -->
       <q-banner
         v-if="store.login.data?.success === false"
         class="text-negative"
@@ -36,7 +36,10 @@
         <!-- {{ store.login.data.error }} -->
       </q-banner>
 
-      <q-btn type="submit" label="Войти" />
+      <q-btn
+        type="submit"
+        label="Войти"
+      />
     </q-form>
   </q-page>
 </template>

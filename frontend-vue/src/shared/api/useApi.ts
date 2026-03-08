@@ -1,4 +1,4 @@
-import type { Nullable } from 'src/types'
+import type { Nullable } from 'src/shared/lib'
 import { ref, shallowRef } from 'vue'
 
 export function useApi<TData, TArgs = void>(
