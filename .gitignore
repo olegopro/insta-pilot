@@ -27,5 +27,3 @@ docker/postgres/data/
 
 # Claude Code
 .claude/
-PLAN.md
-CLAUDE.md

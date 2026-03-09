@@ -2,6 +2,7 @@
   import { ref } from 'vue'
   import { useAccountStore } from 'src/entities/instagram-account/model/accountStore'
   import type { LoginRequest } from 'src/entities/instagram-account/model/types'
+  import { InputComponent } from 'src/shared/ui/input-component'
 
   const store = useAccountStore()
 
@@ -15,17 +16,14 @@
 
 <template>
   <q-page class="flex flex-center">
-    <q-form
-      style="width: 360px"
-      @submit="submitHandler"
-    >
-      <q-input
+    <q-form @submit="submitHandler">
+      <InputComponent
         v-model="form.instagram_login"
-        label="Логин"
+        label-text="Логин"
       />
-      <q-input
+      <InputComponent
         v-model="form.instagram_password"
-        label="Пароль"
+        label-text="Пароль"
         type="password"
       />
 
