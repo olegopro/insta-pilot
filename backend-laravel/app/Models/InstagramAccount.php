@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Encryption\Encrypter;
 
 class InstagramAccount extends Model {
     protected $fillable = [
+        'user_id',
         'instagram_login',
         'instagram_password',
         'session_data',
@@ -16,7 +18,7 @@ class InstagramAccount extends Model {
         'full_name',
         'profile_pic_url',
         'is_active',
-        'last_used_at'
+        'last_used_at',
     ];
 
     protected $hidden = [
@@ -55,5 +57,10 @@ class InstagramAccount extends Model {
 
     public function getSessionDataAttribute(?string $value): ?string {
         return  $value === null ? null : $this->decryptData($value);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

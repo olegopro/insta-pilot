@@ -12,6 +12,10 @@ class InstagramAccountRepository implements InstagramAccountRepositoryInterface 
         return InstagramAccount::all();
     }
 
+    public function getAccountsByUser(int $userId): Collection {
+        return InstagramAccount::where('user_id', $userId)->get();
+    }
+
     public function createAccount(array $accountData): InstagramAccount {
         return InstagramAccount::create($accountData);
     }
@@ -22,6 +26,10 @@ class InstagramAccountRepository implements InstagramAccountRepositoryInterface 
 
     public function findById(int $id): InstagramAccount | null {
         return InstagramAccount::find($id);
+    }
+
+    public function findByIdAndUser(int $id, int $userId): InstagramAccount | null {
+        return InstagramAccount::where('id', $id)->where('user_id', $userId)->first();
     }
 
     public function findByLogin(string $login): InstagramAccount | null {

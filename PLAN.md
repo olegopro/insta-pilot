@@ -39,35 +39,35 @@
 
 ### Фаза 0 — Основа ✅
 
-- [✅] FSD структура, shared/api, shared/lib, shared/ui
-- [✅] entities/instagram-account (типы, store, ProfileCard)
-- [✅] Страница аккаунтов (таблица, CRUD, модалки)
-- [✅] Backend: Controller, Repository, Service, миграция
-- [✅] Python: `/auth/login`, `/account/info`
+- [x] FSD структура, shared/api, shared/lib, shared/ui
+- [x] entities/instagram-account (типы, store, ProfileCard)
+- [x] Страница аккаунтов (таблица, CRUD, модалки)
+- [x] Backend: Controller, Repository, Service, миграция
+- [x] Python: `/auth/login`, `/account/info`
 
 ---
 
-### Фаза 1 — Авторизация и пользователи
+### Фаза 1 — Авторизация и пользователи ✅
 
 > [Backend →](PLAN-EXTEND-BACK.md#фаза-1--авторизация-и-пользователи) | [Frontend →](PLAN-EXTEND-FRONT.md#фаза-1--авторизация-и-пользователи)
 
 **Backend:**
-- [ ] 1.1 Laravel Sanctum (SPA auth, token-based)
-- [ ] 1.2 Spatie/laravel-permission (роли: admin, user)
-- [ ] 1.3 Миграции: `is_active` для users, `user_id` для instagram_accounts
-- [ ] 1.4 AuthController (register, login, logout, me)
-- [ ] 1.5 EnsureUserIsActive middleware
-- [ ] 1.6 UserController (admin: список, toggle active, смена роли)
-- [ ] 1.7 Обновить InstagramAccountController (фильтрация по user_id)
-- [ ] 1.8 AdminSeeder (admin user + roles)
+- [x] 1.1 Laravel Sanctum (SPA auth, token-based)
+- [x] 1.2 Spatie/laravel-permission (роли: admin, user)
+- [x] 1.3 Миграции: `is_active` для users, `user_id` для instagram_accounts
+- [x] 1.4 AuthController (register, login, logout, me)
+- [x] 1.5 EnsureUserIsActive middleware
+- [x] 1.6 UserController (admin: список, toggle active, смена роли)
+- [x] 1.7 Обновить InstagramAccountController (фильтрация по user_id)
+- [x] 1.8 AdminSeeder (admin user + roles)
 
 **Frontend:**
-- [ ] 1.9 entities/user (типы, authStore, token management)
-- [ ] 1.10 Axios interceptor (Bearer token, 401 → redirect)
-- [ ] 1.11 Страница логина (LoginPage)
-- [ ] 1.12 Auth guard в роутере (auth, guest, role)
-- [ ] 1.13 Страница пользователей (AdminUsersPage)
-- [ ] 1.14 MainLayout: навигация с учётом ролей + logout
+- [x] 1.9 entities/user (типы, authStore, token management)
+- [x] 1.10 Axios interceptor (Bearer token, 401 → redirect)
+- [x] 1.11 Страница логина (LoginPage)
+- [x] 1.12 Auth guard в роутере (auth, guest, role)
+- [x] 1.13 Страница пользователей (AdminUsersPage)
+- [x] 1.14 MainLayout: навигация с учётом ролей + logout
 
 ---
 

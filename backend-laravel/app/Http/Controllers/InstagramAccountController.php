@@ -15,8 +15,8 @@ final class InstagramAccountController extends Controller {
         private readonly InstagramAccountRepositoryInterface $accountRepository
     ) {}
 
-    public function index(): JsonResponse {
-        $accounts = $this->accountRepository->getAllAccounts();
+    public function index(Request $request): JsonResponse {
+        $accounts = $this->accountRepository->getAccountsByUser($request->user()->id);
 
         return response()->json([
             'success' => true,
@@ -53,6 +53,7 @@ final class InstagramAccountController extends Controller {
         }
 
         $account = $this->accountRepository->createAccount([
+            'user_id'            => $request->user()->id,
             'instagram_login'    => $validated['instagram_login'],
             'instagram_password' => $validated['instagram_password'],
             'session_data'       => $result['session_data'],
@@ -68,8 +69,8 @@ final class InstagramAccountController extends Controller {
         ]);
     }
 
-    public function show(int $id): JsonResponse {
-        $account = $this->accountRepository->findById($id);
+    public function show(int $id, Request $request): JsonResponse {
+        $account = $this->accountRepository->findByIdAndUser($id, $request->user()->id);
 
         if (!$account) {
             return $this->notFound();
@@ -95,8 +96,8 @@ final class InstagramAccountController extends Controller {
         ]);
     }
 
-    public function destroy(int $id): JsonResponse {
-        $account = $this->accountRepository->findById($id);
+    public function destroy(int $id, Request $request): JsonResponse {
+        $account = $this->accountRepository->findByIdAndUser($id, $request->user()->id);
 
         if (!$account) {
             return $this->notFound();
