@@ -45,7 +45,7 @@ export default defineConfig((/* ctx */) => {
           const paths = (tsConfig.compilerOptions ??= {}).paths ??= {}
           paths['@'] = ['./../src']
           paths['@/*'] = ['./../src/*']
-        },
+        }
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
@@ -65,10 +65,10 @@ export default defineConfig((/* ctx */) => {
       // distDir
 
       extendViteConf(viteConf) {
-        viteConf.resolve = viteConf.resolve || {}
-        viteConf.resolve.alias = {
-          ...(viteConf.resolve.alias as Record<string, string>),
-          '@': path.resolve(__dirname, './src'),
+        const resolve = (viteConf.resolve ??= {})
+        resolve.alias = {
+          ...(resolve.alias as Record<string, string>),
+          '@': path.resolve(__dirname, './src')
         }
       },
       // viteVuePluginOptions: {},
