@@ -13,7 +13,7 @@
 
   defineExpose({
     validate: () => qInputRef.value?.validate(),
-    resetValidation: () => qInputRef.value?.resetValidation(),
+    resetValidation: () => qInputRef.value?.resetValidation()
   })
 
   const attrs = useAttrs() as Omit<QInputProps, 'modelValue'>
@@ -31,7 +31,6 @@
     <span v-if="labelText" class="ui-input__label">{{ labelText }}</span>
     <q-input
       ref="qInputRef"
-      class="ui-input__element"
       v-bind="$attrs"
       v-model="model"
       :type="passType"
@@ -53,16 +52,3 @@
     </q-input>
   </label>
 </template>
-
-<style scoped lang="scss">
-  .ui-input {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    &__label {
-      font-size: 14px;
-      color: $text-primary-light;
-    }
-  }
-</style>

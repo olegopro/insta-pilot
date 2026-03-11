@@ -32,6 +32,20 @@ Laravel: `INSTAGRAM_PYTHON_URL=http://python:8001` (внутренний Docker 
 Quasar Form → Laravel API → Python FastAPI (instagrapi) → Instagram
 ```
 
+## Python service — instagrapi
+Документация: https://subzeroid.github.io/instagrapi/
+Context7 library ID: `/subzeroid/instagrapi`
+
+### Правила работы (по проекту)
+- Основной клиент: `instagrapi.Client` внутри `python-service` слоя, без прямых вызовов из Laravel/Vue.
+- Любые сетевые/Instagram-ошибки оборачивать в предсказуемый API-ответ FastAPI (без traceback наружу).
+- Сессии хранить и переиспользовать через `session_data` (JSON), чтобы снижать количество логинов.
+- Перед логином загружать существующую сессию; после успешной авторизации сохранять обновлённые настройки клиента.
+- Прокси задавать на клиенте до авторизации; формат и валидность прокси проверять заранее.
+- Не логировать пароль, cookie, full session dump и другие чувствительные данные.
+- Таймауты/ретраи делать ограниченными и аккуратными, чтобы не провоцировать антибот-защиту.
+- Не использовать массовые/агрессивные действия без явной бизнес-необходимости (rate-limit first).
+
 ## User Preferences
 - Answer in Russian
 - User writes code themselves — give hints, not full implementations
@@ -51,7 +65,6 @@ Quasar Form → Laravel API → Python FastAPI (instagrapi) → Instagram
 - Controllers: `final class`, только `JsonResponse` в return
 - DI через конструктор, `private readonly`
 - Паттерн: Interface → Implementation → bind в AppServiceProvider → (опционально) Facade
-- API routes в Laravel 12 не включены по умолчанию — добавить в `bootstrap/app.php`
 
 ## Структура app/
 ```
@@ -102,6 +115,9 @@ Context7 library ID: `/feature-sliced/documentation`
 - UI компоненты: только кастомные обёртки из `shared/ui/` (ButtonComponent, InputComponent, ...) над Quasar, суффикс `Component`
 - Каждый action в store — через `useApi`, никакого внутреннего state в store
 - Public API слайсов — через `index.ts` в каждом сегменте
+- Стиль кода: стрелочные функции без `{}` если тело — один expression (`.catch(() => Notify.create(...))`)
+- Стиль кода: `&&` вместо `if` для коротких условных вызовов (`opened && fn()`)
+- Шаблоны: никогда не добавлять `.value` — Vue автоматически разворачивает `Ref` в `<template>`
 
 ## Структура src/ (FSD)
 ```

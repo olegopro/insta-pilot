@@ -1,21 +1,34 @@
+import { AxiosError } from 'axios'
 import type { Nullable } from 'src/shared/lib'
 import { ref, shallowRef } from 'vue'
 
 export function useApi<TData, TArgs = void>(
-  fn: (args: TArgs) => Promise<TData>
+  requestFunction: (payload: TArgs) => Promise<TData>
 ) {
   const loading = ref(false)
   const data = shallowRef<Nullable<TData>>(null)
+  const error = shallowRef<Nullable<string>>(null)
 
-  const execute = async (args: TArgs) => {
+  const execute = async (payload: TArgs) => {
     loading.value = true
+    data.value = null
+    error.value = null
 
     try {
-      data.value = await fn(args)
+      data.value = await requestFunction(payload)
+    } catch (exception: unknown) {
+      if (exception instanceof AxiosError) {
+        error.value = exception.response?.data?.error ?? exception.message
+      } else if (exception instanceof Error) {
+        error.value = exception.message
+      } else {
+        error.value = 'Неизвестная ошибка'
+      }
+      throw exception
     } finally {
       loading.value = false
     }
   }
 
-  return { execute, loading, data }
+  return { execute, loading, data, error }
 }

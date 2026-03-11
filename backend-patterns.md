@@ -11,15 +11,13 @@ Facades/       — опционально, для удобного вызова
 ## Controller
 
 ```php
-final class FooController extends Controller
-{
+final class FooController extends Controller {
     public function __construct(
         private readonly FooServiceInterface $service,
         private readonly FooRepositoryInterface $repo,
     ) {}
 
-    public function action(Request $request): JsonResponse
-    {
+    public function action(Request $request): JsonResponse {
         $data = $request->validate([...]);
         $result = $this->service->doSomething($data);
         return response()->json(['success' => true, 'data' => $result]);

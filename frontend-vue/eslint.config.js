@@ -35,7 +35,7 @@ export default defineConfigWithVueTs(
    *   -> Above, plus rules to enforce subjective community defaults to ensure consistency.
    */
   pluginVue.configs['flat/strongly-recommended'],
-  
+
   {
     files: ['**/*.ts', '**/*.vue'],
     plugins: { '@stylistic': stylisticPlugin },
@@ -109,6 +109,8 @@ export default defineConfigWithVueTs(
         ignores: []
       }],
 
+      'vue/prop-name-casing': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
       'vue/require-explicit-emits': 'error',
       'vue/max-attributes-per-line': 'off',
       'vue/attributes-order': ['error', {

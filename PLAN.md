@@ -57,17 +57,17 @@ src/
 ## Чеклист
 
 ### Фаза 0 — Основа ✅
-- [x] FSD структура (папки, перенос файлов)
-- [x] shared/api: useApi, apiTypes
-- [x] shared/lib: commonTypes
-- [x] entities/instagram-account: types, accountStore, ProfileCard
-- [x] pages/login: LoginPage (временно)
-- [x] MainLayout — базовая шапка
+- [✅] FSD структура (папки, перенос файлов)
+- [✅] shared/api: useApi, apiTypes
+- [✅] shared/lib: commonTypes
+- [✅] entities/instagram-account: types, accountStore, ProfileCard
+- [✅] pages/login: LoginPage (временно)
+- [✅] MainLayout — базовая шапка
 
-### Фаза 1 — shared/ui (базовые компоненты)
-- [ ] ButtonComponent — обёртка над QBtn
-- [x] InputComponent — обёртка над QInput
-- [ ] ModalComponent — обёртка над QDialog
+### Фаза 1 — shared/ui (базовые компоненты) ✅
+- [✅] ButtonComponent — обёртка над QBtn
+- [✅] InputComponent — обёртка над QInput
+- [✅] ModalComponent — обёртка над QDialog
 
 ### Фаза 2 — Instagram Accounts страница
 - [ ] pages/instagram-accounts — основная страница
