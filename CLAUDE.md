@@ -62,6 +62,10 @@ Context7 library ID: `/subzeroid/instagrapi`
 
 # Backend — Laravel 12
 
+## Документация
+- Laravel 12: Context7 library ID: `/websites/laravel_12_x`
+- Laravel (общая): Context7 library ID: `/laravel/docs`
+
 ## Правила
 - `declare(strict_types=1)` в каждом PHP файле
 - Controllers: `final class`, только `JsonResponse` в return
@@ -106,9 +110,13 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 
 # Frontend — Vue 3 + Quasar + TypeScript
 
+## Документация
+- Vue 3: Context7 library ID: `/vuejs/docs`
+- Quasar: Context7 library ID: `/quasarframework/quasar`
+- FSD: Context7 library ID: `/feature-sliced/documentation`
+
 ## Архитектура: FSD (Feature-Sliced Design)
 Документация: https://feature-sliced.design/docs
-Context7 library ID: `/feature-sliced/documentation`
 
 ## Правила
 - Порядок блоков SFC: `<script setup lang="ts">` → `<template>` → `<style>`
