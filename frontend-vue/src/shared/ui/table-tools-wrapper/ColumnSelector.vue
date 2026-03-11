@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import type { QTableColumn } from 'quasar'
-  import { ButtonComponent } from 'src/shared/ui/button-component'
+  import { ButtonComponent } from '@/shared/ui/button-component'
 
   defineProps<{ columns: QTableColumn[] }>()
 

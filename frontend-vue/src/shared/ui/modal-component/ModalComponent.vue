@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import type { QDialogProps } from 'quasar'
   import { useAttrs, useSlots } from 'vue'
-  import { ButtonComponent } from 'src/shared/ui/button-component'
+  import { ButtonComponent } from '@/shared/ui/button-component'
 
   interface ModalComponentProps {
     title?: string

@@ -2,6 +2,7 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
 import { defineConfig } from '#q-app/wrappers'
+import path from 'node:path'
 
 export default defineConfig((/* ctx */) => {
   return {
@@ -39,8 +40,12 @@ export default defineConfig((/* ctx */) => {
 
       typescript: {
         strict: true,
-        vueShim: true
-        // extendTsConfig (tsConfig) {}
+        vueShim: true,
+        extendTsConfig(tsConfig) {
+          const paths = (tsConfig.compilerOptions ??= {}).paths ??= {}
+          paths['@'] = ['./../src']
+          paths['@/*'] = ['./../src/*']
+        },
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
@@ -59,7 +64,13 @@ export default defineConfig((/* ctx */) => {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf(viteConf) {
+        viteConf.resolve = viteConf.resolve || {}
+        viteConf.resolve.alias = {
+          ...(viteConf.resolve.alias as Record<string, string>),
+          '@': path.resolve(__dirname, './src'),
+        }
+      },
       // viteVuePluginOptions: {},
 
       vitePlugins: [

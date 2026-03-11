@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { InstagramAccount } from 'src/entities/instagram-account/model/types'
+  import type { InstagramAccount } from '@/entities/instagram-account/model/types'
 
   defineProps<{ account: InstagramAccount }>()
 </script>

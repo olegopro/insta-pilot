@@ -1,4 +1,4 @@
-import type { Nullable } from 'src/shared/lib'
+import type { Nullable } from '@/shared/lib'
 
 export interface InstagramAccount {
   id: number

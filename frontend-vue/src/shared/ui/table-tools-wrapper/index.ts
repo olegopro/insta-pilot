@@ -1,1 +1,1 @@
-export { default as TableToolsWrapper } from 'src/shared/ui/table-tools-wrapper/TableToolsWrapper.vue'
+export { default as TableToolsWrapper } from '@/shared/ui/table-tools-wrapper/TableToolsWrapper.vue'

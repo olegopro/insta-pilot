@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios'
-import type { Nullable } from 'src/shared/lib'
+import type { Nullable } from '@/shared/lib'
 import { ref, shallowRef } from 'vue'
 
 export function useApi<TData, TArgs = void>(

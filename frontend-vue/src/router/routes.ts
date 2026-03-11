@@ -7,7 +7,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        component: () => import('src/pages/instagram-accounts/ui/InstagramAccountsPage.vue')
+        component: () => import('@/pages/instagram-accounts/ui/InstagramAccountsPage.vue')
       }
     ]
   },

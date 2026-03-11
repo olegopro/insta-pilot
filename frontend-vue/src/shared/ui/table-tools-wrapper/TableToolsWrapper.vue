@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import type { QTableColumn } from 'quasar'
-  import { InputComponent } from 'src/shared/ui/input-component'
-  import ColumnSelector from './ColumnSelector.vue'
+  import { InputComponent } from '@/shared/ui/input-component'
+  import ColumnSelector from '@/shared/ui/table-tools-wrapper/ColumnSelector.vue'
 
   defineProps<{ searchPlaceholder?: string }>()
 

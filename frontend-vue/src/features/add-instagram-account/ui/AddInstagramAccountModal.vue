@@ -1,10 +1,10 @@
 <script setup lang="ts">
   import { reactive } from 'vue'
-  import { useAccountStore } from 'src/entities/instagram-account/model/accountStore'
-  import type { AddAccountRequest } from 'src/entities/instagram-account/model/types'
-  import { notifySuccess, notifyError } from 'src/shared/lib'
-  import { ModalComponent } from 'src/shared/ui/modal-component'
-  import { InputComponent } from 'src/shared/ui/input-component'
+  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import type { AddAccountRequest } from '@/entities/instagram-account/model/types'
+  import { notifySuccess, notifyError } from '@/shared/lib'
+  import { ModalComponent } from '@/shared/ui/modal-component'
+  import { InputComponent } from '@/shared/ui/input-component'
 
   const emit = defineEmits<{
     added: []

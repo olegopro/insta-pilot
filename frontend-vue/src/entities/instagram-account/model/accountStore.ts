@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
-import { api } from 'src/boot/axios'
-import { useApi, type ApiResponseWrapper } from 'src/shared/api'
+import { api } from '@/boot/axios'
+import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import type {
   InstagramAccount,
   InstagramAccountDetailed,
   AddAccountRequest,
   AddAccountResponse
-} from 'src/entities/instagram-account/model/types'
+} from '@/entities/instagram-account/model/types'
 
 export const useAccountStore = defineStore('accounts', () => {
   const fetchAccounts = useApi<ApiResponseWrapper<InstagramAccount[]>>(

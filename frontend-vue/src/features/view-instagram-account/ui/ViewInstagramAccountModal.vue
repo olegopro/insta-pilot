@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { watch } from 'vue'
-  import { useAccountStore } from 'src/entities/instagram-account/model/accountStore'
-  import { ModalComponent } from 'src/shared/ui/modal-component'
+  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import { ModalComponent } from '@/shared/ui/modal-component'
 
   const props = defineProps<{
     accountId: number

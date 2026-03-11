@@ -112,7 +112,7 @@ Context7 library ID: `/feature-sliced/documentation`
 
 ## Правила
 - Порядок блоков SFC: `<script setup lang="ts">` → `<template>` → `<style>`
-- Импорты: через `src/` (не `./` или `../`)
+- Импорты: через `@/` (не `./` или `../`)
 - Обработчики событий: суффикс `Handler` (`submitHandler`)
 - UI компоненты: только кастомные обёртки из `shared/ui/` (ButtonComponent, InputComponent, ...) над Quasar, суффикс `Component`
 - Каждый action в store — через `useApi`, никакого внутреннего state в store

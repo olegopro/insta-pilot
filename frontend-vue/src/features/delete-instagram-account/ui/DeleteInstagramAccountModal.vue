@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import { useAccountStore } from 'src/entities/instagram-account/model/accountStore'
-  import type { InstagramAccount } from 'src/entities/instagram-account/model/types'
-  import { notifySuccess, notifyError } from 'src/shared/lib'
-  import { ModalComponent } from 'src/shared/ui/modal-component'
+  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import type { InstagramAccount } from '@/entities/instagram-account/model/types'
+  import { notifySuccess, notifyError } from '@/shared/lib'
+  import { ModalComponent } from '@/shared/ui/modal-component'
 
   const props = defineProps<{
     account: InstagramAccount

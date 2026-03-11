@@ -1,5 +1,5 @@
-import type { InstagramAccount } from 'src/entities/instagram-account/model/types'
-import type { InstagramAccountRowModel } from 'src/entities/instagram-account/model/instagramAccountTableColumns'
+import type { InstagramAccount } from '@/entities/instagram-account/model/types'
+import type { InstagramAccountRowModel } from '@/entities/instagram-account/model/instagramAccountTableColumns'
 
 class InstagramAccountListDTO {
   toLocal(data: InstagramAccount[]): InstagramAccountRowModel[] {

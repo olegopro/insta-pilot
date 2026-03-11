@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { InstagramAccountsList } from 'src/widgets/instagram-accounts-list'
+  import { InstagramAccountsList } from '@/widgets/instagram-accounts-list'
 </script>
 
 <template>

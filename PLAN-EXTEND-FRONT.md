@@ -238,7 +238,7 @@ pages/
 
 **types.ts:**
 ```typescript
-import type { Nullable } from 'src/shared/lib'
+import type { Nullable } from '@/shared/lib'
 
 export type MediaType = 1 | 2 | 8  // 1=Photo, 2=Video, 8=Album
 
@@ -311,9 +311,9 @@ interface Props {
 **Events:**
 ```typescript
 defineEmits<{
-  (e: 'like'): void
-  (e: 'click'): void
-  (e: 'user-info'): void
+  like: []
+  click: []
+  'user-info': []
 }>()
 ```
 
