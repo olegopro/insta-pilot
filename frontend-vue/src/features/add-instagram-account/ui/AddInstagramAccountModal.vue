@@ -19,7 +19,7 @@
     proxy: ''
   })
 
-  const requiredRule = [(value: string) => !!value || 'Обязательное поле']
+  const requiredRule = [(value: string) => !!value]
 
   const resetHandler = () => {
     form.instagram_login = ''

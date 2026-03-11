@@ -5,7 +5,7 @@
   import instagramAccountListDTO from 'src/entities/instagram-account/model/instagramAccountListDTO'
   import type { InstagramAccount } from 'src/entities/instagram-account/model/types'
   import type { Nullable } from 'src/shared/lib'
-  import { useFilterColumns, useSearchQuery } from 'src/shared/lib'
+  import { useFilterColumns, useSearchQuery, useModal } from 'src/shared/lib'
   import { ButtonComponent } from 'src/shared/ui/button-component'
   import { TableComponent } from 'src/shared/ui/table-component'
   import { TableToolsWrapper } from 'src/shared/ui/table-tools-wrapper'
@@ -15,9 +15,9 @@
 
   const store = useAccountStore()
 
-  const showAddModal = ref(false)
-  const showDeleteModal = ref(false)
-  const showViewModal = ref(false)
+  const addModal = useModal()
+  const deleteModal = useModal()
+  const viewModal = useModal()
   const selectedAccount = ref<Nullable<InstagramAccount>>(null)
   const showActiveOnly = ref(false)
 
@@ -41,12 +41,12 @@
 
   const openViewHandler = (id: number) => {
     selectedAccount.value = findAccount(id)
-    showViewModal.value = true
+    viewModal.open()
   }
 
   const openDeleteHandler = (id: number) => {
     selectedAccount.value = findAccount(id)
-    showDeleteModal.value = true
+    deleteModal.open()
   }
 
   onMounted(() => store.fetchAccounts.execute())
@@ -69,7 +69,7 @@
         color="primary"
         icon="add"
         label="Добавить"
-        @click="showAddModal = true"
+        @click="addModal.open()"
       />
     </template>
 
@@ -114,20 +114,20 @@
   </TableToolsWrapper>
 
   <AddInstagramAccountModal
-    v-model="showAddModal"
+    v-model="addModal.isVisible"
     @added="() => store.fetchAccounts.execute()"
   />
 
   <DeleteInstagramAccountModal
     v-if="selectedAccount"
-    v-model="showDeleteModal"
+    v-model="deleteModal.isVisible"
     :account="selectedAccount"
     @deleted="() => store.fetchAccounts.execute()"
   />
 
   <ViewInstagramAccountModal
     v-if="selectedAccount"
-    v-model="showViewModal"
+    v-model="viewModal.isVisible"
     :account-id="selectedAccount.id"
   />
 </template>

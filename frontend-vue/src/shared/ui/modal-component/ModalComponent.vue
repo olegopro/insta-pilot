@@ -25,7 +25,7 @@
 
   const model = defineModel<boolean>({ default: false })
   const dialogAttrs = useAttrs() as Omit<QDialogProps, 'modelValue'>
-  const hasHeaderContent = useSlots()['header-content']
+  const hasHeaderContent = !!useSlots()['header-content']
 </script>
 
 <template>
@@ -40,10 +40,10 @@
       @reset="$emit('reset')"
     >
       <header v-if="title || hasHeaderContent" class="modal-header">
-        <h3 v-if="title" class="modal-title">
+        <h1 v-if="title" class="modal-title text-h5">
           <q-icon v-if="icon" :name="icon" />
           {{ title }}
-        </h3>
+        </h1>
         <slot name="header-content" />
       </header>
 
@@ -55,7 +55,7 @@
           type="submit"
           :color="submitColor ?? 'primary'"
           :label="submitLabel"
-          icon="file_download_done"
+          icon="check"
           :disable="submitDisable"
           :loading="submitLoading"
         />
@@ -97,7 +97,7 @@
 
   .modal-footer {
     display: flex;
-    flex-direction: column;
+    justify-content: end;
     gap: 8px;
     padding-top: 24px;
   }
