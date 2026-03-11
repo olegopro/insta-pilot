@@ -54,7 +54,9 @@ Context7 library ID: `/subzeroid/instagrapi`
 ---
 
 ## Plan & Progress
-См. [PLAN.md](PLAN.md)
+- [PLAN.md](PLAN.md) — Master Plan (фазы, чеклист, архитектура)
+- [PLAN-EXTEND-BACK.md](PLAN-EXTEND-BACK.md) — Backend детали (Laravel + Python)
+- [PLAN-EXTEND-FRONT.md](PLAN-EXTEND-FRONT.md) — Frontend детали (Vue + Quasar, FSD)
 
 ---
 
