@@ -16,13 +16,13 @@
   const isOpen = defineModel<boolean>({ default: false })
 
   const submitHandler = () => {
-    store.deleteAccount.execute(props.account.id)
+    store.deleteAccount(props.account.id)
       .then(() => {
         notifySuccess('Аккаунт удалён')
         emit('deleted')
         isOpen.value = false
       })
-      .catch(() => notifyError(store.deleteAccount.error ?? 'Ошибка'))
+      .catch(() => notifyError(store.deleteAccountError ?? 'Ошибка'))
   }
 </script>
 
@@ -33,7 +33,7 @@
     submit-label="Удалить"
     submit-color="negative"
     reset-label="Отмена"
-    :submit-loading="store.deleteAccount.loading"
+    :submit-loading="store.deleteAccountLoading"
     @submit="submitHandler"
     @reset="isOpen = false"
   >

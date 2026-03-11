@@ -29,13 +29,13 @@
   }
 
   const submitHandler = () => {
-    store.addAccount.execute(form)
+    store.addAccount(form)
       .then(() => {
         notifySuccess('Аккаунт добавлен')
         emit('added')
         resetHandler()
       })
-      .catch(() => notifyError(store.addAccount.error ?? 'Ошибка'))
+      .catch(() => notifyError(store.addAccountError ?? 'Ошибка'))
   }
 </script>
 
@@ -46,7 +46,7 @@
     title="Добавить аккаунт"
     submit-label="Добавить"
     reset-label="Отмена"
-    :submit-loading="store.addAccount.loading"
+    :submit-loading="store.addAccountLoading"
     @submit="submitHandler"
     @reset="resetHandler"
   >

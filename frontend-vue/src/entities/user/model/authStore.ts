@@ -31,6 +31,8 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('token', result.token)
     }
   }
+  const loginLoading = computed(() => loginApi.loading.value)
+  const loginError = computed(() => loginApi.error.value)
 
   const logout = async () => {
     await logoutApi.execute()
@@ -48,5 +50,15 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('token')
   }
 
-  return { user, isAuthenticated, isAdmin, loginApi, logoutApi, meApi, login, logout, fetchMe, clearAuth }
+  return {
+    user,
+    isAuthenticated,
+    isAdmin,
+    login,
+    loginLoading,
+    loginError,
+    logout,
+    fetchMe,
+    clearAuth
+  }
 })

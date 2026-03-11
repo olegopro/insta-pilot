@@ -10,7 +10,7 @@
   const store = useAccountStore()
   const isOpen = defineModel<boolean>({ default: false })
 
-  watch(isOpen, (opened) => opened && store.fetchAccountDetails.execute(props.accountId))
+  watch(isOpen, (opened) => opened && store.fetchAccountDetails(props.accountId))
 </script>
 
 <template>
@@ -19,7 +19,7 @@
     title="Информация об аккаунте"
     reset-label="Закрыть"
   >
-    <div v-if="store.fetchAccountDetails.loading" class="flex flex-center q-pa-lg">
+    <div v-if="store.fetchAccountDetailsLoading" class="flex flex-center q-pa-lg">
       <q-spinner size="48px" color="primary" />
     </div>
 

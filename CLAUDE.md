@@ -189,9 +189,40 @@ pages/
 - `user` — пользователь системы insta-pilot (будет позже, с авторизацией)
 
 ## Pinia и .value
-- Внутри `defineStore` setup: `data.value` нужно (это обычный `shallowRef`)
-- В компоненте через `store.someApi.data`: `.value` НЕ нужно — Pinia применяет `UnwrapRef` рекурсивно, ref уже развёрнут
-- Правило: если пишешь `store.*.data.value` в компоненте — это ошибка TS
+- Внутри `defineStore` setup: `someApi.response.value` нужно (это обычный `shallowRef`)
+- В компоненте через `store.someApi.response`: `.value` НЕ нужно — Pinia применяет `UnwrapRef` рекурсивно, ref уже развёрнут
+- Правило: если пишешь `store.*.response.value` в компоненте — это ошибка TS
+
+## Паттерн store: нейминг и структура
+```ts
+// ПРИВАТНЫЕ useApi-объекты (суффикс Api, не в return):
+const fetchAccountsApi = useApi(...)
+const deleteAccountApi = useApi(...)
+
+// ПУБЛИЧНЫЕ computed-геттеры данных (существительное):
+const accounts = computed(() => fetchAccountsApi.response.value?.data ?? [])
+
+// ПУБЛИЧНЫЕ actions + их loading/error computed (сразу под action):
+const fetchAccounts = () => fetchAccountsApi.execute()
+const fetchAccountsLoading = computed(() => fetchAccountsApi.loading.value)
+
+const deleteAccount = (id: number) => deleteAccountApi.execute(id)
+const deleteAccountLoading = computed(() => deleteAccountApi.loading.value)
+const deleteAccountError = computed(() => deleteAccountApi.error.value)
+
+// return — только публичное, никаких *Api:
+return {
+  accounts,
+  fetchAccounts,
+  fetchAccountsLoading,
+  deleteAccount,
+  deleteAccountLoading,
+  deleteAccountError
+}
+```
+- `*Api`-объекты никогда не выставляются наружу через return
+- Компонент вызывает `store.fetchAccounts()`, а НЕ `store.fetchAccountsApi.execute()`
+- `store.*Api.response` в компоненте — никогда
 
 ## Отладка ошибок
 

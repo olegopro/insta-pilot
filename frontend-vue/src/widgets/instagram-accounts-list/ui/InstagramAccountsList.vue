@@ -47,7 +47,7 @@
     deleteModal.open()
   }
 
-  onMounted(() => store.fetchAccounts.execute())
+  onMounted(() => store.fetchAccounts())
 </script>
 
 <template>
@@ -76,7 +76,7 @@
       :columns="columns"
       :visible-columns="columnsVisibleNames"
       :filter="searchText"
-      :loading="store.fetchAccounts.loading"
+      :loading="store.fetchAccountsLoading"
       row-key="id"
       no-data-label="Нет аккаунтов"
     >
@@ -113,14 +113,14 @@
 
   <AddInstagramAccountModal
     v-model="addModal.isVisible"
-    @added="() => store.fetchAccounts.execute()"
+    @added="() => store.fetchAccounts()"
   />
 
   <DeleteInstagramAccountModal
     v-if="selectedAccount"
     v-model="deleteModal.isVisible"
     :account="selectedAccount"
-    @deleted="() => store.fetchAccounts.execute()"
+    @deleted="() => store.fetchAccounts()"
   />
 
   <ViewInstagramAccountModal

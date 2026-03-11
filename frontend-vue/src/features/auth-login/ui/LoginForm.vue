@@ -1,8 +1,8 @@
 <script setup lang="ts">
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import { Notify } from 'quasar'
   import { useAuthStore } from '@/entities/user'
+  import { notifyError } from '@/shared/lib'
   import { InputComponent } from '@/shared/ui/input-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
 
@@ -15,7 +15,7 @@
   const submitHandler = async () => {
     await authStore.login({ email: email.value, password: password.value })
       .then(() => router.push('/'))
-      .catch(() => Notify.create({ type: 'negative', message: authStore.loginApi.error ?? 'Ошибка входа' }))
+      .catch(() => notifyError(authStore.loginError ?? 'Ошибка входа'))
   }
 </script>
 
@@ -44,7 +44,7 @@
       type="submit"
       color="primary"
       class="full-width q-mt-lg"
-      :loading="authStore.loginApi.loading"
+      :loading="authStore.loginLoading"
     >
       Войти
     </ButtonComponent>

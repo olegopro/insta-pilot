@@ -20,16 +20,21 @@ export const useAdminUsersStore = defineStore('adminUsers', () => {
   const users = computed(() => listApi.response.value?.data ?? [])
 
   const fetchUsers = () => listApi.execute()
+  const fetchUsersLoading = computed(() => listApi.loading.value)
+
   const toggleActive = (id: number) => toggleActiveApi.execute({ id })
+  const toggleActiveError = computed(() => toggleActiveApi.error.value)
+
   const updateRole = (id: number, role: string) => updateRoleApi.execute({ id, role })
+  const updateRoleError = computed(() => updateRoleApi.error.value)
 
   return {
-    listApi,
-    toggleActiveApi,
-    updateRoleApi,
     users,
     fetchUsers,
+    fetchUsersLoading,
     toggleActive,
-    updateRole
+    toggleActiveError,
+    updateRole,
+    updateRoleError
   }
 })

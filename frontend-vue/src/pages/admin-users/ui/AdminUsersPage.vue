@@ -24,13 +24,13 @@
   const toggleActiveHandler = async (id: number) => {
     await store.toggleActive(id)
       .then(() => store.fetchUsers())
-      .catch(() => notifyError(store.toggleActiveApi.error ?? 'Ошибка'))
+      .catch(() => notifyError(store.toggleActiveError ?? 'Ошибка'))
   }
 
   const updateRoleHandler = async (id: number, role: string) => {
     await store.updateRole(id, role)
       .then(() => store.fetchUsers())
-      .catch(() => notifyError(store.updateRoleApi.error ?? 'Ошибка'))
+      .catch(() => notifyError(store.updateRoleError ?? 'Ошибка'))
   }
 
   onMounted(() => store.fetchUsers())
@@ -51,7 +51,7 @@
         :columns="columns"
         :visible-columns="columnsVisibleNames"
         :filter="searchText"
-        :loading="store.listApi.loading"
+        :loading="store.fetchUsersLoading"
         row-key="id"
         no-data-label="Нет пользователей"
       >
