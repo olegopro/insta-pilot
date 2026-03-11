@@ -7,17 +7,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use App\Models\User;
 
-final class AuthController extends Controller
-{
-    public function register(Request $request): JsonResponse
-    {
+final class AuthController extends Controller {
+    public function register(Request $request): JsonResponse {
         $validated = $request->validate([
-            'name'                  => 'required|string|max:255',
-            'email'                 => 'required|email|unique:users,email',
-            'password'              => 'required|string|min:8|confirmed',
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $user = User::create($validated);
@@ -32,8 +29,7 @@ final class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request): JsonResponse
-    {
+    public function login(Request $request): JsonResponse {
         $validated = $request->validate([
             'email'    => 'required|email',
             'password' => 'required|string',
@@ -68,8 +64,7 @@ final class AuthController extends Controller
         ]);
     }
 
-    public function logout(Request $request): JsonResponse
-    {
+    public function logout(Request $request): JsonResponse {
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
@@ -79,8 +74,7 @@ final class AuthController extends Controller
         ]);
     }
 
-    public function me(Request $request): JsonResponse
-    {
+    public function me(Request $request): JsonResponse {
         return response()->json([
             'success' => true,
             'data'    => $request->user()->load('roles'),

@@ -8,14 +8,12 @@ use App\Repositories\UserRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-final class AdminUserController extends Controller
-{
+final class AdminUserController extends Controller {
     public function __construct(
         private readonly UserRepositoryInterface $userRepository
     ) {}
 
-    public function index(): JsonResponse
-    {
+    public function index(): JsonResponse {
         $users = $this->userRepository->all();
 
         return response()->json([
@@ -25,8 +23,7 @@ final class AdminUserController extends Controller
         ]);
     }
 
-    public function toggleActive(int $id): JsonResponse
-    {
+    public function toggleActive(int $id): JsonResponse {
         $user = $this->userRepository->findById($id);
 
         if (! $user) {
@@ -45,8 +42,7 @@ final class AdminUserController extends Controller
         ]);
     }
 
-    public function updateRole(int $id, Request $request): JsonResponse
-    {
+    public function updateRole(int $id, Request $request): JsonResponse {
         $validated = $request->validate([
             'role' => 'required|string|in:admin,user',
         ]);

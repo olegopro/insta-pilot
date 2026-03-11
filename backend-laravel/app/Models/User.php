@@ -11,8 +11,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
-{
+class User extends Authenticatable {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
     use Notifiable;
@@ -31,8 +30,7 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected function casts(): array
-    {
+    protected function casts(): array {
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
@@ -40,8 +38,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function instagramAccounts(): HasMany
-    {
+    public function instagramAccounts(): HasMany {
         return $this->hasMany(InstagramAccount::class);
     }
 }

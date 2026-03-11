@@ -76,13 +76,13 @@ final class InstagramAccountController extends Controller {
             return $this->notFound();
         }
 
-        $data = $account->toArray();
+        $data                    = $account->toArray();
         $data['followers_count'] = null;
         $data['following_count'] = null;
 
         if ($account->session_data) {
             try {
-                $info = $this->instagramClient->getUserInfo($account->session_data);
+                $info                    = $this->instagramClient->getUserInfo($account->session_data);
                 $data['followers_count'] = $info['followers_count'] ?? null;
                 $data['following_count'] = $info['following_count'] ?? null;
             } catch (\Throwable) {
