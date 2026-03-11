@@ -24,9 +24,7 @@
   const { columns, columnsVisibleNames } = useFilterColumns(instagramAccountTableColumns)
   const { searchText } = useSearchQuery()
 
-  const allRows = computed(() =>
-    instagramAccountListDTO.toLocal(store.fetchAccounts.data?.data ?? [])
-  )
+  const allRows = computed(() => instagramAccountListDTO.toLocal(store.accounts))
 
   const rows = computed(() =>
     showActiveOnly.value
@@ -37,7 +35,7 @@
   const pageTitle = computed(() => `Аккаунты Instagram (${String(allRows.value.length)})`)
 
   const findAccount = (id: number): Nullable<InstagramAccount> =>
-    store.fetchAccounts.data?.data.find((a) => a.id === id) ?? null
+    store.accounts.find((account) => account.id === id) ?? null
 
   const openViewHandler = (id: number) => {
     selectedAccount.value = findAccount(id)

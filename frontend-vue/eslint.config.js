@@ -136,7 +136,8 @@ export default defineConfigWithVueTs(
       '@stylistic/no-multi-spaces': 'error',
       '@stylistic/comma-dangle': ['error', 'never'],
       '@stylistic/no-multiple-empty-lines': ['error', { max: 2, maxEOF: 0, maxBOF: 0 }],
-      '@stylistic/eol-last': ['error', 'always']
+      '@stylistic/eol-last': ['error', 'always'],
+      '@stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }]
     }
   },
 

@@ -1,47 +1,36 @@
 <script setup lang="ts">
-  import { onMounted } from 'vue'
-  import { Notify } from 'quasar'
+  import { computed, onMounted } from 'vue'
   import { useAdminUsersStore } from '@/entities/user'
-  import type { User } from '@/entities/user'
+  import adminUsersTableColumns from '@/entities/user/model/adminUsersTableColumns'
+  import adminUsersListDTO from '@/entities/user/model/adminUsersListDTO'
+  import { useFilterColumns, useSearchQuery, notifyError } from '@/shared/lib'
+  import { TableComponent } from '@/shared/ui/table-component'
+  import { TableToolsWrapper } from '@/shared/ui/table-tools-wrapper'
+  import { SelectComponent } from '@/shared/ui/select-component'
+  import { ToggleComponent } from '@/shared/ui/toggle-component'
 
   const store = useAdminUsersStore()
 
-  const columns = [
-    { name: 'name', label: 'Имя', field: 'name', align: 'left' as const, sortable: true },
-    { name: 'email', label: 'Email', field: 'email', align: 'left' as const, sortable: true },
-    { name: 'role', label: 'Роль', field: 'roles', align: 'center' as const },
-    { name: 'is_active', label: 'Активен', field: 'is_active', align: 'center' as const }
-  ]
+  const { columns, columnsVisibleNames } = useFilterColumns(adminUsersTableColumns)
+  const { searchText } = useSearchQuery()
+
+  const rows = computed(() => adminUsersListDTO.toLocal(store.users))
 
   const roleOptions = [
     { label: 'Пользователь', value: 'user' },
     { label: 'Администратор', value: 'admin' }
   ]
 
-  const getRole = (user: User) => user.roles[0]?.name ?? 'user'
-
-  const toggleActiveHandler = async (user: User) => {
-    await store.toggleActive(user.id)
-      .then(() => {
-        const updated = store.toggleActiveApi.data.value?.data
-        if (updated && store.listApi.data.value?.data) {
-          const idx = store.listApi.data.value.data.findIndex((u) => u.id === updated.id)
-          if (idx !== -1) store.listApi.data.value.data.splice(idx, 1, updated)
-        }
-      })
-      .catch(() => Notify.create({ type: 'negative', message: store.toggleActiveApi.error ?? 'Ошибка' }))
+  const toggleActiveHandler = async (id: number) => {
+    await store.toggleActive(id)
+      .then(() => store.fetchUsers())
+      .catch(() => notifyError(store.toggleActiveApi.error ?? 'Ошибка'))
   }
 
-  const updateRoleHandler = async (user: User, role: string) => {
-    await store.updateRole(user.id, role)
-      .then(() => {
-        const updated = store.updateRoleApi.data.value?.data
-        if (updated && store.listApi.data.value?.data) {
-          const idx = store.listApi.data.value.data.findIndex((u) => u.id === updated.id)
-          if (idx !== -1) store.listApi.data.value.data.splice(idx, 1, updated)
-        }
-      })
-      .catch(() => Notify.create({ type: 'negative', message: store.updateRoleApi.error ?? 'Ошибка' }))
+  const updateRoleHandler = async (id: number, role: string) => {
+    await store.updateRole(id, role)
+      .then(() => store.fetchUsers())
+      .catch(() => notifyError(store.updateRoleApi.error ?? 'Ошибка'))
   }
 
   onMounted(() => store.fetchUsers())
@@ -51,39 +40,46 @@
   <q-page padding>
     <div class="text-h5 q-mb-md">Пользователи</div>
 
-    <q-table
-      :rows="store.listApi.data?.data ?? []"
-      :columns="columns"
-      :loading="store.listApi.loading"
-      row-key="id"
-      flat
-      bordered
+    <TableToolsWrapper
+      v-model:search="searchText"
+      v-model:columns="columns"
+      v-model:columns-visible-names="columnsVisibleNames"
+      search-placeholder="Поиск по пользователям"
     >
-      <template #body-cell-role="{ row }">
-        <q-td class="text-center">
-          <q-select
-            :model-value="getRole(row)"
-            :options="roleOptions"
-            option-value="value"
-            option-label="label"
-            emit-value
-            map-options
-            dense
-            borderless
-            style="min-width: 140px"
-            @update:model-value="(role) => updateRoleHandler(row, role)"
-          />
-        </q-td>
-      </template>
+      <TableComponent
+        :rows="rows"
+        :columns="columns"
+        :visible-columns="columnsVisibleNames"
+        :filter="searchText"
+        :loading="store.listApi.loading"
+        row-key="id"
+        no-data-label="Нет пользователей"
+      >
+        <template #body-cell-role="{ row, value }">
+          <q-td class="text-center">
+            <SelectComponent
+              :model-value="value"
+              :options="roleOptions"
+              option-value="value"
+              option-label="label"
+              emit-value
+              map-options
+              dense
+              borderless
+              @update:model-value="(role) => updateRoleHandler(row.id, role)"
+            />
+          </q-td>
+        </template>
 
-      <template #body-cell-is_active="{ row }">
-        <q-td class="text-center">
-          <q-toggle
-            :model-value="row.is_active"
-            @update:model-value="() => toggleActiveHandler(row)"
-          />
-        </q-td>
-      </template>
-    </q-table>
+        <template #body-cell-isActive="{ row, value }">
+          <q-td class="text-center">
+            <ToggleComponent
+              :model-value="value"
+              @update:model-value="() => toggleActiveHandler(row.id)"
+            />
+          </q-td>
+        </template>
+      </TableComponent>
+    </TableToolsWrapper>
   </q-page>
 </template>

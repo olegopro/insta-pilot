@@ -1,3 +1,4 @@
+import { computed } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
@@ -25,5 +26,8 @@ export const useAccountStore = defineStore('accounts', () => {
     (id) => api.delete(`/accounts/${String(id)}`).then((response) => response.data)
   )
 
-  return { fetchAccounts, addAccount, fetchAccountDetails, deleteAccount }
+  const accounts = computed(() => fetchAccounts.response.value?.data ?? [])
+  const accountDetail = computed(() => fetchAccountDetails.response.value?.data ?? null)
+
+  return { fetchAccounts, addAccount, fetchAccountDetails, deleteAccount, accounts, accountDetail }
 })

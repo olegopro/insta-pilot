@@ -42,7 +42,6 @@ class InstagramAccount extends Model {
         return $decrypted->decrypt($data);
     }
 
-
     public function setInstagramPasswordAttribute(string $value): void {
         $this->attributes['instagram_password'] = $this->encryptData($value);
     }
@@ -59,8 +58,7 @@ class InstagramAccount extends Model {
         return  $value === null ? null : $this->decryptData($value);
     }
 
-    public function user(): BelongsTo
-    {
+    public function user(): BelongsTo {
         return $this->belongsTo(User::class);
     }
 }

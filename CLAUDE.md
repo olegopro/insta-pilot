@@ -71,6 +71,7 @@ Context7 library ID: `/subzeroid/instagrapi`
 - Controllers: `final class`, только `JsonResponse` в return
 - DI через конструктор, `private readonly`
 - Паттерн: Interface → Implementation → bind в AppServiceProvider → (опционально) Facade
+- Фигурная скобка `{` на той же строке: `class Foo {`, `function bar(): void {`, `interface Baz {`
 
 ## Структура app/
 ```
@@ -122,12 +123,28 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 - Порядок блоков SFC: `<script setup lang="ts">` → `<template>` → `<style>`
 - Импорты: через `@/` (не `./` или `../`)
 - Обработчики событий: суффикс `Handler` (`submitHandler`)
-- UI компоненты: только кастомные обёртки из `shared/ui/` (ButtonComponent, InputComponent, ...) над Quasar, суффикс `Component`
+- UI компоненты: только кастомные обёртки из `shared/ui/` (ButtonComponent, InputComponent, SelectComponent, ToggleComponent, ...) над Quasar, суффикс `Component`
 - Каждый action в store — через `useApi`, никакого внутреннего state в store
 - Public API слайсов — через `index.ts` в каждом сегменте
 - Стиль кода: стрелочные функции без `{}` если тело — один expression (`.catch(() => Notify.create(...))`)
+- Стиль кода: параметры callback-ов — только полные имена, без однобуквенных сокращений (`.then((response) => response.data)`, `.find((account) => account.id === id)`, не `r`, `a`, `e` и т.п.)`
 - Стиль кода: `&&` вместо `if` для коротких условных вызовов (`opened && fn()`)
 - Шаблоны: никогда не добавлять `.value` — Vue автоматически разворачивает `Ref` в `<template>`
+- Уведомления: использовать `notifyError` / `notifySuccess` из `@/shared/lib`, а не `Notify.create` напрямую
+
+## Паттерн таблиц (QTable)
+Всегда использовать `TableComponent` из `@/shared/ui/table-component` вместо `q-table` напрямую.
+Для каждой сущности с таблицей создавать два файла в `entities/*/model/`:
+- `*TableColumns.ts` — колонки + `RowModel` интерфейс (`satisfies QTableColumn<RowModel>[]`)
+- `*ListDTO.ts` — маппинг API-модели (snake_case) → RowModel (camelCase), класс + singleton
+
+Страница/виджет с таблицей использует:
+```ts
+const { columns, columnsVisibleNames } = useFilterColumns(*TableColumns)
+const { searchText } = useSearchQuery()
+const rows = computed(() => *ListDTO.toLocal(store.someApi.data?.data ?? []))
+```
+Пример: [InstagramAccountsList.vue](src/widgets/instagram-accounts-list/ui/InstagramAccountsList.vue)
 
 ## Структура src/ (FSD)
 ```
@@ -140,7 +157,7 @@ shared/
   api/
     index.ts             # export { useApi, type ApiResponseWrapper }
     types.ts             # ApiResponseWrapper<T>
-    useApi.ts            # generic composable { execute, loading, data }
+    useApi.ts            # generic composable { execute, loading, response, error }
   lib/
     index.ts             # export { type Nullable }
     types.ts             # Nullable<T>
@@ -148,6 +165,8 @@ shared/
     button-component/    # каждый компонент — своя папка (kebab-case) + index.ts
     input-component/
     modal-component/
+    select-component/
+    toggle-component/
 
 entities/
   instagram-account/
@@ -168,3 +187,20 @@ pages/
 ## Нейминг
 - `instagram-account` — Instagram аккаунт в системе
 - `user` — пользователь системы insta-pilot (будет позже, с авторизацией)
+
+## Pinia и .value
+- Внутри `defineStore` setup: `data.value` нужно (это обычный `shallowRef`)
+- В компоненте через `store.someApi.data`: `.value` НЕ нужно — Pinia применяет `UnwrapRef` рекурсивно, ref уже развёрнут
+- Правило: если пишешь `store.*.data.value` в компоненте — это ошибка TS
+
+## Отладка ошибок
+
+### Где смотреть ошибки
+- Overlay в браузере (vue-tsc/ESLint) = те же ошибки, что в логах Docker vue-контейнера
+- Логи контейнера: `docker compose logs vue` или `docker compose logs -f vue`
+- Ручная проверка TS: `docker compose exec vue npx vue-tsc --noEmit`
+
+### Workflow после реализации задачи
+1. Сначала запустить ESLint autofix: `docker compose exec vue npx eslint --fix ./src`
+2. Проверить оставшиеся TS ошибки: `docker compose exec vue npx vue-tsc --noEmit`
+3. Исправлять вручную только то, что autofix не решил
