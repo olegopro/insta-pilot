@@ -8,6 +8,7 @@
 - Лента Instagram-аккаунта (Masonry + лайки + инфо)
 - Поиск по хэштегам / геолокации + генерация AI-комментариев
 - Настройки LLM-провайдера
+- Мониторинг активности аккаунтов (логирование действий + real-time)
 
 ---
 
@@ -21,6 +22,8 @@
 | 3 | Поиск | `/search` | auth | Хэштеги / гео, модалка поста, комментарии |
 | 4 | Настройки LLM | `/settings/llm` | admin | API key, модель, промпт, тон |
 | 5 | Пользователи | `/admin/users` | admin | Таблица, роли, активация |
+| 6 | Мониторинг | `/monitoring` | auth | Обзор активности аккаунтов |
+| 7 | Мониторинг (детали) | `/monitoring/:accountId` | auth | Логи, статистика, real-time |
 
 ---
 
@@ -32,6 +35,7 @@
 | `instagram-account` | Instagram-аккаунт, добавленный в систему |
 | `media-post` | Публикация Instagram (фото/видео/альбом) |
 | `llm-settings` | Настройки LLM-провайдера |
+| `activity-log` | Запись действия с Instagram-аккаунтом (лайк, лента, поиск и т.д.) |
 
 ---
 
@@ -143,6 +147,35 @@
 
 ---
 
+### Фаза 5 — Мониторинг активности аккаунтов
+
+> [Backend →](PLAN-EXTEND-LOGGING-BACKEND.md) | [Frontend →](PLAN-EXTEND-LOGGING-FRONT.md)
+
+**Python:**
+- [ ] 5.1 Структурированные ошибки: добавить `error_code` в ответы Python-сервиса (rate_limited, challenge_required, login_required, timeout)
+
+**Laravel:**
+- [ ] 5.2 Миграция `create_account_activity_logs_table` (action, status, request_payload, response_summary, error_message, error_code, duration_ms)
+- [ ] 5.3 Модель `AccountActivityLog`
+- [ ] 5.4 `ActivityLoggerService` (Interface + Implementation): логирование + broadcast
+- [ ] 5.5 `ActivityLogRepository` (Interface + Implementation): cursor-пагинация, агрегация, cleanup
+- [ ] 5.6 `ActivityLogCreated` event (ShouldBroadcast → канал `account-activity.{accountId}`)
+- [ ] 5.7 `ActivityLogController` (index: логи с фильтрами, stats: агрегация, summary: обзор)
+- [ ] 5.8 Интеграция в `InstagramClientService` (логирование каждого вызова Python)
+- [ ] 5.9 Интеграция в `GenerateCommentJob` (Фаза 4)
+- [ ] 5.10 `PruneActivityLogs` artisan command (cleanup старых записей по расписанию)
+
+**Frontend:**
+- [ ] 5.11 `entities/activity-log` (типы, constants, activityLogStore с cursor-пагинацией)
+- [ ] 5.12 DTO + колонки таблиц (логи + summary)
+- [ ] 5.13 `MonitoringPage` — обзор всех аккаунтов (summary table, клик → детали)
+- [ ] 5.14 `MonitoringDetailPage` — детализация: карточки статистики + группировки + таблица логов
+- [ ] 5.15 `ActivityFilter` (feature: фильтры по действию, статусу, дате)
+- [ ] 5.16 `useActivityLive` composable (WebSocket подписка на real-time логи)
+- [ ] 5.17 Router: `/monitoring`, `/monitoring/:accountId` + MainLayout навигация
+
+---
+
 ## Архитектурные решения
 
 | Решение | Технология | Причина |
@@ -155,6 +188,8 @@
 | Masonry | CSS `column-count` | Без лишних зависимостей |
 | Real-time (frontend) | Laravel Echo + pusher-js | Стандарт для Reverb broadcasting |
 | Infinite scroll | Quasar QInfiniteScroll | Встроен в Quasar |
+| Activity Logging | `account_activity_logs` + Reverb broadcast | Persistence в БД + real-time через WebSocket |
+| Cursor pagination | `before_id` вместо offset | Эффективно для append-only логов + не ломается при real-time вставках |
 
 ---
 
@@ -176,8 +211,10 @@
 
 ```
 [Vue SPA] → [Laravel API] → [Python FastAPI] → [Instagram (instagrapi)]
-                ↓
-          [Redis Queue] → [GenerateCommentJob] → [z.ai LLM API]
-                ↓
-          [Laravel Reverb] ←→ [Frontend (Echo + pusher-js)]
+                ↓                    ↓
+          [Redis Queue]     [ActivityLoggerService] → [account_activity_logs]
+                ↓                    ↓
+          [GenerateCommentJob]   [ActivityLogCreated event]
+                ↓                    ↓
+          [z.ai LLM API]     [Laravel Reverb] ←→ [Frontend (Echo + pusher-js)]
 ```
