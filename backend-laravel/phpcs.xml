@@ -18,4 +18,9 @@
     <rule ref="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore">
         <exclude name="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore"/>
     </rule>
+
+    <!-- PHPUnit требует snake_case в именах тестов (test_foo_bar) -->
+    <rule ref="PSR1.Methods.CamelCapsMethodName">
+        <exclude-pattern>tests/</exclude-pattern>
+    </rule>
 </ruleset>

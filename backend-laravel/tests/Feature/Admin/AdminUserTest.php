@@ -54,7 +54,7 @@ class AdminUserTest extends TestCase {
 
         $response = $this->withToken($this->adminToken)
             ->patchJson("/api/admin/users/{$user->id}/toggle-active");
-э
+
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,

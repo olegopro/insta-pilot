@@ -72,6 +72,7 @@ Context7 library ID: `/subzeroid/instagrapi`
 - DI через конструктор, `private readonly`
 - Паттерн: Interface → Implementation → bind в AppServiceProvider → (опционально) Facade
 - Фигурная скобка `{` на той же строке: `class Foo {`, `function bar(): void {`, `interface Baz {`
+- Trailing comma в массивах не ставится: `['a', 'b', 'c']`, не `['a', 'b', 'c',]`
 
 ## Структура app/
 ```
@@ -131,6 +132,7 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 - Стиль кода: `&&` вместо `if` для коротких условных вызовов (`opened && fn()`)
 - Шаблоны: никогда не добавлять `.value` — Vue автоматически разворачивает `Ref` в `<template>`
 - Уведомления: использовать `notifyError` / `notifySuccess` из `@/shared/lib`, а не `Notify.create` напрямую
+- Trailing comma в объектах не ставится: `{ a: 1, b: 2 }`, не `{ a: 1, b: 2, }`; правило распространяется и на объект с одним свойством: `{ a: 1 }`, не `{ a: 1, }`
 
 ## Паттерн таблиц (QTable)
 Всегда использовать `TableComponent` из `@/shared/ui/table-component` вместо `q-table` напрямую.

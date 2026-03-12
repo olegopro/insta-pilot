@@ -28,7 +28,7 @@ describe('useApi', () => {
 
   it('error содержит сообщение при AxiosError', async () => {
     const axiosError = new AxiosError('Request failed')
-    axiosError.response = { data: { error: 'Неверный пароль' } } as typeof axiosError.response
+    axiosError.response = { data: { error: 'Неверный пароль' } } as NonNullable<typeof axiosError.response>
 
     const { execute, error } = useApi(() => Promise.reject(axiosError))
 
@@ -51,7 +51,7 @@ describe('useApi', () => {
   })
 
   it('повторный execute сбрасывает response и error перед запросом', async () => {
-    const requestFn = vi.fn()
+    const requestFn = vi.fn<() => Promise<string>>()
     requestFn.mockResolvedValueOnce('first').mockRejectedValueOnce(new Error('fail'))
 
     const { execute, response, error } = useApi(requestFn)

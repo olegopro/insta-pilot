@@ -10,7 +10,7 @@ const makeUser = (overrides: Partial<User> = {}): User => ({
   roles: [{ id: 1, name: 'user', guard_name: 'web' }],
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
-  ...overrides,
+  ...overrides
 })
 
 describe('adminUsersListDTO.toLocal', () => {
@@ -22,7 +22,7 @@ describe('adminUsersListDTO.toLocal', () => {
       name: 'Test User',
       email: 'test@example.com',
       isActive: true,
-      createdAt: '2026-01-01T00:00:00Z',
+      createdAt: '2026-01-01T00:00:00Z'
     })
   })
 
@@ -31,7 +31,7 @@ describe('adminUsersListDTO.toLocal', () => {
 
     const result = adminUsersListDTO.toLocal([user])
 
-    expect(result[0].role).toBe('admin')
+    expect(result).toMatchObject([{ role: 'admin' }])
   })
 
   it('role = "user" если roles пустой массив', () => {
@@ -39,7 +39,7 @@ describe('adminUsersListDTO.toLocal', () => {
 
     const result = adminUsersListDTO.toLocal([user])
 
-    expect(result[0].role).toBe('user')
+    expect(result).toMatchObject([{ role: 'user' }])
   })
 
   it('возвращает пустой массив при пустом входе', () => {
@@ -52,6 +52,6 @@ describe('adminUsersListDTO.toLocal', () => {
     const result = adminUsersListDTO.toLocal(users)
 
     expect(result).toHaveLength(2)
-    expect(result[1].email).toBe('second@example.com')
+    expect(result).toMatchObject([{}, { email: 'second@example.com' }])
   })
 })

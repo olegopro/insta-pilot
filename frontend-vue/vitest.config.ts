@@ -7,11 +7,12 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: true,
+    include: ['src/**/*.spec.ts']
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '#q-app/wrappers': path.resolve(__dirname, './src/__mocks__/quasarWrappers.ts'),
-    },
-  },
+      '#q-app/wrappers': path.resolve(__dirname, './src/__mocks__/quasarWrappers.ts')
+    }
+  }
 })

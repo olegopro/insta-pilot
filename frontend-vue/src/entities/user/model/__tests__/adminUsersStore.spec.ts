@@ -5,8 +5,8 @@ import type { User } from '@/entities/user/model/types'
 vi.mock('@/boot/axios', () => ({
   api: {
     get: vi.fn(),
-    patch: vi.fn(),
-  },
+    patch: vi.fn()
+  }
 }))
 
 import { api } from '@/boot/axios'
@@ -19,7 +19,7 @@ const mockUser: User = {
   is_active: true,
   roles: [{ id: 1, name: 'user', guard_name: 'web' }],
   created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z'
 }
 
 describe('adminUsersStore', () => {
@@ -30,7 +30,7 @@ describe('adminUsersStore', () => {
 
   it('fetchUsers вызывает GET /admin/users', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({
-      data: { success: true, data: [mockUser], message: 'OK' },
+      data: { success: true, data: [mockUser], message: 'OK' }
     })
 
     const store = useAdminUsersStore()
@@ -41,14 +41,13 @@ describe('adminUsersStore', () => {
 
   it('users содержит данные после fetchUsers', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({
-      data: { success: true, data: [mockUser], message: 'OK' },
+      data: { success: true, data: [mockUser], message: 'OK' }
     })
 
     const store = useAdminUsersStore()
     await store.fetchUsers()
 
-    expect(store.users).toHaveLength(1)
-    expect(store.users[0].id).toBe(1)
+    expect(store.users).toMatchObject([{ id: 1 }])
   })
 
   it('users = [] до вызова fetchUsers', () => {
@@ -59,7 +58,7 @@ describe('adminUsersStore', () => {
 
   it('toggleActive вызывает PATCH с нужным URL', async () => {
     vi.mocked(api.patch).mockResolvedValueOnce({
-      data: { success: true, data: { ...mockUser, is_active: false }, message: 'OK' },
+      data: { success: true, data: { ...mockUser, is_active: false }, message: 'OK' }
     })
 
     const store = useAdminUsersStore()
@@ -70,7 +69,7 @@ describe('adminUsersStore', () => {
 
   it('updateRole отправляет role в теле запроса', async () => {
     vi.mocked(api.patch).mockResolvedValueOnce({
-      data: { success: true, data: { ...mockUser, roles: [{ id: 2, name: 'admin', guard_name: 'web' }] }, message: 'OK' },
+      data: { success: true, data: { ...mockUser, roles: [{ id: 2, name: 'admin', guard_name: 'web' }] }, message: 'OK' }
     })
 
     const store = useAdminUsersStore()

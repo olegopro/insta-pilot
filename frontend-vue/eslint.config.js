@@ -148,6 +148,14 @@ export default defineConfigWithVueTs(
         ...globals.serviceworker
       }
     }
+  },
+
+  {
+    files: ['**/__tests__/**/*.ts', '**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      '@typescript-eslint/unbound-method': 'off'
+    }
   }
   // prettierSkipFormatting,
 )

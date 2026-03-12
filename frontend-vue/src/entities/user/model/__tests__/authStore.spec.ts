@@ -5,8 +5,8 @@ import type { User } from '@/entities/user/model/types'
 vi.mock('@/boot/axios', () => ({
   api: {
     post: vi.fn(),
-    get: vi.fn(),
-  },
+    get: vi.fn()
+  }
 }))
 
 import { api } from '@/boot/axios'
@@ -19,12 +19,12 @@ const mockUser: User = {
   is_active: true,
   roles: [{ id: 1, name: 'user', guard_name: 'web' }],
   created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z'
 }
 
 const mockAdminUser: User = {
   ...mockUser,
-  roles: [{ id: 2, name: 'admin', guard_name: 'web' }],
+  roles: [{ id: 2, name: 'admin', guard_name: 'web' }]
 }
 
 describe('authStore', () => {
@@ -36,7 +36,7 @@ describe('authStore', () => {
 
   it('login сохраняет токен в localStorage', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
-      data: { success: true, data: { user: mockUser, token: 'test-token' }, message: 'OK' },
+      data: { success: true, data: { user: mockUser, token: 'test-token' }, message: 'OK' }
     })
 
     const store = useAuthStore()
@@ -47,7 +47,7 @@ describe('authStore', () => {
 
   it('login сохраняет user в store', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
-      data: { success: true, data: { user: mockUser, token: 'test-token' }, message: 'OK' },
+      data: { success: true, data: { user: mockUser, token: 'test-token' }, message: 'OK' }
     })
 
     const store = useAuthStore()
@@ -59,7 +59,7 @@ describe('authStore', () => {
   it('logout удаляет токен из localStorage', async () => {
     localStorage.setItem('token', 'existing-token')
     vi.mocked(api.post).mockResolvedValueOnce({
-      data: { success: true, data: null, message: 'OK' },
+      data: { success: true, data: null, message: 'OK' }
     })
 
     const store = useAuthStore()
@@ -70,7 +70,7 @@ describe('authStore', () => {
 
   it('logout обнуляет user', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
-      data: { success: true, data: null, message: 'OK' },
+      data: { success: true, data: null, message: 'OK' }
     })
 
     const store = useAuthStore()
@@ -97,7 +97,7 @@ describe('authStore', () => {
 
   it('isAuthenticated = true после login', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
-      data: { success: true, data: { user: mockUser, token: 'test-token' }, message: 'OK' },
+      data: { success: true, data: { user: mockUser, token: 'test-token' }, message: 'OK' }
     })
 
     const store = useAuthStore()
@@ -108,7 +108,7 @@ describe('authStore', () => {
 
   it('isAdmin = false для роли user', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
-      data: { success: true, data: { user: mockUser, token: 'test-token' }, message: 'OK' },
+      data: { success: true, data: { user: mockUser, token: 'test-token' }, message: 'OK' }
     })
 
     const store = useAuthStore()
@@ -122,8 +122,8 @@ describe('authStore', () => {
       data: {
         success: true,
         data: { user: mockAdminUser, token: 'admin-token' },
-        message: 'OK',
-      },
+        message: 'OK'
+      }
     })
 
     const store = useAuthStore()

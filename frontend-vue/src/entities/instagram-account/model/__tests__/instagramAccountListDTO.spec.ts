@@ -10,7 +10,7 @@ const makeAccount = (overrides: Partial<InstagramAccount> = {}): InstagramAccoun
   proxy: null,
   is_active: true,
   created_at: '2026-01-01T00:00:00Z',
-  ...overrides,
+  ...overrides
 })
 
 describe('instagramAccountListDTO.toLocal', () => {
@@ -22,7 +22,7 @@ describe('instagramAccountListDTO.toLocal', () => {
       instagramLogin: 'testuser',
       fullName: 'Test Account',
       isActive: true,
-      createdAt: '2026-01-01T00:00:00Z',
+      createdAt: '2026-01-01T00:00:00Z'
     })
   })
 
@@ -36,6 +36,6 @@ describe('instagramAccountListDTO.toLocal', () => {
     const result = instagramAccountListDTO.toLocal(accounts)
 
     expect(result).toHaveLength(2)
-    expect(result[1].instagramLogin).toBe('second')
+    expect(result).toMatchObject([{}, { instagramLogin: 'second' }])
   })
 })
