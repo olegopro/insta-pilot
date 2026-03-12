@@ -20,6 +20,7 @@
         <q-toolbar-title>Insta Pilot</q-toolbar-title>
 
         <q-btn flat to="/" label="Аккаунты" />
+        <q-btn flat to="/feed" label="Лента" />
         <q-btn v-if="authStore.isAdmin" flat to="/admin/users" label="Пользователи" />
 
         <q-separator vertical inset class="q-mx-sm" />

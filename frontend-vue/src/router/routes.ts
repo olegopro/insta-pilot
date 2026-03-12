@@ -22,6 +22,10 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/instagram-accounts/ui/InstagramAccountsPage.vue')
       },
       {
+        path: 'feed',
+        component: () => import('@/pages/feed/ui/FeedPage.vue')
+      },
+      {
         path: 'admin/users',
         component: () => import('@/pages/admin-users/ui/AdminUsersPage.vue'),
         meta: { requiresAdmin: true }

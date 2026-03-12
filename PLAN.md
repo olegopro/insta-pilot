@@ -75,27 +75,27 @@
 
 ---
 
-### Фаза 2 — Лента аккаунта
+### Фаза 2 — Лента аккаунта ✅
 
 > [Backend →](PLAN-EXTEND-BACK.md#фаза-2--лента-аккаунта) | [Frontend →](PLAN-EXTEND-FRONT.md#фаза-2--лента-аккаунта)
 
 **Python:**
-- [ ] 2.1 `POST /account/feed` (таймлайн + пагинация через max_id)
-- [ ] 2.2 `POST /user/info` (детали пользователя по pk)
+- [x] 2.1 `POST /account/feed` (таймлайн + пагинация через max_id)
+- [x] 2.2 `POST /user/info` (детали пользователя по pk)
 
 **Laravel:**
-- [ ] 2.3 FeedController (лента + лайк)
-- [ ] 2.4 InstagramUserController (инфо о пользователе)
-- [ ] 2.5 Обновить InstagramClientService (getFeed, getUserInfoByPk, likeMedia)
+- [x] 2.3 FeedController (лента + лайк)
+- [x] 2.4 InstagramUserController (инфо о пользователе)
+- [x] 2.5 Обновить InstagramClientService (getFeed, getUserInfoByPk, likeMedia)
 
 **Frontend:**
-- [ ] 2.6 shared/ui: MasonryGrid (CSS columns, 3 колонки)
-- [ ] 2.7 shared/ui: MediaCard (thumbnail + hover overlay с лайком и инфо)
-- [ ] 2.8 entities/media-post (типы MediaPost, MediaUser, InstagramUserDetail)
-- [ ] 2.9 feedStore (Pinia: fetchFeed, likePost, fetchUserInfo)
-- [ ] 2.10 Страница ленты (FeedPage: выбор аккаунта + Masonry + QInfiniteScroll)
-- [ ] 2.11 Модалка поста (PostDetailModal: фото/видео, caption, статистика)
-- [ ] 2.12 Модалка пользователя (InstagramUserModal: аватар, bio, подписчики)
+- [x] 2.6 shared/ui: MasonryGrid (CSS columns, 3 колонки)
+- [x] 2.7 shared/ui: MediaCard (thumbnail + hover overlay с лайком и инфо)
+- [x] 2.8 entities/media-post (типы MediaPost, MediaUser, InstagramUserDetail)
+- [x] 2.9 feedStore (Pinia: fetchFeed, likePost, fetchUserInfo)
+- [x] 2.10 Страница ленты (FeedPage: выбор аккаунта + Masonry + QInfiniteScroll)
+- [x] 2.11 Модалка поста (PostDetailModal: фото/видео, caption, статистика)
+- [x] 2.12 Модалка пользователя (InstagramUserModal: аватар, bio, подписчики)
 
 ---
 

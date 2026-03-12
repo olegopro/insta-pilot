@@ -9,13 +9,14 @@ export function useApi<TData, TArgs = void>(
   const response = shallowRef<Nullable<TData>>(null)
   const error = shallowRef<Nullable<string>>(null)
 
-  const execute = async (payload: TArgs) => {
+  const execute = async (payload: TArgs): Promise<TData> => {
     loading.value = true
     response.value = null
     error.value = null
 
     try {
       response.value = await requestFunction(payload)
+      return response.value
     } catch (exception: unknown) {
       if (exception instanceof AxiosError) {
         error.value = exception.response?.data?.error ?? exception.message

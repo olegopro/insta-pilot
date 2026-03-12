@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InstagramAccountController;
+use App\Http\Controllers\InstagramUserController;
 use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +31,15 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
         Route::get('/{id}', [InstagramAccountController::class, 'show']);
         Route::delete('/{id}', [InstagramAccountController::class, 'destroy']);
     });
+
+    // Feed
+    Route::prefix('feed')->group(function () {
+        Route::get('/{accountId}', [FeedController::class, 'index']);
+        Route::post('/{accountId}/like', [FeedController::class, 'like']);
+    });
+
+    // Instagram users
+    Route::get('/instagram-user/{accountId}/{userPk}', [InstagramUserController::class, 'show']);
 
     // Admin
     Route::prefix('admin')->middleware('role:admin')->group(function () {

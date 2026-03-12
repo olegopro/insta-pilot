@@ -24,12 +24,9 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = computed(() => user.value?.roles.some((role) => role.name === 'admin') ?? false)
 
   const login = async (payload: LoginRequest) => {
-    await loginApi.execute(payload)
-    const result = loginApi.response.value?.data
-    if (result) {
-      user.value = result.user
-      localStorage.setItem('token', result.token)
-    }
+    const { data } = await loginApi.execute(payload)
+    user.value = data.user
+    localStorage.setItem('token', data.token)
   }
   const loginLoading = computed(() => loginApi.loading.value)
   const loginError = computed(() => loginApi.error.value)
@@ -41,8 +38,8 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const fetchMe = async () => {
-    await meApi.execute()
-    user.value = meApi.response.value?.data ?? null
+    const { data } = await meApi.execute()
+    user.value = data
   }
 
   const clearAuth = () => {

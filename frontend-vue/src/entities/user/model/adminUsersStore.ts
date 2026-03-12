@@ -1,4 +1,4 @@
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import { api } from '@/boot/axios'
@@ -17,9 +17,12 @@ export const useAdminUsersStore = defineStore('adminUsers', () => {
     ({ id, role }) => api.patch(`/admin/users/${String(id)}/role`, { role }).then((response) => response.data)
   )
 
-  const users = computed(() => listApi.response.value?.data ?? [])
+  const users = ref<User[]>([])
 
-  const fetchUsers = () => listApi.execute()
+  const fetchUsers = async () => {
+    const { data } = await listApi.execute()
+    users.value = data
+  }
   const fetchUsersLoading = computed(() => listApi.loading.value)
 
   const toggleActive = (id: number) => toggleActiveApi.execute({ id })

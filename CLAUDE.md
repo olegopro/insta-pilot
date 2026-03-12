@@ -73,6 +73,7 @@ Context7 library ID: `/subzeroid/instagrapi`
 - Паттерн: Interface → Implementation → bind в AppServiceProvider → (опционально) Facade
 - Фигурная скобка `{` на той же строке: `class Foo {`, `function bar(): void {`, `interface Baz {`
 - Trailing comma в массивах не ставится: `['a', 'b', 'c']`, не `['a', 'b', 'c',]`
+- Массивы с 2+ элементами — многострочно, каждый элемент на своей строке
 
 ## Структура app/
 ```
@@ -134,6 +135,12 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 - Уведомления: использовать `notifyError` / `notifySuccess` из `@/shared/lib`, а не `Notify.create` напрямую
 - Trailing comma в объектах не ставится: `{ a: 1, b: 2 }`, не `{ a: 1, b: 2, }`; правило распространяется и на объект с одним свойством: `{ a: 1 }`, не `{ a: 1, }`
 
+## Типы и DTO
+- API типы (snake_case от бэкенда): суффикс `Api` — `MediaPostApi`, `FeedResponseApi`. Файл: `apiTypes.ts`
+- Локальные типы (camelCase): без суффикса — `MediaPost`, `InstagramUserDetail`. Файл: `types.ts`
+- DTO: класс-синглтон с `toLocal()` / `toLocalPost()`. Файл: `*DTO.ts`, экспорт: `export default new ClassName()`
+- `Nullable<T>` из `@/shared/lib` вместо `T | null`
+
 ## Паттерн таблиц (QTable)
 Всегда использовать `TableComponent` из `@/shared/ui/table-component` вместо `q-table` напрямую.
 Для каждой сущности с таблицей создавать два файла в `entities/*/model/`:
@@ -191,9 +198,8 @@ pages/
 - `user` — пользователь системы insta-pilot (будет позже, с авторизацией)
 
 ## Pinia и .value
-- Внутри `defineStore` setup: `someApi.response.value` нужно (это обычный `shallowRef`)
-- В компоненте через `store.someApi.response`: `.value` НЕ нужно — Pinia применяет `UnwrapRef` рекурсивно, ref уже развёрнут
-- Правило: если пишешь `store.*.response.value` в компоненте — это ошибка TS
+- В компоненте через `store.someProperty`: `.value` НЕ нужно — Pinia применяет `UnwrapRef` рекурсивно
+- Правило: `store.*.value` в компоненте — это ошибка TS
 
 ## Паттерн store: нейминг и структура
 ```ts
@@ -201,30 +207,29 @@ pages/
 const fetchAccountsApi = useApi(...)
 const deleteAccountApi = useApi(...)
 
-// ПУБЛИЧНЫЕ computed-геттеры данных (существительное):
-const accounts = computed(() => fetchAccountsApi.response.value?.data ?? [])
+// ПУБЛИЧНЫЕ ref-данные (существительное):
+const accounts = ref<InstagramAccount[]>([])
 
-// ПУБЛИЧНЫЕ actions + их loading/error computed (сразу под action):
-const fetchAccounts = () => fetchAccountsApi.execute()
+// ПУБЛИЧНЫЕ actions — всегда императивный паттерн:
+const fetchAccounts = async () => {
+  const { data } = await fetchAccountsApi.execute()
+  accounts.value = data
+}
 const fetchAccountsLoading = computed(() => fetchAccountsApi.loading.value)
 
+// Если action не работает с данными ответа — fire-and-forget:
 const deleteAccount = (id: number) => deleteAccountApi.execute(id)
 const deleteAccountLoading = computed(() => deleteAccountApi.loading.value)
 const deleteAccountError = computed(() => deleteAccountApi.error.value)
 
 // return — только публичное, никаких *Api:
-return {
-  accounts,
-  fetchAccounts,
-  fetchAccountsLoading,
-  deleteAccount,
-  deleteAccountLoading,
-  deleteAccountError
-}
+return { accounts, fetchAccounts, fetchAccountsLoading, ... }
 ```
 - `*Api`-объекты никогда не выставляются наружу через return
-- Компонент вызывает `store.fetchAccounts()`, а НЕ `store.fetchAccountsApi.execute()`
-- `store.*Api.response` в компоненте — никогда
+- Данные всегда в `ref`, не в `computed(() => api.response.value?.data)`
+- `execute()` возвращает `Promise<TData>` — данные получаем через `const { data } = await execute()`
+- При ошибке `execute()` ставит `error.value` и пробрасывает throw — код после `await` не выполнится
+- Не использовать `if (!data) return` после `await execute()` — ошибки уже обработаны через throw
 
 ## Отладка ошибок
 

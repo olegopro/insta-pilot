@@ -1,7 +1,8 @@
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
+import type { Nullable } from '@/shared/lib'
 import type {
   InstagramAccount,
   InstagramAccountDetailed,
@@ -26,17 +27,23 @@ export const useAccountStore = defineStore('accounts', () => {
     (id) => api.delete(`/accounts/${String(id)}`).then((response) => response.data)
   )
 
-  const accounts = computed(() => fetchAccountsApi.response.value?.data ?? [])
-  const accountDetail = computed(() => fetchAccountDetailsApi.response.value?.data ?? null)
+  const accounts = ref<InstagramAccount[]>([])
+  const accountDetail = ref<Nullable<InstagramAccountDetailed>>(null)
 
-  const fetchAccounts = () => fetchAccountsApi.execute()
+  const fetchAccounts = async () => {
+    const { data } = await fetchAccountsApi.execute()
+    accounts.value = data
+  }
   const fetchAccountsLoading = computed(() => fetchAccountsApi.loading.value)
 
   const addAccount = (args: AddAccountRequest) => addAccountApi.execute(args)
   const addAccountLoading = computed(() => addAccountApi.loading.value)
   const addAccountError = computed(() => addAccountApi.error.value)
 
-  const fetchAccountDetails = (id: number) => fetchAccountDetailsApi.execute(id)
+  const fetchAccountDetails = async (id: number) => {
+    const { data } = await fetchAccountDetailsApi.execute(id)
+    accountDetail.value = data
+  }
   const fetchAccountDetailsLoading = computed(() => fetchAccountDetailsApi.loading.value)
 
   const deleteAccount = (id: number) => deleteAccountApi.execute(id)
