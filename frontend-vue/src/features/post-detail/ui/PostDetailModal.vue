@@ -36,9 +36,7 @@
 <template>
   <ModalComponent
     v-model="isOpen"
-    maximized
-    transition-show="slide-up"
-    transition-hide="slide-down"
+    inner-class="post-detail-modal__inner"
   >
     <q-bar class="post-detail__bar">
       <q-space />
@@ -47,8 +45,14 @@
 
     <div class="post-detail__body">
       <div class="post-detail__media">
+        <video
+          v-if="post.mediaType === 2 && post.videoUrl"
+          :src="post.videoUrl"
+          class="post-detail__video"
+          controls
+        />
         <q-carousel
-          v-if="displayImages.length > 1"
+          v-else-if="displayImages.length > 1"
           v-model="carouselSlide"
           animated
           arrows
@@ -120,118 +124,125 @@
   </ModalComponent>
 </template>
 
-<style scoped lang="scss">
-  :deep(.modal-inner) {
-    max-width: 900px;
-    margin: auto;
-    padding: 0;
+<style>
+  .post-detail-modal__inner {
+    width: 70vw;
+    height: 85vh;
     min-width: unset;
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
   }
+</style>
 
-  .post-detail {
-    &__bar {
-      background: white;
-      border-bottom: 1px solid #eee;
-    }
+<style scoped>
+  .post-detail__bar {
+    background: white;
+    border-bottom: 1px solid #eee;
+  }
 
-    &__body {
-      display: flex;
-      gap: 0;
-      flex: 1;
-      overflow: hidden;
+  .post-detail__body {
+    display: flex;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-      @media (max-width: 600px) {
-        flex-direction: column;
-        overflow-y: auto;
-      }
-    }
-
-    &__media {
-      flex: 1;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 300px;
-    }
-
-    &__carousel {
-      width: 100%;
-      height: 100%;
-    }
-
-    &__image {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    &__no-image {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 300px;
-    }
-
-    &__info {
-      width: 350px;
-      padding: 20px;
+  @media (max-width: 600px) {
+    .post-detail__body {
+      flex-direction: column;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      border-left: 1px solid #eee;
-
-      @media (max-width: 600px) {
-        width: 100%;
-        border-left: none;
-        border-top: 1px solid #eee;
-      }
     }
+  }
 
-    &__user {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
+  .post-detail__media {
+    flex: 1;
+    min-height: 0;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-      &:hover {
-        opacity: 0.8;
-      }
-    }
+  .post-detail__carousel {
+    width: 100%;
+    height: 100%;
+  }
 
-    &__caption {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+  .post-detail__video {
+    max-width: 100%;
+    max-height: 100%;
+  }
 
-    &__meta {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+  .post-detail__image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
 
-    &__actions {
-      display: flex;
-      align-items: center;
-      margin-top: auto;
-      padding-top: 8px;
+  .post-detail__no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 300px;
+  }
+
+  .post-detail__info {
+    width: 350px;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-left: 1px solid #eee;
+  }
+
+  @media (max-width: 600px) {
+    .post-detail__info {
+      width: 100%;
+      border-left: none;
       border-top: 1px solid #eee;
     }
+  }
 
-    &__stat {
-      font-size: 14px;
-      color: #555;
-      margin-left: 4px;
-    }
+  .post-detail__user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .post-detail__user:hover {
+    opacity: 0.8;
+  }
+
+  .post-detail__caption {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .post-detail__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .post-detail__actions {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+  }
+
+  .post-detail__stat {
+    font-size: 14px;
+    color: #555;
+    margin-left: 4px;
   }
 </style>

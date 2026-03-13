@@ -136,7 +136,10 @@
         </template>
       </q-infinite-scroll>
 
-      <div v-if="!isMockMode && !feedStore.feedLoading && displayPosts.length === 0" class="column items-center q-pa-xl text-grey">
+      <div
+        v-if="!isMockMode && !feedStore.feedLoading && displayPosts.length === 0"
+        class="column items-center q-pa-xl text-grey" 
+      >
         <q-icon name="photo_library" size="64px" color="grey-3" />
         <p class="q-mt-sm">Лента пуста</p>
       </div>

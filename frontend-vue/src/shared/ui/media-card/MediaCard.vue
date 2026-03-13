@@ -92,7 +92,6 @@
 
     &.mock {
       opacity: 0.7;
-      pointer-events: none;
     }
   }
 

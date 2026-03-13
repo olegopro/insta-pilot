@@ -12,9 +12,10 @@
     resetLabel?: string
     submitDisable?: boolean
     readonly?: boolean
+    innerClass?: string
   }
 
-  defineProps<ModalComponentProps>()
+  const props = defineProps<ModalComponentProps>()
 
   defineEmits<{
     submit: [payload: Event | SubmitEvent]
@@ -35,7 +36,7 @@
     @hide="$emit('reset')" 
   >
     <q-form
-      class="modal-inner" 
+      :class="['modal-inner', props.innerClass]"
       @submit="(event) => $emit('submit', event)" 
       @reset="$emit('reset')"
     >

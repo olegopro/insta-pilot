@@ -78,7 +78,7 @@ export const MOCK_FEED: MediaPost[] = [
     takenAt: '2026-03-08T18:45:00+00:00',
     mediaType: 2,
     thumbnailUrl: 'https://picsum.photos/seed/insta4/600/600',
-    videoUrl: null,
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     captionText: 'New reel dropping 🎬 #dance #trending',
     likeCount: 12500,
     commentCount: 430,
