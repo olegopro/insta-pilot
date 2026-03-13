@@ -48,7 +48,8 @@ export default defineConfig((/* ctx */) => {
         }
       },
 
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      vueRouterMode: 'history', // available values: 'hash', 'history'
+      // При переходе на 'history' nginx требует: try_files $uri $uri/ /index.html;
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
