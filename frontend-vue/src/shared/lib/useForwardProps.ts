@@ -42,6 +42,29 @@ import { computed, type ComputedRef } from 'vue'
  * </template>
  * ```
  *
+ * ## Partial<T> и required-пропсы
+ * `useForwardProps` возвращает `Partial<T>` — TypeScript не может знать, какие пропсы
+ * реально передал родитель. Возврат `T` вместо `Partial<T>` ломает `exactOptionalPropertyTypes`.
+ *
+ * Для компонентов с required-пропсами (кроме `modelValue`) нужен cast в шаблоне:
+ * ```html
+ * <q-table v-bind="{ ...$attrs, ...forwarded as QTableProps }" />
+ * ```
+ *
+ * Quasar-компоненты с required-пропсами:
+ * | Компонент          | Required-пропсы    |
+ * |--------------------|--------------------|
+ * | QTableProps        | `rows`             |
+ * | QTreeProps         | `nodes`, `nodeKey` |
+ * | QVideoProps        | `src`              |
+ * | QPaginationProps   | `max`              |
+ * | QStepProps         | `name`, `title`    |
+ * | QTabPanelProps     | `name`             |
+ * | QCarouselSlideProps| `name`             |
+ * | QRadioProps        | `val`              |
+ *
+ * Все остальные (QInput, QSelect, QBtn, QToggle и др.) — cast не нужен.
+ *
  * @see https://www.radix-vue.com/utilities/use-forward-props (оригинальная идея)
  * @see https://github.com/vuejs/core/discussions/8508 (обсуждение проблемы)
  */

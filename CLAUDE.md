@@ -134,39 +134,18 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 - Шаблоны: никогда не добавлять `.value` — Vue автоматически разворачивает `Ref` в `<template>`
 - Уведомления: использовать `notifyError` / `notifySuccess` из `@/shared/lib`, а не `Notify.create` напрямую
 - Trailing comma в объектах не ставится: `{ a: 1, b: 2 }`, не `{ a: 1, b: 2, }`; правило распространяется и на объект с одним свойством: `{ a: 1 }`, не `{ a: 1, }`
+- Валидация форм: правила выносить в переменные в `<script setup>`, не писать функции прямо в `:rules`; все переиспользуемые валидаторы — в `shared/lib/validators.ts` (реэкспорт через `shared/lib/index.ts`); для email использовать `patterns.testPattern.email` из `quasar`, не `type="email"`
 
 ## Обёртки над Quasar-компонентами (shared/ui)
 
-Каждый UI-компонент — обёртка над Quasar с полным автокомплитом пропсов в родителе.
-
-**Паттерн:**
-- `interface XxxComponentProps extends Omit<QXxxProps, 'modelValue'>` — даёт автокомплит всех Quasar-пропсов; `modelValue` исключают через `Omit`, т.к. он объявлен через `defineModel`
-- `useForwardProps(props)` из `@/shared/lib` — фильтрует `undefined`, предотвращает Vue-boolean-кастинг (без этого `outlined: false` перезатрёт дефолт Quasar)
-- `v-bind="{ ...$attrs, ...forwarded }"` — `$attrs` несёт нативные атрибуты (`class`, `autocomplete`), `forwarded` — Quasar-пропсы и события
-- `defineOptions({ inheritAttrs: false })` — не даёт `$attrs` упасть на корневой элемент автоматически
-- `defineModel` — двусторонний бинд вместо ручного `:modelValue` + `emit`
-- Слоты: proxy через `v-for` по `$slots` → пробрасываются все слоты Quasar-компонента
+Паттерн каждого wrapper-компонента (`shared/ui/*/`):
+- `interface XxxComponentProps extends Omit<QXxxProps, 'modelValue'>` + `defineProps<XxxComponentProps>()`
+- `useForwardProps(props)` из `@/shared/lib` — фильтрует `undefined` для корректного проброса пропсов
+- `defineOptions({ inheritAttrs: false })` + `v-bind="{ ...$attrs, ...forwarded }"` на корневом элементе
+- `defineModel` для двустороннего бинда
+- Слоты: proxy через `v-for` по `$slots`
 - `export interface XxxComponentProps` + реэкспорт через `index.ts` сегмента
-
-**Почему `useForwardProps` возвращает `Partial<T>`:**
-Vue при `defineProps<T>()` применяет boolean-кастинг — все необъявленные boolean-пропсы превращаются из `undefined` в `false`. `useForwardProps` фильтрует `undefined`-значения, чтобы не перезатирать дефолты дочернего компонента. Возвращаемый тип `Partial<T>` — единственный корректный вариант, т.к. TypeScript не может знать, какие пропсы реально передал родитель. Возврат `T` вместо `Partial<T>` ломает `exactOptionalPropertyTypes` — известное ограничение Vue language-tools.
-
-**Особый случай — обязательные пропсы:**
-`useForwardProps` возвращает `Partial<T>`, что делает required-пропсы опциональными для TypeScript. Для компонентов с required-пропсами нужен cast в шаблоне: `v-bind="({ ...$attrs, ...forwarded }) as QXxxProps"`.
-
-Quasar-компоненты с required-пропсами (кроме `modelValue`):
-| Компонент | Required-пропсы | Нужен cast |
-|---|---|---|
-| QTableProps | `rows` | `as QTableProps` |
-| QTreeProps | `nodes`, `nodeKey` | `as QTreeProps` |
-| QVideoProps | `src` | `as QVideoProps` |
-| QPaginationProps | `max` | `as QPaginationProps` |
-| QStepProps | `name`, `title` | `as QStepProps` |
-| QTabPanelProps | `name` | `as QTabPanelProps` |
-| QCarouselSlideProps | `name` | `as QCarouselSlideProps` |
-| QRadioProps | `val` | `as QRadioProps` |
-
-Все остальные компоненты (QInput, QSelect, QBtn, QToggle и др.) — все пропсы кроме `modelValue` опциональны, cast не нужен.
+- Компоненты с required-пропсами (QTable, QTree и др.) — нужен cast: `v-bind="{ ...$attrs, ...(forwarded as QXxxProps) }"` (см. JSDoc в `useForwardProps.ts`)
 
 Примеры: `shared/ui/input-component/` (без cast), `shared/ui/table-component/` (с cast)
 
