@@ -1,45 +1,19 @@
-import { computed, type ComputedRef } from 'vue'
+import { computed, getCurrentInstance, type ComputedRef } from 'vue'
 
+const toKebabCase = (str: string) => str.replace(/([A-Z])/g, '-$1').toLowerCase()
 
 /**
- * Composable для безопасного проброса props в дочерний Quasar-компонент.
+ * Возвращает только те пропсы, которые родитель **явно передал** компоненту.
  *
- * ## Проблема
- * При создании wrapper-компонента (например, InputComponent → QInput)
- * с `defineProps<ExtendedInterface>()` + `v-bind="$props"` возникает
- * проблема boolean-кастинга Vue:
+ * Использует `vnode.props` текущего инстанса — там хранятся пропсы без
+ * Vue-кастинга (boolean `undefined → false`). Ключи проверяются в camelCase
+ * и kebab-case вариантах.
  *
- * Vue автоматически преобразует все **необъявленные** boolean-пропсы
- * из `undefined` в `false`. Если QInput имеет 30+ boolean-пропсов
- * (`outlined`, `dense`, `filled`, `borderless`, `hideBottomSpace` ...),
- * обёртка передаёт `outlined: false` в QInput — даже если родитель
- * **не указывал** `outlined` вообще. Это перезатирает дефолтное
- * поведение дочернего компонента.
- *
- * ## Решение
- * `useForwardProps` фильтрует props-объект: возвращает только те
- * свойства, значение которых !== `undefined`. Неуказанные boolean-пропсы
- * не попадают в результат, и дочерний компонент использует свои дефолты.
- *
- * `$attrs` добавляется в шаблоне через spread: `v-bind="{ ...$attrs, ...forwarded }"`
- * для проброса нативных HTML-атрибутов (`class`, `autocomplete`),
- * которые не входят в типы дочернего компонента.
- *
- * ## Использование
+ * Применяется в wrapper-компонентах вместо `v-bind="$props"`:
  * ```vue
- * <script setup lang="ts">
- * import { useForwardProps } from '@/shared/lib'
- *
- * interface Props extends Omit<QInputProps, 'modelValue'> {
- *   labelText?: string
- * }
- * const props = defineProps<Props>()
  * const forwarded = useForwardProps(props)
- * </script>
- *
- * <template>
- *   <q-input v-bind="{ ...$attrs, ...forwarded }" />
- * </template>
+ * // в шаблоне:
+ * <q-input v-bind="{ ...$attrs, ...forwarded }" />
  * ```
  *
  * ## Partial<T> и required-пропсы
@@ -71,11 +45,14 @@ import { computed, type ComputedRef } from 'vue'
 export function useForwardProps<T extends Record<string, unknown>>(
   props: T
 ): ComputedRef<Partial<T>> {
+  const instance = getCurrentInstance()
+
   return computed(() => {
+    const vnodeProps = instance?.vnode.props ?? {}
     const result: Record<string, unknown> = {}
 
     for (const key in props) {
-      if (props[key] !== undefined) {
+      if (key in vnodeProps || toKebabCase(key) in vnodeProps) {
         result[key] = props[key]
       }
     }
