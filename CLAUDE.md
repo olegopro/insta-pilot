@@ -94,18 +94,18 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 ```
 
 ## Таблица instagram_accounts
-| Поле | Тип | Описание |
-|------|-----|----------|
-| id | bigIncrements | PK |
-| instagram_login | string, unique | логин |
-| instagram_password | text | зашифрован |
-| session_data | text, nullable | JSON сессии, зашифрован |
-| proxy | string, nullable | прокси |
-| full_name | string, nullable | имя из Instagram |
-| profile_pic_url | text, nullable | URL аватарки |
-| is_active | boolean, default true | |
-| last_used_at | timestamp, nullable | |
-| created_at / updated_at | timestamps | |
+| Поле                    | Тип                   | Описание                |
+|-------------------------|-----------------------|-------------------------|
+| id                      | bigIncrements         | PK                      |
+| instagram_login         | string, unique        | логин                   |
+| instagram_password      | text                  | зашифрован              |
+| session_data            | text, nullable        | JSON сессии, зашифрован |
+| proxy                   | string, nullable      | прокси                  |
+| full_name               | string, nullable      | имя из Instagram        |
+| profile_pic_url         | text, nullable        | URL аватарки            |
+| is_active               | boolean, default true |                         |
+| last_used_at            | timestamp, nullable   |                         |
+| created_at / updated_at | timestamps            |                         |
 
 Шифрование через Accessors в модели с `INSTAGRAM_SALT` → `config('app.instagram_salt')`.
 
@@ -134,6 +134,41 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 - Шаблоны: никогда не добавлять `.value` — Vue автоматически разворачивает `Ref` в `<template>`
 - Уведомления: использовать `notifyError` / `notifySuccess` из `@/shared/lib`, а не `Notify.create` напрямую
 - Trailing comma в объектах не ставится: `{ a: 1, b: 2 }`, не `{ a: 1, b: 2, }`; правило распространяется и на объект с одним свойством: `{ a: 1 }`, не `{ a: 1, }`
+
+## Обёртки над Quasar-компонентами (shared/ui)
+
+Каждый UI-компонент — обёртка над Quasar с полным автокомплитом пропсов в родителе.
+
+**Паттерн:**
+- `interface XxxComponentProps extends Omit<QXxxProps, 'modelValue'>` — даёт автокомплит всех Quasar-пропсов; `modelValue` исключают через `Omit`, т.к. он объявлен через `defineModel`
+- `useForwardProps(props)` из `@/shared/lib` — фильтрует `undefined`, предотвращает Vue-boolean-кастинг (без этого `outlined: false` перезатрёт дефолт Quasar)
+- `v-bind="{ ...$attrs, ...forwarded }"` — `$attrs` несёт нативные атрибуты (`class`, `autocomplete`), `forwarded` — Quasar-пропсы и события
+- `defineOptions({ inheritAttrs: false })` — не даёт `$attrs` упасть на корневой элемент автоматически
+- `defineModel` — двусторонний бинд вместо ручного `:modelValue` + `emit`
+- Слоты: proxy через `v-for` по `$slots` → пробрасываются все слоты Quasar-компонента
+- `export interface XxxComponentProps` + реэкспорт через `index.ts` сегмента
+
+**Почему `useForwardProps` возвращает `Partial<T>`:**
+Vue при `defineProps<T>()` применяет boolean-кастинг — все необъявленные boolean-пропсы превращаются из `undefined` в `false`. `useForwardProps` фильтрует `undefined`-значения, чтобы не перезатирать дефолты дочернего компонента. Возвращаемый тип `Partial<T>` — единственный корректный вариант, т.к. TypeScript не может знать, какие пропсы реально передал родитель. Возврат `T` вместо `Partial<T>` ломает `exactOptionalPropertyTypes` — известное ограничение Vue language-tools.
+
+**Особый случай — обязательные пропсы:**
+`useForwardProps` возвращает `Partial<T>`, что делает required-пропсы опциональными для TypeScript. Для компонентов с required-пропсами нужен cast в шаблоне: `v-bind="({ ...$attrs, ...forwarded }) as QXxxProps"`.
+
+Quasar-компоненты с required-пропсами (кроме `modelValue`):
+| Компонент | Required-пропсы | Нужен cast |
+|---|---|---|
+| QTableProps | `rows` | `as QTableProps` |
+| QTreeProps | `nodes`, `nodeKey` | `as QTreeProps` |
+| QVideoProps | `src` | `as QVideoProps` |
+| QPaginationProps | `max` | `as QPaginationProps` |
+| QStepProps | `name`, `title` | `as QStepProps` |
+| QTabPanelProps | `name` | `as QTabPanelProps` |
+| QCarouselSlideProps | `name` | `as QCarouselSlideProps` |
+| QRadioProps | `val` | `as QRadioProps` |
+
+Все остальные компоненты (QInput, QSelect, QBtn, QToggle и др.) — все пропсы кроме `modelValue` опциональны, cast не нужен.
+
+Примеры: `shared/ui/input-component/` (без cast), `shared/ui/table-component/` (с cast)
 
 ## Типы и DTO
 - API типы (snake_case от бэкенда): суффикс `Api` — `MediaPostApi`, `FeedResponseApi`. Файл: `apiTypes.ts`

@@ -2,7 +2,7 @@
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuthStore } from '@/entities/user'
-  import { notifyError } from '@/shared/lib'
+  import { notifyError, requiredField, checkEmail } from '@/shared/lib'
   import { InputComponent } from '@/shared/ui/input-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
 
@@ -12,8 +12,14 @@
   const email = ref('')
   const password = ref('')
 
+  const emailRules = [requiredField, checkEmail]
+  const passwordRules = [requiredField]
+
   const submitHandler = async () => {
-    await authStore.login({ email: email.value, password: password.value })
+    await authStore.login({
+      email: email.value,
+      password: password.value
+    })
       .then(() => router.push('/'))
       .catch(() => notifyError(authStore.loginError ?? 'Ошибка входа'))
   }
@@ -26,9 +32,10 @@
     <InputComponent
       v-model="email"
       label-text="Email"
-      type="email"
       autocomplete="email"
-      :rules="[(v: string) => !!v || 'Обязательное поле']"
+      outlined
+      lazy-rules="ondemand"
+      :rules="emailRules"
     />
 
     <InputComponent
@@ -37,7 +44,9 @@
       type="password"
       autocomplete="current-password"
       class="q-mt-md"
-      :rules="[(v: string) => !!v || 'Обязательное поле']"
+      outlined
+      lazy-rules="ondemand"
+      :rules="passwordRules"
     />
 
     <ButtonComponent
