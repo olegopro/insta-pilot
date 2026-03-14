@@ -22,7 +22,8 @@
 
   const SELECTED_ACCOUNT_KEY = 'feed_selected_account_id'
 
-  const isMockMode = computed(() => !selectedAccount.value)
+  const isInitializing = ref(true)
+  const isMockMode = computed(() => !isInitializing.value && !selectedAccount.value)
   const displayPosts = computed(() => isMockMode.value ? MOCK_FEED : feedStore.posts)
 
   watch(selectedAccount, (account) => {
@@ -64,9 +65,10 @@
     void accountStore.fetchAccounts().then(() => {
       const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY)
       if (savedId) {
-        const account = accountStore.accounts.find((a) => String(a.id) === savedId)
+        const account = accountStore.accounts.find((account) => String(account.id) === savedId)
         account && (selectedAccount.value = account)
       }
+      isInitializing.value = false
     })
   })
 </script>
@@ -110,7 +112,7 @@
       Демо-режим — выберите аккаунт для загрузки реальной ленты
     </div>
 
-    <div v-if="feedStore.feedLoading" class="row justify-center q-pa-xl">
+    <div v-if="isInitializing || feedStore.feedLoading" class="row justify-center q-pa-xl">
       <q-spinner size="48px" color="primary" />
     </div>
 

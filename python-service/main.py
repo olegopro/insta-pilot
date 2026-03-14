@@ -205,18 +205,24 @@ async def like_media(data: MediaLikeRequest):
 async def get_feed(data: FeedRequest):
     try:
         cl = _make_client(data.session_data)
-        raw = cl.get_timeline_feed(max_id=data.max_id)
+        reason = "pagination" if data.max_id else "cold_start_fetch"
+        raw = cl.get_timeline_feed(max_id=data.max_id, reason=reason)
         feed_items = raw.get("feed_items") or []
         posts = []
         for item in feed_items:
+            has_media = "media_or_ad" in item
             media_dict = item.get("media_or_ad") or {}
+            pk = media_dict.get("pk", "-") if has_media else "-"
+            print(f"[FEED] has_media={has_media}, pk={pk}, keys={list(item.keys())[:6]}")
             serialized = _serialize_media(media_dict)
             if serialized and serialized["pk"]:
                 posts.append(serialized)
+        next_max_id = raw.get("next_max_id")
+        print(f"[FEED] total={len(feed_items)}, posts={len(posts)}, next_max_id={next_max_id}")
         return FeedResponse(
             success=True,
             posts=posts,
-            next_max_id=raw.get("next_max_id"),
+            next_max_id=next_max_id,
             more_available=bool(raw.get("more_available", False))
         )
     except Exception as e:
