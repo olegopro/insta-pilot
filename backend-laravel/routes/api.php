@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InstagramAccountController;
 use App\Http\Controllers\InstagramUserController;
+use App\Http\Controllers\ProxyImageController;
 use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,9 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
     });
 });
+
+// --- Public proxy ---
+Route::get('/proxy/image', [ProxyImageController::class, 'show']);
 
 // --- Protected routes ---
 Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function () {

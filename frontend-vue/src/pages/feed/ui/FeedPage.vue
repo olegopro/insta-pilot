@@ -5,7 +5,7 @@
   import type { MediaPost } from '@/entities/media-post'
   import type { InstagramAccount } from '@/entities/instagram-account/model/types'
   import type { Nullable } from '@/shared/lib'
-  import { notifyError, notifySuccess, useModal } from '@/shared/lib'
+  import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { MediaCard } from '@/shared/ui/media-card'
@@ -92,7 +92,7 @@
           <q-item v-bind="scope.itemProps">
             <q-item-section avatar>
               <q-avatar size="32px">
-                <img v-if="scope.opt.profile_pic_url" :src="scope.opt.profile_pic_url">
+                <img v-if="scope.opt.profile_pic_url" :src="proxyImageUrl(scope.opt.profile_pic_url) ?? undefined">
                 <q-icon v-else name="person" />
               </q-avatar>
             </q-item-section>

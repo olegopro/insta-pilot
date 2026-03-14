@@ -5,6 +5,7 @@ import type {
   InstagramUserDetailApi
 } from './apiTypes'
 import type { MediaPost, MediaUser, MediaResource, InstagramUserDetail } from './types'
+import { proxyImageUrl } from '@/shared/lib'
 
 class MediaPostDTO {
   toLocalUser(data: MediaUserApi): MediaUser {
@@ -12,7 +13,7 @@ class MediaPostDTO {
       pk: data.pk,
       username: data.username,
       fullName: data.full_name,
-      profilePicUrl: data.profile_pic_url
+      profilePicUrl: proxyImageUrl(data.profile_pic_url)
     }
   }
 
@@ -50,7 +51,7 @@ class MediaPostDTO {
       pk: data.pk,
       username: data.username,
       fullName: data.full_name,
-      profilePicUrl: data.profile_pic_url,
+      profilePicUrl: proxyImageUrl(data.profile_pic_url),
       biography: data.biography,
       externalUrl: data.external_url,
       isPrivate: data.is_private,
