@@ -130,6 +130,8 @@ export default defineConfigWithVueTs(
         alphabetical: false
       }],
 
+      '@typescript-eslint/no-unused-expressions': ['error', { allowShortCircuit: true, allowTernary: true }],
+
       '@stylistic/arrow-spacing': ['error', { before: true, after: true }],
       '@stylistic/space-before-function-paren': 'off',
       '@stylistic/function-call-spacing': ['error', 'never'],

@@ -20,24 +20,25 @@
   const postModal = useModal()
   const userModal = useModal()
 
+  const SELECTED_ACCOUNT_KEY = 'feed_selected_account_id'
+
   const isMockMode = computed(() => !selectedAccount.value)
   const displayPosts = computed(() => isMockMode.value ? MOCK_FEED : feedStore.posts)
 
   watch(selectedAccount, (account) => {
     if (account) {
+      localStorage.setItem(SELECTED_ACCOUNT_KEY, String(account.id))
       feedStore.loadFeed(account.id)
         .catch(() => notifyError(feedStore.feedError ?? 'Ошибка загрузки ленты'))
+    } else {
+      localStorage.removeItem(SELECTED_ACCOUNT_KEY)
     }
   })
 
-  const loadMoreHandler = (index: number, done: (stop?: boolean) => void) => {
-    if (!selectedAccount.value || !feedStore.moreAvailable) {
-      done(true)
-      return
-    }
+  const loadMoreClickHandler = () => {
+    if (!selectedAccount.value) return
     feedStore.loadMoreFeed(selectedAccount.value.id)
-      .then(() => done(!feedStore.moreAvailable))
-      .catch(() => done(true))
+      .catch(() => notifyError('Ошибка загрузки'))
   }
 
   const openPostHandler = (post: MediaPost) => {
@@ -59,7 +60,15 @@
       .catch(() => notifyError('Не удалось загрузить профиль'))
   }
 
-  onMounted(() => accountStore.fetchAccounts())
+  onMounted(() => {
+    void accountStore.fetchAccounts().then(() => {
+      const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY)
+      if (savedId) {
+        const account = accountStore.accounts.find((a) => String(a.id) === savedId)
+        account && (selectedAccount.value = account)
+      }
+    })
+  })
 </script>
 
 <template>
@@ -111,37 +120,35 @@
     </div>
 
     <div v-else>
-      <q-infinite-scroll
-        :disable="isMockMode || !feedStore.moreAvailable"
-        :offset="200"
-        @load="loadMoreHandler"
-      >
-        <MasonryGrid>
-          <MediaCard
-            v-for="post in displayPosts"
-            :key="post.pk"
-            :post="post"
-            :is-mock="isMockMode"
-            :is-liking="feedStore.isLiking"
-            @open="openPostHandler"
-            @like="likePostHandler"
-            @open-user="openUserHandler"
-          />
-        </MasonryGrid>
-
-        <template #loading>
-          <div class="row justify-center q-pa-md">
-            <q-spinner size="32px" color="primary" />
-          </div>
-        </template>
-      </q-infinite-scroll>
+      <MasonryGrid>
+        <MediaCard
+          v-for="post in displayPosts"
+          :key="post.pk"
+          :post="post"
+          :is-mock="isMockMode"
+          :is-liking="feedStore.isLiking"
+          @open="openPostHandler"
+          @like="likePostHandler"
+          @open-user="openUserHandler"
+        />
+      </MasonryGrid>
 
       <div
         v-if="!isMockMode && !feedStore.feedLoading && displayPosts.length === 0"
-        class="column items-center q-pa-xl text-grey" 
+        class="column items-center q-pa-xl text-grey"
       >
         <q-icon name="photo_library" size="64px" color="grey-3" />
         <p class="q-mt-sm">Лента пуста</p>
+      </div>
+
+      <div v-if="!isMockMode && feedStore.moreAvailable" class="row justify-center q-pa-md">
+        <q-btn
+          label="Загрузить ещё"
+          color="primary"
+          outline
+          :loading="feedStore.loadMoreLoading"
+          @click="loadMoreClickHandler"
+        />
       </div>
     </div>
 

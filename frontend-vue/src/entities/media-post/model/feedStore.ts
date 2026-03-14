@@ -32,26 +32,36 @@ export const useFeedStore = defineStore('feed', () => {
     posts.value = []
     nextMaxId.value = null
     moreAvailable.value = false
+
     const { data } = await fetchFeedApi.execute({ accountId })
     posts.value = mediaPostDTO.toLocal(data.posts)
+    
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
   }
 
-  const loadingMore = ref(false)
+  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; maxId?: string }>(
+    ({ accountId, maxId }) =>
+      api.get(`/feed/${String(accountId)}`, { params: maxId ? { max_id: maxId } : {} })
+        .then((response) => response.data)
+  )
 
   const loadMoreFeed = async (accountId: number) => {
-    if (!moreAvailable.value || loadingMore.value) return
-    loadingMore.value = true
-    try {
-      const maxId = nextMaxId.value
-      const { data } = await fetchFeedApi.execute(maxId ? { accountId, maxId } : { accountId })
-      posts.value.push(...mediaPostDTO.toLocal(data.posts))
-      nextMaxId.value = data.next_max_id
-      moreAvailable.value = data.more_available
-    } finally {
-      loadingMore.value = false
+    if (!moreAvailable.value || loadMoreApi.loading.value) return
+    const maxId = nextMaxId.value ?? undefined
+
+    const { data } = await loadMoreApi.execute(maxId ? { accountId, maxId } : { accountId })
+    const existingPks = new Set(posts.value.map((post) => post.pk))
+
+    const newPosts = mediaPostDTO.toLocal(data.posts).filter((post) => !existingPks.has(post.pk))
+    if (newPosts.length === 0) {
+      moreAvailable.value = false
+      return
     }
+    
+    posts.value.push(...newPosts)
+    nextMaxId.value = data.next_max_id
+    moreAvailable.value = data.more_available
   }
 
   const likingPostIds = ref<Set<string>>(new Set())
@@ -78,6 +88,7 @@ export const useFeedStore = defineStore('feed', () => {
   const feedLoading = computed(() => fetchFeedApi.loading.value)
   const feedError = computed(() => fetchFeedApi.error.value)
   const userInfoLoading = computed(() => fetchUserInfoApi.loading.value)
+  const loadMoreLoading = computed(() => loadMoreApi.loading.value)
 
   return {
     posts,
@@ -91,6 +102,7 @@ export const useFeedStore = defineStore('feed', () => {
     fetchUserInfo,
     feedLoading,
     feedError,
-    userInfoLoading
+    userInfoLoading,
+    loadMoreLoading
   }
 })
