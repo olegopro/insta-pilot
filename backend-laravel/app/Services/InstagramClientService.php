@@ -9,7 +9,11 @@ use Illuminate\Support\Facades\Http;
 readonly class InstagramClientService implements InstagramClientServiceInterface {
     public function __construct(private string $pythonUrl) {}
 
-    public function login(string $login, string $password, ?string $proxy = null): array {
+    public function login(
+        string $login,
+        string $password,
+        ?string $proxy = null
+    ): array {
         return Http::post(
             "$this->pythonUrl/auth/login",
             compact('login', 'password', 'proxy')
@@ -55,7 +59,12 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
      * @param string|null $maxId        Курсор следующей страницы из предыдущего ответа
      * @param string|null $seenPosts    Comma-separated media_id просмотренных постов
      */
-    public function getFeed(string $sessionData, ?string $maxId = null, ?string $seenPosts = null): array {
+    public function getFeed(
+        string $sessionData,
+        ?string $maxId = null,
+        ?string $seenPosts = null,
+        ?string $reason = null
+    ): array {
         $payload = ['session_data' => $sessionData];
 
         if ($maxId !== null) {
@@ -63,8 +72,11 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
         }
 
         if ($seenPosts !== null) {
-            // Передаём как есть — Python сам разбивает по запятой и формирует feed_view_info
             $payload['seen_posts'] = $seenPosts;
+        }
+
+        if ($reason !== null) {
+            $payload['reason'] = $reason;
         }
 
         return Http::post("$this->pythonUrl/account/feed", $payload)->json();

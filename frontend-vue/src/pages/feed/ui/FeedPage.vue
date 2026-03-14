@@ -7,6 +7,7 @@
   import type { Nullable } from '@/shared/lib'
   import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
   import { SelectComponent } from '@/shared/ui/select-component'
+  import { ButtonComponent } from '@/shared/ui/button-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { MediaCard } from '@/shared/ui/media-card'
   import { PostDetailModal } from '@/features/post-detail'
@@ -35,6 +36,12 @@
       localStorage.removeItem(SELECTED_ACCOUNT_KEY)
     }
   })
+
+  const refreshFeedHandler = () => {
+    if (!selectedAccount.value) return
+    feedStore.refreshFeed(selectedAccount.value.id)
+      .catch(() => notifyError('Ошибка обновления ленты'))
+  }
 
   const loadMoreClickHandler = () => {
     if (!selectedAccount.value) return
@@ -84,34 +91,44 @@
   <q-page class="feed-page q-pa-md">
     <div class="row items-center justify-between q-mb-lg">
       <span class="text-h6">Лента</span>
-      <SelectComponent
-        v-model="selectedAccount"
-        :options="accountStore.accounts"
-        :loading="accountStore.fetchAccountsLoading"
-        option-label="instagram_login"
-        label="Выберите аккаунт"
-        clearable
-        outlined
-        dense
-        style="min-width: 260px"
-        emit-value
-        map-options
-      >
-        <template #option="scope">
-          <q-item v-bind="scope.itemProps">
-            <q-item-section avatar>
-              <q-avatar size="32px">
-                <img v-if="scope.opt.profile_pic_url" :src="proxyImageUrl(scope.opt.profile_pic_url) ?? undefined">
-                <q-icon v-else name="person" />
-              </q-avatar>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>{{ scope.opt.instagram_login }}</q-item-label>
-              <q-item-label v-if="scope.opt.full_name" caption>{{ scope.opt.full_name }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-      </SelectComponent>
+      <div class="row items-center q-gutter-sm">
+        <ButtonComponent
+          icon="refresh"
+          flat
+          round
+          color="primary"
+          :disable="!selectedAccount || feedStore.feedLoading"
+          @click="refreshFeedHandler"
+        />
+        <SelectComponent
+          v-model="selectedAccount"
+          :options="accountStore.accounts"
+          :loading="accountStore.fetchAccountsLoading"
+          option-label="instagram_login"
+          label="Выберите аккаунт"
+          clearable
+          outlined
+          dense
+          style="min-width: 260px"
+          emit-value
+          map-options
+        >
+          <template #option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section avatar>
+                <q-avatar size="32px">
+                  <img v-if="scope.opt.profile_pic_url" :src="proxyImageUrl(scope.opt.profile_pic_url) ?? undefined">
+                  <q-icon v-else name="person" />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ scope.opt.instagram_login }}</q-item-label>
+                <q-item-label v-if="scope.opt.full_name" caption>{{ scope.opt.full_name }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+        </SelectComponent>
+      </div>
     </div>
 
     <div v-if="isMockMode" class="mock-notice row items-center q-mb-md text-grey-6 text-caption">

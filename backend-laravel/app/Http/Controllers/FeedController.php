@@ -60,8 +60,14 @@ final class FeedController extends Controller {
         // Фронт накапливает их из каждого ответа и передаёт при следующем запросе.
         // Python формирует из них feed_view_info и seen_posts для запроса к Instagram.
         $seenPosts = $request->query('seen_posts') ?: null;
+        $reason    = $request->query('reason') ?: null;
 
-        $result = $this->instagramClient->getFeed($account->session_data, $maxId, $seenPosts);
+        $result = $this->instagramClient->getFeed(
+            $account->session_data,
+            $maxId,
+            $seenPosts,
+            $reason
+        );
 
         if (empty($result['success'])) {
             return response()->json([

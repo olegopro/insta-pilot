@@ -14,9 +14,9 @@ export const useFeedStore = defineStore('feed', () => {
   const seenPosts = ref<string[]>([])
   const userDetail = ref<Nullable<InstagramUserDetail>>(null)
 
-  const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; maxId?: string }>(
-    ({ accountId, maxId }) =>
-      api.get(`/feed/${String(accountId)}`, { params: maxId ? { max_id: maxId } : {} }).then((response) => response.data)
+  const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; reason?: string }>(
+    ({ accountId, reason }) =>
+      api.get(`/feed/${String(accountId)}`, { params: reason ? { reason } : {} }).then((response) => response.data)
   )
 
   const likeFeedApi = useApi<ApiResponseWrapper<null>, { accountId: number; mediaId: string }>(
@@ -29,20 +29,23 @@ export const useFeedStore = defineStore('feed', () => {
       api.get(`/instagram-user/${String(accountId)}/${userPk}`).then((response) => response.data)
   )
 
-  const loadFeed = async (accountId: number) => {
+  const loadFeed = async (accountId: number, reason?: string) => {
+    if (fetchFeedApi.loading.value) return
     posts.value = []
     nextMaxId.value = null
     moreAvailable.value = false
     seenPosts.value = []
 
-    const { data } = await fetchFeedApi.execute({ accountId })
+    const { data } = await fetchFeedApi.execute({ accountId, ...(reason ? { reason } : {}) })
     posts.value = mediaPostDTO.toLocal(data.posts)
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
     seenPosts.value = data.posts.map((post) => post.id)
   }
 
-  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; maxId?: string; seenPostsParam?: string }>(
+  const refreshFeed = (accountId: number) => loadFeed(accountId, 'pull_to_refresh')
+
+  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>,{ accountId: number; maxId?: string; seenPostsParam?: string }>(
     ({ accountId, maxId, seenPostsParam }) =>
       api.get(`/feed/${String(accountId)}`, {
         params: {
@@ -73,7 +76,9 @@ export const useFeedStore = defineStore('feed', () => {
     posts.value = [...posts.value, ...newPosts]
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
-    seenPosts.value = [...seenPosts.value, ...data.posts.map((post) => post.id)]
+    const MAX_SEEN_POSTS = 300
+    const updatedSeen = [...seenPosts.value, ...data.posts.map((post) => post.id)]
+    seenPosts.value = updatedSeen.length > MAX_SEEN_POSTS ? updatedSeen.slice(-MAX_SEEN_POSTS) : updatedSeen
   }
 
   const likingPostIds = ref<Set<string>>(new Set())
@@ -108,6 +113,7 @@ export const useFeedStore = defineStore('feed', () => {
     moreAvailable,
     userDetail,
     loadFeed,
+    refreshFeed,
     loadMoreFeed,
     likePost,
     isLiking,

@@ -174,6 +174,7 @@ class FeedRequest(BaseModel):
     session_data: str
     max_id: Optional[str] = None
     seen_posts: Optional[str] = None
+    reason: Optional[str] = None
 
 
 class FeedResponse(BaseModel):
@@ -255,7 +256,8 @@ async def get_feed(data: FeedRequest):
             params = _build_pagination_params(cl, data.max_id, seen)
             raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
         else:
-            raw = cl.get_timeline_feed("cold_start_fetch")
+            reason = data.reason if data.reason in ("cold_start_fetch", "pull_to_refresh", "warm_start_fetch") else "cold_start_fetch"
+            raw = cl.get_timeline_feed(reason)
 
         feed_items = raw.get("feed_items") or []
         posts = []
