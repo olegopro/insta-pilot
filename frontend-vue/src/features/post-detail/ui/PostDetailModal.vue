@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
-  import { formatCount } from '@/shared/lib'
+  import { formatCount, formatDate } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
 
   const props = defineProps<{
@@ -11,17 +11,32 @@
 
   const emit = defineEmits(['like', 'openUser'])
 
+  const INFO_PANEL_WIDTH = '350px'
+
   const isOpen = defineModel<boolean>({ default: false })
   const carouselSlide = ref(0)
 
-  const formatDate = (iso: string): string => {
-    if (!iso) return ''
-    return new Date(iso).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-  }
+  const videoAspectRatio = computed(() =>
+    props.post.videoWidth && props.post.videoHeight
+      ? `${String(props.post.videoWidth)} / ${String(props.post.videoHeight)}`
+      : '9 / 16'
+  )
+
+  const carouselStyle = computed(() => {
+    const first = props.post.resources.at(0)
+    const maxWidth = `calc(70vw - ${INFO_PANEL_WIDTH})`
+    return first?.width && first.height
+      ? {
+        height: '100%',
+        width: 'auto',
+        maxWidth,
+        aspectRatio: `${String(first.width)} / ${String(first.height)}`
+      }
+      : {
+        width: maxWidth,
+        height: '100%'
+      }
+  })
 
   const displayImages = computed(() => {
     if (props.post.mediaType === 8 && props.post.resources.length > 0) {
@@ -38,17 +53,12 @@
     v-model="isOpen"
     inner-class="post-detail-modal__inner"
   >
-    <q-bar class="post-detail__bar">
-      <q-space />
-      <q-btn flat round dense icon="close" @click="isOpen = false" />
-    </q-bar>
-
-    <div class="post-detail__body">
-      <div class="post-detail__media">
+    <div class="body">
+      <div class="media">
         <video
           v-if="post.mediaType === 2 && post.videoUrl"
           :src="post.videoUrl"
-          class="post-detail__video"
+          :style="{ aspectRatio: videoAspectRatio }"
           controls
         />
         <q-carousel
@@ -58,7 +68,7 @@
           arrows
           navigation
           swipeable
-          class="post-detail__carousel"
+          :style="carouselStyle"
         >
           <q-carousel-slide
             v-for="(imgUrl, idx) in displayImages"
@@ -70,16 +80,15 @@
         <img
           v-else-if="displayImages.length === 1"
           :src="displayImages[0]"
-          class="post-detail__image"
           :alt="post.captionText"
         >
-        <div v-else class="post-detail__no-image">
+        <div v-else class="no-image">
           <q-icon name="image" size="64px" color="grey-4" />
         </div>
       </div>
 
-      <div class="post-detail__info">
-        <div class="post-detail__user" @click="emit('openUser', post)">
+      <div class="info">
+        <div class="user" @click="emit('openUser', post)">
           <q-avatar size="40px">
             <img v-if="post.user.profilePicUrl" :src="post.user.profilePicUrl">
             <q-icon v-else name="person" />
@@ -90,9 +99,9 @@
           </div>
         </div>
 
-        <p v-if="post.captionText" class="post-detail__caption">{{ post.captionText }}</p>
+        <p v-if="post.captionText">{{ post.captionText }}</p>
 
-        <div class="post-detail__meta text-caption text-grey">
+        <div class="meta text-caption text-grey">
           <span v-if="post.locationName">
             <q-icon name="location_on" size="14px" />
             {{ post.locationName }}
@@ -100,7 +109,7 @@
           <span>{{ formatDate(post.takenAt) }}</span>
         </div>
 
-        <div class="post-detail__actions">
+        <div class="actions">
           <q-btn
             flat
             round
@@ -109,14 +118,14 @@
             :loading="isLiking?.(post.id)"
             @click="emit('like', post)"
           />
-          <span class="post-detail__stat">{{ formatCount(post.likeCount) }}</span>
+          <span>{{ formatCount(post.likeCount) }}</span>
 
           <q-icon name="chat_bubble_outline" color="grey-7" size="20px" class="q-ml-md" />
-          <span class="post-detail__stat">{{ formatCount(post.commentCount) }}</span>
+          <span>{{ formatCount(post.commentCount) }}</span>
 
           <template v-if="post.viewCount > 0">
             <q-icon name="play_arrow" color="grey-7" size="20px" class="q-ml-md" />
-            <span class="post-detail__stat">{{ formatCount(post.viewCount) }}</span>
+            <span>{{ formatCount(post.viewCount) }}</span>
           </template>
         </div>
       </div>
@@ -125,124 +134,108 @@
 </template>
 
 <style>
-  .post-detail-modal__inner {
-    width: 70vw;
+  .modal-inner.post-detail-modal__inner {
+    display: inline-flex;
+    max-width: 70vw;
     height: 85vh;
-    min-width: unset;
+    min-width: 0;
     padding: 0;
-    display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
 </style>
 
-<style scoped>
-  .post-detail__bar {
-    background: white;
-    border-bottom: 1px solid #eee;
-  }
+<style lang="scss" scoped>
+  $info-panel-width: 350px;
 
-  .post-detail__body {
+  .body {
     display: flex;
-    gap: 0;
     flex: 1;
     min-height: 0;
     overflow: hidden;
-  }
 
-  @media (max-width: 600px) {
-    .post-detail__body {
+    @media (max-width: 600px) {
       flex-direction: column;
       overflow-y: auto;
     }
-  }
 
-  .post-detail__media {
-    flex: 1;
-    min-height: 0;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+    .media {
+      flex: 0 0 auto;
+      height: 85vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-  .post-detail__carousel {
-    width: 100%;
-    height: 100%;
-  }
+      video, img {
+        height: 100%;
+        width: auto;
+        max-width: calc(70vw - $info-panel-width);
+        display: block;
+      }
 
-  .post-detail__video {
-    max-width: 100%;
-    max-height: 100%;
-  }
-
-  .post-detail__image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-
-  .post-detail__no-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 300px;
-  }
-
-  .post-detail__info {
-    width: 350px;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    border-left: 1px solid #eee;
-  }
-
-  @media (max-width: 600px) {
-    .post-detail__info {
-      width: 100%;
-      border-left: none;
-      border-top: 1px solid #eee;
+      .no-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 300px;
+      }
     }
-  }
 
-  .post-detail__user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-  }
+    .info {
+      width: $info-panel-width;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-left: 1px solid #eee;
 
-  .post-detail__user:hover {
-    opacity: 0.8;
-  }
+      @media (max-width: 600px) {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid #eee;
+      }
 
-  .post-detail__caption {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
+      .user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
 
-  .post-detail__meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+        &:hover {
+          opacity: 0.8;
+        }
+      }
 
-  .post-detail__actions {
-    display: flex;
-    align-items: center;
-    margin-top: auto;
-    padding-top: 8px;
-    border-top: 1px solid #eee;
-  }
+      p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
 
-  .post-detail__stat {
-    font-size: 14px;
-    color: #555;
-    margin-left: 4px;
+      .meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        margin-top: auto;
+        padding-top: 16px;
+        border-top: 1px solid #eee;
+
+        span {
+          font-size: 14px;
+          color: #555;
+          margin-left: 4px;
+        }
+      }
+    }
   }
 </style>

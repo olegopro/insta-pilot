@@ -22,7 +22,9 @@ class MediaPostDTO {
       pk: data.pk,
       mediaType: data.media_type,
       thumbnailUrl: data.thumbnail_url,
-      videoUrl: data.video_url
+      videoUrl: data.video_url,
+      width: data.width,
+      height: data.height
     }
   }
 
@@ -42,7 +44,11 @@ class MediaPostDTO {
       hasLiked: data.has_liked,
       user: this.toLocalUser(data.user),
       resources: data.resources.map((resource) => this.toLocalResource(resource)),
-      locationName: data.location_name
+      locationName: data.location_name,
+      thumbnailWidth: data.thumbnail_width,
+      thumbnailHeight: data.thumbnail_height,
+      videoWidth: data.video_width,
+      videoHeight: data.video_height
     }
   }
 

@@ -9,6 +9,10 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 1,
     thumbnailUrl: 'https://picsum.photos/seed/insta1/600/750',
     videoUrl: null,
+    thumbnailWidth: 600,
+    thumbnailHeight: 750,
+    videoWidth: null,
+    videoHeight: null,
     captionText: 'Golden hour vibes 🌅 #photography #nature #landscape',
     likeCount: 2341,
     commentCount: 87,
@@ -31,6 +35,10 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 8,
     thumbnailUrl: 'https://picsum.photos/seed/insta2/600/600',
     videoUrl: null,
+    thumbnailWidth: 600,
+    thumbnailHeight: 600,
+    videoWidth: null,
+    videoHeight: null,
     captionText: 'Weekend trip highlights ✈️🌍 Swipe to see more!',
     likeCount: 5820,
     commentCount: 214,
@@ -43,9 +51,9 @@ export const MOCK_FEED: MediaPost[] = [
       profilePicUrl: 'https://picsum.photos/seed/avatar2/100/100'
     },
     resources: [
-      { pk: 'r1', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2a/600/600', videoUrl: null },
-      { pk: 'r2', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2b/600/600', videoUrl: null },
-      { pk: 'r3', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2c/600/600', videoUrl: null }
+      { pk: 'r1', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2a/600/600', videoUrl: null, width: 600, height: 600 },
+      { pk: 'r2', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2b/600/600', videoUrl: null, width: 600, height: 600 },
+      { pk: 'r3', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2c/600/600', videoUrl: null, width: 600, height: 600 }
     ],
     locationName: 'Barcelona, Spain'
   },
@@ -57,6 +65,10 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 1,
     thumbnailUrl: 'https://picsum.photos/seed/insta3/600/800',
     videoUrl: null,
+    thumbnailWidth: 600,
+    thumbnailHeight: 800,
+    videoWidth: null,
+    videoHeight: null,
     captionText: 'Morning coffee routine ☕ Nothing beats the first cup of the day',
     likeCount: 934,
     commentCount: 31,
@@ -79,6 +91,10 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 2,
     thumbnailUrl: 'https://picsum.photos/seed/insta4/600/600',
     videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    thumbnailWidth: 720,
+    thumbnailHeight: 1280,
+    videoWidth: 720,
+    videoHeight: 1280,
     captionText: 'New reel dropping 🎬 #dance #trending',
     likeCount: 12500,
     commentCount: 430,
@@ -101,6 +117,10 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 1,
     thumbnailUrl: 'https://picsum.photos/seed/insta5/600/900',
     videoUrl: null,
+    thumbnailWidth: 600,
+    thumbnailHeight: 900,
+    videoWidth: null,
+    videoHeight: null,
     captionText: 'City lights and late nights 🌃 #urban #cityscape #nightphotography',
     likeCount: 3670,
     commentCount: 102,
@@ -123,6 +143,10 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 8,
     thumbnailUrl: 'https://picsum.photos/seed/insta6/600/600',
     videoUrl: null,
+    thumbnailWidth: 600,
+    thumbnailHeight: 600,
+    videoWidth: null,
+    videoHeight: null,
     captionText: 'Home studio setup reveal 🎨 The creative space I always dreamed of',
     likeCount: 7890,
     commentCount: 298,
@@ -135,8 +159,8 @@ export const MOCK_FEED: MediaPost[] = [
       profilePicUrl: 'https://picsum.photos/seed/avatar6/100/100'
     },
     resources: [
-      { pk: 'r4', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6a/600/600', videoUrl: null },
-      { pk: 'r5', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6b/600/600', videoUrl: null }
+      { pk: 'r4', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6a/600/600', videoUrl: null, width: 600, height: 600 },
+      { pk: 'r5', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6b/600/600', videoUrl: null, width: 600, height: 600 }
     ],
     locationName: null
   }

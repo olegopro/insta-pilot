@@ -54,7 +54,6 @@ final class AuthController extends Controller {
             ], 403);
         }
 
-        $user->tokens()->delete();
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([

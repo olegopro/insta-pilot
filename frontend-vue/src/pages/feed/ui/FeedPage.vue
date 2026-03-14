@@ -54,6 +54,13 @@
       .catch(() => notifyError('Ошибка лайка'))
   }
 
+
+  const getPostHeight = (post: MediaPost, columnWidth: number): number | undefined => {
+    if (post.thumbnailWidth && post.thumbnailHeight) {
+      return (post.thumbnailHeight / post.thumbnailWidth) * columnWidth
+    }
+  }
+
   const openUserHandler = (post: MediaPost) => {
     if (!selectedAccount.value) return
     feedStore.fetchUserInfo(selectedAccount.value.id, post.user.pk)
@@ -122,7 +129,7 @@
     </div>
 
     <div v-else>
-      <MasonryGrid :items="displayPosts">
+      <MasonryGrid :items="displayPosts" :get-item-height="getPostHeight">
         <template #default="{ item }">
           <MediaCard
             :key="item.pk"

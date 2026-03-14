@@ -87,7 +87,9 @@ def _serialize_media(media_dict: dict) -> Optional[dict]:
                 "pk": str(res.get("pk", "")),
                 "media_type": res_type,
                 "thumbnail_url": res_thumb,
-                "video_url": res_video
+                "video_url": res_video,
+                "width": res.get("original_width"),
+                "height": res.get("original_height")
             })
 
     caption = media_dict.get("caption") or {}
@@ -123,7 +125,11 @@ def _serialize_media(media_dict: dict) -> Optional[dict]:
             "profile_pic_url": user.get("profile_pic_url")
         },
         "resources": resources,
-        "location_name": location.get("name") if isinstance(location, dict) else None
+        "location_name": location.get("name") if isinstance(location, dict) else None,
+        "thumbnail_width": media_dict.get("original_width"),
+        "thumbnail_height": media_dict.get("original_height"),
+        "video_width": media_dict.get("original_width") if media_type == 2 else None,
+        "video_height": media_dict.get("original_height") if media_type == 2 else None
     }
 
 

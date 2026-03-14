@@ -12,6 +12,8 @@ export interface MediaResource {
   mediaType: number
   thumbnailUrl: Nullable<string>
   videoUrl: Nullable<string>
+  width: Nullable<number>
+  height: Nullable<number>
 }
 
 export interface MediaPost {
@@ -30,6 +32,10 @@ export interface MediaPost {
   user: MediaUser
   resources: MediaResource[]
   locationName: Nullable<string>
+  thumbnailWidth: Nullable<number>
+  thumbnailHeight: Nullable<number>
+  videoWidth: Nullable<number>
+  videoHeight: Nullable<number>
 }
 
 export interface InstagramUserDetail {

@@ -50,7 +50,7 @@
 
       <slot />
 
-      <footer class="modal-footer">
+      <footer v-if="(submitLabel && !readonly) || resetLabel" class="modal-footer">
         <ButtonComponent
           v-if="submitLabel && !readonly"
           type="submit"

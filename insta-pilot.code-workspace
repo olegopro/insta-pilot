@@ -12,5 +12,9 @@
 		"php-cs-fixer.config": "./backend-laravel/.php-cs-fixer.php",
 		"phpcs.executablePath": "./backend-laravel/vendor/bin/phpcs",
 		"phpcs.standard": "./backend-laravel/phpcs.xml",
+		"python.defaultInterpreterPath": "${workspaceFolder}/python-service/venv/bin/python3",
+		"python.analysis.extraPaths": [
+			"${workspaceFolder}/python-service/venv/lib/python3.9/site-packages"
+		]
 	}
 }

@@ -12,6 +12,8 @@ export interface MediaResourceApi {
   media_type: number
   thumbnail_url: Nullable<string>
   video_url: Nullable<string>
+  width: Nullable<number>
+  height: Nullable<number>
 }
 
 export interface MediaPostApi {
@@ -30,6 +32,10 @@ export interface MediaPostApi {
   user: MediaUserApi
   resources: MediaResourceApi[]
   location_name: Nullable<string>
+  thumbnail_width: Nullable<number>
+  thumbnail_height: Nullable<number>
+  video_width: Nullable<number>
+  video_height: Nullable<number>
 }
 
 export interface FeedResponseApi {

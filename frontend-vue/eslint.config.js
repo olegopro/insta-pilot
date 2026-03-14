@@ -109,6 +109,7 @@ export default defineConfigWithVueTs(
         ignores: []
       }],
 
+      'vue/require-default-prop': 'off',
       'vue/prop-name-casing': 'off',
       'vue/singleline-html-element-content-newline': 'off',
       'vue/require-explicit-emits': 'error',
