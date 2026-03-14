@@ -63,7 +63,8 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
         string $sessionData,
         ?string $maxId = null,
         ?string $seenPosts = null,
-        ?string $reason = null
+        ?string $reason = null,
+        ?int $minPosts = null
     ): array {
         $payload = ['session_data' => $sessionData];
 
@@ -79,7 +80,13 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
             $payload['reason'] = $reason;
         }
 
-        return Http::post("$this->pythonUrl/account/feed", $payload)->json();
+        if ($minPosts !== null) {
+            $payload['min_posts'] = $minPosts;
+        }
+
+        $timeout = $minPosts !== null ? 60 : 15;
+
+        return Http::timeout($timeout)->post("$this->pythonUrl/account/feed", $payload)->json();
     }
 
     public function getUserInfoByPk(string $sessionData, string $userPk): array {

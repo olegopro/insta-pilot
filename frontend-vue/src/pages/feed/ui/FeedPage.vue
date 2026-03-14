@@ -48,6 +48,13 @@
     selectedAccount.value && feedStore.setCacheEnabled(selectedAccount.value.id, enabled)
   }
 
+  const minPostsOptions = [
+    { label: 'По умолчанию', value: null },
+    { label: '5 постов', value: 5 },
+    { label: '10 постов', value: 10 },
+    { label: '15 постов', value: 15 }
+  ]
+
   const loadMoreClickHandler = () => {
     if (!selectedAccount.value) return
     feedStore.loadMoreFeed(selectedAccount.value.id)
@@ -97,13 +104,6 @@
     <div class="row items-center justify-between q-mb-lg">
       <span class="text-h6">Лента</span>
       <div class="row items-center q-gutter-sm">
-        <ToggleComponent
-          :model-value="feedStore.cacheEnabled"
-          label="Кэш"
-          dense
-          :disable="!selectedAccount"
-          @update:model-value="cacheToggleHandler"
-        />
         <ButtonComponent
           icon="refresh"
           flat
@@ -111,6 +111,27 @@
           color="primary"
           :disable="!selectedAccount || feedStore.feedLoading"
           @click="refreshFeedHandler"
+        />
+        <ToggleComponent
+          :model-value="feedStore.cacheEnabled"
+          label="Кэш"
+          dense
+          :disable="!selectedAccount"
+          @update:model-value="cacheToggleHandler"
+        />
+        <SelectComponent
+          :model-value="feedStore.minPostsPerLoad"
+          :options="minPostsOptions"
+          option-label="label"
+          option-value="value"
+          label="Постов"
+          dense
+          outlined
+          emit-value
+          map-options
+          :disable="!selectedAccount"
+          style="min-width: 150px"
+          @update:model-value="(value: number | null) => feedStore.setMinPostsPerLoad(value)"
         />
         <SelectComponent
           v-model="selectedAccount"

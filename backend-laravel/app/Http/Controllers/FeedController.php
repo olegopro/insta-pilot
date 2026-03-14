@@ -61,12 +61,14 @@ final class FeedController extends Controller {
         // Python формирует из них feed_view_info и seen_posts для запроса к Instagram.
         $seenPosts = $request->query('seen_posts') ?: null;
         $reason    = $request->query('reason') ?: null;
+        $minPosts  = $request->query('min_posts') ? (int) $request->query('min_posts') : null;
 
         $result = $this->instagramClient->getFeed(
             $account->session_data,
             $maxId,
             $seenPosts,
-            $reason
+            $reason,
+            $minPosts
         );
 
         if (empty($result['success'])) {

@@ -10,6 +10,7 @@ import mediaPostDTO from './mediaPostDTO'
 const MAX_SEEN_POSTS = 100
 const CACHE_ENABLED_KEY = 'feed_cache_enabled_'
 const SEEN_POSTS_KEY = 'feed_seen_posts_'
+const MIN_POSTS_KEY = 'feed_min_posts'
 
 export const useFeedStore = defineStore('feed', () => {
   const posts = ref<MediaPost[]>([])
@@ -18,6 +19,10 @@ export const useFeedStore = defineStore('feed', () => {
   const seenPosts = ref<string[]>([])
   const userDetail = ref<Nullable<InstagramUserDetail>>(null)
   const cacheEnabled = ref(false)
+  const minPostsPerLoad = ref<Nullable<number>>((() => {
+    const saved = localStorage.getItem(MIN_POSTS_KEY)
+    return saved ? Number(saved) : null
+  })())
 
   const loadCacheState = (accountId: number) => {
     cacheEnabled.value = localStorage.getItem(`${CACHE_ENABLED_KEY}${String(accountId)}`) === '1'
@@ -41,9 +46,14 @@ export const useFeedStore = defineStore('feed', () => {
     }
   }
 
-  const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; reason?: string }>(
-    ({ accountId, reason }) =>
-      api.get(`/feed/${String(accountId)}`, { params: reason ? { reason } : {} }).then((response) => response.data)
+  const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; reason?: string; minPosts?: number }>(
+    ({ accountId, reason, minPosts }) =>
+      api.get(`/feed/${String(accountId)}`, {
+        params: {
+          ...(reason ? { reason } : {}),
+          ...(minPosts ? { min_posts: minPosts } : {})
+        }
+      }).then((response) => response.data)
   )
 
   const likeFeedApi = useApi<ApiResponseWrapper<null>, { accountId: number; mediaId: string }>(
@@ -64,7 +74,9 @@ export const useFeedStore = defineStore('feed', () => {
     seenPosts.value = []
     loadCacheState(accountId)
 
-    const { data } = await fetchFeedApi.execute({ accountId, ...(reason ? { reason } : {}) })
+    const minPosts = minPostsPerLoad.value ?? undefined
+
+    const { data } = await fetchFeedApi.execute({ accountId, ...(reason ? { reason } : {}), ...(minPosts ? { minPosts } : {}) })
     posts.value = mediaPostDTO.toLocal(data.posts)
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
@@ -81,12 +93,22 @@ export const useFeedStore = defineStore('feed', () => {
 
   const refreshFeed = (accountId: number) => loadFeed(accountId, 'pull_to_refresh')
 
-  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>,{ accountId: number; maxId?: string; seenPostsParam?: string }>(
-    ({ accountId, maxId, seenPostsParam }) =>
+  const setMinPostsPerLoad = (value: Nullable<number>) => {
+    minPostsPerLoad.value = value
+    if (value !== null) {
+      localStorage.setItem(MIN_POSTS_KEY, String(value))
+    } else {
+      localStorage.removeItem(MIN_POSTS_KEY)
+    }
+  }
+
+  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>,{ accountId: number; maxId?: string; seenPostsParam?: string; minPosts?: number }>(
+    ({ accountId, maxId, seenPostsParam, minPosts }) =>
       api.get(`/feed/${String(accountId)}`, {
         params: {
           ...(maxId ? { max_id: maxId } : {}),
-          ...(seenPostsParam ? { seen_posts: seenPostsParam } : {})
+          ...(seenPostsParam ? { seen_posts: seenPostsParam } : {}),
+          ...(minPosts ? { min_posts: minPosts } : {})
         }
       }).then((response) => response.data)
   )
@@ -103,10 +125,13 @@ export const useFeedStore = defineStore('feed', () => {
     const maxId = nextMaxId.value ?? undefined
     const seenPostsParam = effectiveSeenPosts.length ? effectiveSeenPosts.join(',') : undefined
 
+    const minPosts = minPostsPerLoad.value ?? undefined
+
     const { data } = await loadMoreApi.execute({
       accountId,
       ...(maxId ? { maxId } : {}),
-      ...(seenPostsParam ? { seenPostsParam } : {})
+      ...(seenPostsParam ? { seenPostsParam } : {}),
+      ...(minPosts ? { minPosts } : {})
     })
     const existingPks = new Set(posts.value.map((post) => post.pk))
 
@@ -156,10 +181,12 @@ export const useFeedStore = defineStore('feed', () => {
     moreAvailable,
     userDetail,
     cacheEnabled,
+    minPostsPerLoad,
     loadFeed,
     refreshFeed,
     loadMoreFeed,
     setCacheEnabled,
+    setMinPostsPerLoad,
     likePost,
     isLiking,
     fetchUserInfo,

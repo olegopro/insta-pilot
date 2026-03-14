@@ -175,6 +175,7 @@ class FeedRequest(BaseModel):
     max_id: Optional[str] = None
     seen_posts: Optional[str] = None
     reason: Optional[str] = None
+    min_posts: Optional[int] = None
 
 
 class FeedResponse(BaseModel):
@@ -246,6 +247,20 @@ async def like_media(data: MediaLikeRequest):
         return MediaLikeResponse(success=False, error=str(e))
 
 
+def _extract_posts(raw: dict) -> list[dict]:
+    feed_items = raw.get("feed_items") or []
+    posts = []
+    for item in feed_items:
+        media_dict = item.get("media_or_ad") or {}
+        serialized = _serialize_media(media_dict)
+        if serialized and serialized["pk"]:
+            posts.append(serialized)
+    return posts
+
+
+MAX_PAGINATION_ITERATIONS = 5
+
+
 @app.post("/account/feed", response_model=FeedResponse)
 async def get_feed(data: FeedRequest):
     try:
@@ -253,28 +268,78 @@ async def get_feed(data: FeedRequest):
 
         if data.max_id:
             seen = [s for s in (data.seen_posts or "").split(",") if s]
-            params = _build_pagination_params(cl, data.max_id, seen)
-            raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
+            all_posts: list[dict] = []
+            current_max_id = data.max_id
+            more_available = True
+            next_max_id = None
+            iterations = 0
+
+            while more_available and iterations < MAX_PAGINATION_ITERATIONS:
+                iterations += 1
+                params = _build_pagination_params(cl, current_max_id, seen)
+                raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
+
+                batch = _extract_posts(raw)
+                all_posts.extend(batch)
+                seen.extend([p["id"] for p in batch])
+
+                next_max_id = raw.get("next_max_id")
+                more_available = bool(raw.get("more_available", False)) and bool(next_max_id)
+
+                print(f"[FEED] iteration={iterations}, batch={len(batch)}, total={len(all_posts)}, more={'yes' if more_available else 'no'}")
+
+                if not data.min_posts or len(all_posts) >= data.min_posts or not more_available:
+                    break
+
+                current_max_id = next_max_id
+                time.sleep(random.uniform(1.0, 2.5))
+
+            return FeedResponse(
+                success=True,
+                posts=all_posts,
+                next_max_id=next_max_id,
+                more_available=more_available
+            )
         else:
             reason = data.reason if data.reason in ("cold_start_fetch", "pull_to_refresh", "warm_start_fetch") else "cold_start_fetch"
             raw = cl.get_timeline_feed(reason)
+            all_posts = _extract_posts(raw)
+            next_max_id = raw.get("next_max_id")
+            more_available = bool(raw.get("more_available", False)) and bool(next_max_id)
+            seen = [p["id"] for p in all_posts]
 
-        feed_items = raw.get("feed_items") or []
-        posts = []
-        for item in feed_items:
-            media_dict = item.get("media_or_ad") or {}
-            serialized = _serialize_media(media_dict)
-            if serialized and serialized["pk"]:
-                posts.append(serialized)
+            print(f"[FEED] initial={len(all_posts)}, next_max_id={'yes' if next_max_id else 'no'}")
 
-        next_max_id = raw.get("next_max_id")
-        print(f"[FEED] posts={len(posts)}, next_max_id={'yes' if next_max_id else 'no'}")
-        return FeedResponse(
-            success=True,
-            posts=posts,
-            next_max_id=next_max_id,
-            more_available=bool(raw.get("more_available", False))
-        )
+            if data.min_posts and len(all_posts) < data.min_posts and more_available:
+                iterations = 0
+                current_max_id = next_max_id
+
+                while more_available and iterations < MAX_PAGINATION_ITERATIONS:
+                    iterations += 1
+                    params = _build_pagination_params(cl, current_max_id, seen)
+                    raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
+
+                    batch = _extract_posts(raw)
+                    all_posts.extend(batch)
+                    seen.extend([p["id"] for p in batch])
+
+                    next_max_id = raw.get("next_max_id")
+                    more_available = bool(raw.get("more_available", False)) and bool(next_max_id)
+
+                    print(f"[FEED] extra iteration={iterations}, batch={len(batch)}, total={len(all_posts)}, more={'yes' if more_available else 'no'}")
+
+                    if len(all_posts) >= data.min_posts or not more_available:
+                        break
+
+                    current_max_id = next_max_id
+                    time.sleep(random.uniform(1.0, 2.5))
+
+            return FeedResponse(
+                success=True,
+                posts=all_posts,
+                next_max_id=next_max_id,
+                more_available=more_available
+            )
     except Exception as e:
         return FeedResponse(success=False, error=str(e))
 
