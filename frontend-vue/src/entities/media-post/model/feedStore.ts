@@ -11,6 +11,7 @@ export const useFeedStore = defineStore('feed', () => {
   const posts = ref<MediaPost[]>([])
   const nextMaxId = ref<Nullable<string>>(null)
   const moreAvailable = ref(false)
+  const seenPosts = ref<string[]>([])
   const userDetail = ref<Nullable<InstagramUserDetail>>(null)
 
   const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; maxId?: string }>(
@@ -32,25 +33,35 @@ export const useFeedStore = defineStore('feed', () => {
     posts.value = []
     nextMaxId.value = null
     moreAvailable.value = false
+    seenPosts.value = []
 
     const { data } = await fetchFeedApi.execute({ accountId })
     posts.value = mediaPostDTO.toLocal(data.posts)
-    
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
+    seenPosts.value = data.posts.map((post) => post.id)
   }
 
-  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; maxId?: string }>(
-    ({ accountId, maxId }) =>
-      api.get(`/feed/${String(accountId)}`, { params: maxId ? { max_id: maxId } : {} })
-        .then((response) => response.data)
+  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; maxId?: string; seenPostsParam?: string }>(
+    ({ accountId, maxId, seenPostsParam }) =>
+      api.get(`/feed/${String(accountId)}`, {
+        params: {
+          ...(maxId ? { max_id: maxId } : {}),
+          ...(seenPostsParam ? { seen_posts: seenPostsParam } : {})
+        }
+      }).then((response) => response.data)
   )
 
   const loadMoreFeed = async (accountId: number) => {
     if (!moreAvailable.value || loadMoreApi.loading.value) return
     const maxId = nextMaxId.value ?? undefined
+    const seenPostsParam = seenPosts.value.length ? seenPosts.value.join(',') : undefined
 
-    const { data } = await loadMoreApi.execute(maxId ? { accountId, maxId } : { accountId })
+    const { data } = await loadMoreApi.execute({
+      accountId,
+      ...(maxId ? { maxId } : {}),
+      ...(seenPostsParam ? { seenPostsParam } : {})
+    })
     const existingPks = new Set(posts.value.map((post) => post.pk))
 
     const newPosts = mediaPostDTO.toLocal(data.posts).filter((post) => !existingPks.has(post.pk))
@@ -58,10 +69,11 @@ export const useFeedStore = defineStore('feed', () => {
       moreAvailable.value = false
       return
     }
-    
-    posts.value.push(...newPosts)
+
+    posts.value = [...posts.value, ...newPosts]
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
+    seenPosts.value = [...seenPosts.value, ...data.posts.map((post) => post.id)]
   }
 
   const likingPostIds = ref<Set<string>>(new Set())

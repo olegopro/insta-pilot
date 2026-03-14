@@ -122,17 +122,18 @@
     </div>
 
     <div v-else>
-      <MasonryGrid>
-        <MediaCard
-          v-for="post in displayPosts"
-          :key="post.pk"
-          :post="post"
-          :is-mock="isMockMode"
-          :is-liking="feedStore.isLiking"
-          @open="openPostHandler"
-          @like="likePostHandler"
-          @open-user="openUserHandler"
-        />
+      <MasonryGrid :items="displayPosts">
+        <template #default="{ item }">
+          <MediaCard
+            :key="item.pk"
+            :post="item"
+            :is-mock="isMockMode"
+            :is-liking="feedStore.isLiking"
+            @open="openPostHandler"
+            @like="likePostHandler"
+            @open-user="openUserHandler"
+          />
+        </template>
       </MasonryGrid>
 
       <div

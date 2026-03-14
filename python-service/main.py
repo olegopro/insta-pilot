@@ -1,5 +1,7 @@
 import datetime
 import json
+import random
+import time
 from typing import Optional, List
 
 from fastapi import FastAPI
@@ -10,6 +12,41 @@ app = FastAPI(title="insta-pilot python service")
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
+def _build_view_info(media_id: str) -> dict:
+    view_ms = random.randint(5000, 15000)
+    return {
+        "media_id": media_id,
+        "version": 23,
+        "media_pct": 1.0,
+        "time_info": {"10": view_ms, "25": view_ms, "50": view_ms, "75": view_ms},
+        "latest_timestamp": int(time.time() * 1000),
+    }
+
+
+def _build_pagination_params(cl: Client, max_id: str, seen_posts: list[str]) -> dict:
+    return {
+        "max_id": max_id,
+        "reason": "pagination",
+        "is_pull_to_refresh": "0",
+        "is_prefetch": "0",
+        "feed_view_info": json.dumps([_build_view_info(media_id) for media_id in seen_posts]),
+        "seen_posts": ",".join(seen_posts),
+        "phone_id": cl.phone_id,
+        "device_id": cl.uuid,
+        "_uuid": cl.uuid,
+        "_csrftoken": cl.token,
+        "client_session_id": cl.client_session_id,
+        "battery_level": 100,
+        "timezone_offset": cl.timezone_offset,
+        "is_charging": "1",
+        "will_sound_on": "0",
+        "is_async_ads_in_headload_enabled": "0",
+        "is_async_ads_double_request": "0",
+        "is_async_ads_rti": "0",
+        "rti_delivery_backend": "0",
+    }
+
 
 def _make_client(session_data: str, proxy: Optional[str] = None) -> Client:
     cl = Client()
@@ -130,6 +167,7 @@ class MediaLikeResponse(BaseModel):
 class FeedRequest(BaseModel):
     session_data: str
     max_id: Optional[str] = None
+    seen_posts: Optional[str] = None
 
 
 class FeedResponse(BaseModel):
@@ -205,20 +243,24 @@ async def like_media(data: MediaLikeRequest):
 async def get_feed(data: FeedRequest):
     try:
         cl = _make_client(data.session_data)
-        reason = "pagination" if data.max_id else "cold_start_fetch"
-        raw = cl.get_timeline_feed(max_id=data.max_id, reason=reason)
+
+        if data.max_id:
+            seen = [s for s in (data.seen_posts or "").split(",") if s]
+            params = _build_pagination_params(cl, data.max_id, seen)
+            raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
+        else:
+            raw = cl.get_timeline_feed("cold_start_fetch")
+
         feed_items = raw.get("feed_items") or []
         posts = []
         for item in feed_items:
-            has_media = "media_or_ad" in item
             media_dict = item.get("media_or_ad") or {}
-            pk = media_dict.get("pk", "-") if has_media else "-"
-            print(f"[FEED] has_media={has_media}, pk={pk}, keys={list(item.keys())[:6]}")
             serialized = _serialize_media(media_dict)
             if serialized and serialized["pk"]:
                 posts.append(serialized)
+
         next_max_id = raw.get("next_max_id")
-        print(f"[FEED] total={len(feed_items)}, posts={len(posts)}, next_max_id={next_max_id}")
+        print(f"[FEED] posts={len(posts)}, next_max_id={'yes' if next_max_id else 'no'}")
         return FeedResponse(
             success=True,
             posts=posts,
