@@ -7,12 +7,39 @@ import type { MediaPost, InstagramUserDetail } from './types'
 import type { FeedResponseApi, InstagramUserDetailApi } from './apiTypes'
 import mediaPostDTO from './mediaPostDTO'
 
+const MAX_SEEN_POSTS = 100
+const CACHE_ENABLED_KEY = 'feed_cache_enabled_'
+const SEEN_POSTS_KEY = 'feed_seen_posts_'
+
 export const useFeedStore = defineStore('feed', () => {
   const posts = ref<MediaPost[]>([])
   const nextMaxId = ref<Nullable<string>>(null)
   const moreAvailable = ref(false)
   const seenPosts = ref<string[]>([])
   const userDetail = ref<Nullable<InstagramUserDetail>>(null)
+  const cacheEnabled = ref(false)
+
+  const loadCacheState = (accountId: number) => {
+    cacheEnabled.value = localStorage.getItem(`${CACHE_ENABLED_KEY}${String(accountId)}`) === '1'
+  }
+
+  const setCacheEnabled = (accountId: number, enabled: boolean) => {
+    cacheEnabled.value = enabled
+    localStorage.setItem(`${CACHE_ENABLED_KEY}${String(accountId)}`, enabled ? '1' : '0')
+  }
+
+  const saveSeenPostsCache = (accountId: number) => {
+    localStorage.setItem(`${SEEN_POSTS_KEY}${String(accountId)}`, JSON.stringify(seenPosts.value))
+  }
+
+  const getSeenPostsCache = (accountId: number): string[] => {
+    try {
+      const raw = localStorage.getItem(`${SEEN_POSTS_KEY}${String(accountId)}`)
+      return raw ? JSON.parse(raw) as string[] : []
+    } catch {
+      return []
+    }
+  }
 
   const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; reason?: string }>(
     ({ accountId, reason }) =>
@@ -35,12 +62,21 @@ export const useFeedStore = defineStore('feed', () => {
     nextMaxId.value = null
     moreAvailable.value = false
     seenPosts.value = []
+    loadCacheState(accountId)
 
     const { data } = await fetchFeedApi.execute({ accountId, ...(reason ? { reason } : {}) })
     posts.value = mediaPostDTO.toLocal(data.posts)
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
-    seenPosts.value = data.posts.map((post) => post.id)
+
+    const newIds = data.posts.map((post) => post.id)
+    if (cacheEnabled.value) {
+      const cached = getSeenPostsCache(accountId)
+      seenPosts.value = [...new Set([...cached, ...newIds])].slice(-MAX_SEEN_POSTS)
+    } else {
+      seenPosts.value = newIds
+    }
+    saveSeenPostsCache(accountId)
   }
 
   const refreshFeed = (accountId: number) => loadFeed(accountId, 'pull_to_refresh')
@@ -57,8 +93,15 @@ export const useFeedStore = defineStore('feed', () => {
 
   const loadMoreFeed = async (accountId: number) => {
     if (!moreAvailable.value || loadMoreApi.loading.value) return
+
+    let effectiveSeenPosts = seenPosts.value
+    if (cacheEnabled.value) {
+      const cached = getSeenPostsCache(accountId)
+      effectiveSeenPosts = [...new Set([...cached, ...seenPosts.value])]
+    }
+
     const maxId = nextMaxId.value ?? undefined
-    const seenPostsParam = seenPosts.value.length ? seenPosts.value.join(',') : undefined
+    const seenPostsParam = effectiveSeenPosts.length ? effectiveSeenPosts.join(',') : undefined
 
     const { data } = await loadMoreApi.execute({
       accountId,
@@ -76,9 +119,9 @@ export const useFeedStore = defineStore('feed', () => {
     posts.value = [...posts.value, ...newPosts]
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
-    const MAX_SEEN_POSTS = 300
-    const updatedSeen = [...seenPosts.value, ...data.posts.map((post) => post.id)]
+    const updatedSeen = [...new Set([...seenPosts.value, ...data.posts.map((post) => post.id)])]
     seenPosts.value = updatedSeen.length > MAX_SEEN_POSTS ? updatedSeen.slice(-MAX_SEEN_POSTS) : updatedSeen
+    saveSeenPostsCache(accountId)
   }
 
   const likingPostIds = ref<Set<string>>(new Set())
@@ -112,9 +155,11 @@ export const useFeedStore = defineStore('feed', () => {
     nextMaxId,
     moreAvailable,
     userDetail,
+    cacheEnabled,
     loadFeed,
     refreshFeed,
     loadMoreFeed,
+    setCacheEnabled,
     likePost,
     isLiking,
     fetchUserInfo,

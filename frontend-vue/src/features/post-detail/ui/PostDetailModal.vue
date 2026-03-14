@@ -64,6 +64,8 @@
         <q-carousel
           v-else-if="displayImages.length > 1"
           v-model="carouselSlide"
+          transition-prev="slide-right"
+          transition-next="slide-left"
           animated
           arrows
           navigation

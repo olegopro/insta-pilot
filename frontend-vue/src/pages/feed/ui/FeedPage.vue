@@ -8,6 +8,7 @@
   import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
+  import { ToggleComponent } from '@/shared/ui/toggle-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { MediaCard } from '@/shared/ui/media-card'
   import { PostDetailModal } from '@/features/post-detail'
@@ -41,6 +42,10 @@
     if (!selectedAccount.value) return
     feedStore.refreshFeed(selectedAccount.value.id)
       .catch(() => notifyError('Ошибка обновления ленты'))
+  }
+
+  const cacheToggleHandler = (enabled: boolean) => {
+    selectedAccount.value && feedStore.setCacheEnabled(selectedAccount.value.id, enabled)
   }
 
   const loadMoreClickHandler = () => {
@@ -92,6 +97,13 @@
     <div class="row items-center justify-between q-mb-lg">
       <span class="text-h6">Лента</span>
       <div class="row items-center q-gutter-sm">
+        <ToggleComponent
+          :model-value="feedStore.cacheEnabled"
+          label="Кэш"
+          dense
+          :disable="!selectedAccount"
+          @update:model-value="cacheToggleHandler"
+        />
         <ButtonComponent
           icon="refresh"
           flat
