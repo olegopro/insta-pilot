@@ -98,4 +98,47 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
             ]
         )->json();
     }
+
+    public function searchHashtag(string $sessionData, string $hashtag, int $amount = 30): array {
+        return Http::timeout(30)->post(
+            "$this->pythonUrl/search/hashtag",
+            [
+                'session_data' => $sessionData,
+                'hashtag'      => $hashtag,
+                'amount'       => $amount
+            ]
+        )->json();
+    }
+
+    public function searchLocations(string $sessionData, string $query): array {
+        return Http::post(
+            "$this->pythonUrl/search/locations",
+            [
+                'session_data' => $sessionData,
+                'query'        => $query
+            ]
+        )->json();
+    }
+
+    public function searchLocationMedias(string $sessionData, int $locationPk, int $amount = 30): array {
+        return Http::timeout(30)->post(
+            "$this->pythonUrl/search/location",
+            [
+                'session_data' => $sessionData,
+                'location_pk'  => $locationPk,
+                'amount'       => $amount
+            ]
+        )->json();
+    }
+
+    public function commentMedia(string $sessionData, string $mediaPk, string $text): array {
+        return Http::post(
+            "$this->pythonUrl/media/comment",
+            [
+                'session_data' => $sessionData,
+                'media_pk'     => $mediaPk,
+                'text'         => $text
+            ]
+        )->json();
+    }
 }

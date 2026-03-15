@@ -44,6 +44,26 @@ export interface FeedResponseApi {
   more_available: boolean
 }
 
+export interface SearchResponseApi {
+  items: MediaPostApi[]
+}
+
+export interface LocationApi {
+  pk: number
+  name: string
+  address: string
+  lat: number
+  lng: number
+}
+
+export interface SearchLocationsResponseApi {
+  locations: LocationApi[]
+}
+
+export interface SendCommentResponseApi {
+  comment_pk: Nullable<string>
+}
+
 export interface InstagramUserDetailApi {
   pk: string
   username: string

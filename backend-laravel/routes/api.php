@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InstagramAccountController;
 use App\Http\Controllers\InstagramUserController;
 use App\Http\Controllers\ProxyImageController;
+use App\Http\Controllers\SearchController;
 use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +46,16 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
 
     // Instagram users
     Route::get('/instagram-user/{accountId}/{userPk}', [InstagramUserController::class, 'show']);
+
+    // Search
+    Route::prefix('search')->group(function () {
+        Route::get('/hashtag', [SearchController::class, 'hashtag']);
+        Route::get('/locations', [SearchController::class, 'locations']);
+        Route::get('/location', [SearchController::class, 'locationMedias']);
+    });
+
+    // Comments
+    Route::post('/media/{mediaPk}/comment', [CommentController::class, 'store']);
 
     // Admin
     Route::prefix('admin')->middleware('role:admin')->group(function () {

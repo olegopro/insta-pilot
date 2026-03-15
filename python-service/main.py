@@ -1,8 +1,10 @@
 import datetime
+import hashlib
 import json
 import random
 import time
 from typing import Optional, List
+from urllib.parse import quote
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -48,12 +50,31 @@ def _build_pagination_params(cl: Client, max_id: str, seen_posts: list[str]) -> 
     }
 
 
+_client_cache: dict[str, tuple[Client, float]] = {}
+_CLIENT_CACHE_TTL = 300
+_CLIENT_CACHE_MAX = 5
+
+
 def _make_client(session_data: str, proxy: Optional[str] = None) -> Client:
+    cache_key = hashlib.md5(session_data.encode()).hexdigest()
+    now = time.time()
+
+    if cache_key in _client_cache:
+        cl, created_at = _client_cache[cache_key]
+        if now - created_at < _CLIENT_CACHE_TTL:
+            return cl
+        del _client_cache[cache_key]
+
+    if len(_client_cache) >= _CLIENT_CACHE_MAX:
+        oldest_key = min(_client_cache, key=lambda k: _client_cache[k][1])
+        del _client_cache[oldest_key]
+
     cl = Client()
     if proxy:
         cl.set_proxy(proxy)
     settings = json.loads(session_data)
     cl.set_settings(settings)
+    _client_cache[cache_key] = (cl, now)
     return cl
 
 
@@ -160,8 +181,7 @@ class AccountInfoResponse(BaseModel):
     error: Optional[str] = None
 
 
-class MediaLikeRequest(BaseModel):
-    session_data: str
+class MediaLikeRequest(SessionRequest):
     media_id: str
 
 
@@ -170,8 +190,7 @@ class MediaLikeResponse(BaseModel):
     error: Optional[str] = None
 
 
-class FeedRequest(BaseModel):
-    session_data: str
+class FeedRequest(SessionRequest):
     max_id: Optional[str] = None
     seen_posts: Optional[str] = None
     reason: Optional[str] = None
@@ -186,14 +205,50 @@ class FeedResponse(BaseModel):
     error: Optional[str] = None
 
 
-class UserInfoByPkRequest(BaseModel):
-    session_data: str
+class UserInfoByPkRequest(SessionRequest):
     user_pk: str
 
 
 class UserInfoByPkResponse(BaseModel):
     success: bool
     user: Optional[dict] = None
+    error: Optional[str] = None
+
+
+class SearchHashtagRequest(SessionRequest):
+    hashtag: str
+    amount: int = 30
+
+
+class SearchLocationsRequest(SessionRequest):
+    query: str
+
+
+class SearchLocationRequest(SessionRequest):
+    location_pk: int
+    amount: int = 30
+
+
+class SearchResponse(BaseModel):
+    success: bool
+    items: List[dict] = []
+    error: Optional[str] = None
+
+
+class SearchLocationsResponse(BaseModel):
+    success: bool
+    locations: List[dict] = []
+    error: Optional[str] = None
+
+
+class CommentRequest(SessionRequest):
+    media_pk: str
+    text: str
+
+
+class CommentResponse(BaseModel):
+    success: bool
+    comment_pk: Optional[str] = None
     error: Optional[str] = None
 
 
@@ -261,6 +316,42 @@ def _extract_posts(raw: dict) -> list[dict]:
 MAX_PAGINATION_ITERATIONS = 5
 
 
+def _paginate_feed(
+    cl: Client,
+    start_max_id: str,
+    seen: list[str],
+    all_posts: list[dict],
+    min_posts: Optional[int],
+    label: str
+) -> tuple[Optional[str], bool]:
+    current_max_id = start_max_id
+    next_max_id = None
+    more_available = True
+    iterations = 0
+
+    while more_available and iterations < MAX_PAGINATION_ITERATIONS:
+        iterations += 1
+        params = _build_pagination_params(cl, current_max_id, seen)
+        raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
+
+        batch = _extract_posts(raw)
+        all_posts.extend(batch)
+        seen.extend([p["id"] for p in batch])
+
+        next_max_id = raw.get("next_max_id")
+        more_available = bool(raw.get("more_available", False)) and bool(next_max_id)
+
+        print(f"[FEED] {label} iteration={iterations}, batch={len(batch)}, total={len(all_posts)}, more={'yes' if more_available else 'no'}")
+
+        if not min_posts or len(all_posts) >= min_posts or not more_available:
+            break
+
+        current_max_id = next_max_id
+        time.sleep(random.uniform(1.0, 2.5))
+
+    return next_max_id, more_available
+
+
 @app.post("/account/feed", response_model=FeedResponse)
 async def get_feed(data: FeedRequest):
     try:
@@ -269,30 +360,10 @@ async def get_feed(data: FeedRequest):
         if data.max_id:
             seen = [s for s in (data.seen_posts or "").split(",") if s]
             all_posts: list[dict] = []
-            current_max_id = data.max_id
-            more_available = True
-            next_max_id = None
-            iterations = 0
 
-            while more_available and iterations < MAX_PAGINATION_ITERATIONS:
-                iterations += 1
-                params = _build_pagination_params(cl, current_max_id, seen)
-                raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
-
-                batch = _extract_posts(raw)
-                all_posts.extend(batch)
-                seen.extend([p["id"] for p in batch])
-
-                next_max_id = raw.get("next_max_id")
-                more_available = bool(raw.get("more_available", False)) and bool(next_max_id)
-
-                print(f"[FEED] iteration={iterations}, batch={len(batch)}, total={len(all_posts)}, more={'yes' if more_available else 'no'}")
-
-                if not data.min_posts or len(all_posts) >= data.min_posts or not more_available:
-                    break
-
-                current_max_id = next_max_id
-                time.sleep(random.uniform(1.0, 2.5))
+            next_max_id, more_available = _paginate_feed(
+                cl, data.max_id, seen, all_posts, data.min_posts, "pagination"
+            )
 
             return FeedResponse(
                 success=True,
@@ -311,28 +382,9 @@ async def get_feed(data: FeedRequest):
             print(f"[FEED] initial={len(all_posts)}, next_max_id={'yes' if next_max_id else 'no'}")
 
             if data.min_posts and len(all_posts) < data.min_posts and more_available:
-                iterations = 0
-                current_max_id = next_max_id
-
-                while more_available and iterations < MAX_PAGINATION_ITERATIONS:
-                    iterations += 1
-                    params = _build_pagination_params(cl, current_max_id, seen)
-                    raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
-
-                    batch = _extract_posts(raw)
-                    all_posts.extend(batch)
-                    seen.extend([p["id"] for p in batch])
-
-                    next_max_id = raw.get("next_max_id")
-                    more_available = bool(raw.get("more_available", False)) and bool(next_max_id)
-
-                    print(f"[FEED] extra iteration={iterations}, batch={len(batch)}, total={len(all_posts)}, more={'yes' if more_available else 'no'}")
-
-                    if len(all_posts) >= data.min_posts or not more_available:
-                        break
-
-                    current_max_id = next_max_id
-                    time.sleep(random.uniform(1.0, 2.5))
+                next_max_id, more_available = _paginate_feed(
+                    cl, next_max_id, seen, all_posts, data.min_posts, "extra"
+                )
 
             return FeedResponse(
                 success=True,
@@ -342,6 +394,21 @@ async def get_feed(data: FeedRequest):
             )
     except Exception as e:
         return FeedResponse(success=False, error=str(e))
+
+
+def _extract_sections_posts(raw: dict, amount: int) -> list[dict]:
+    posts = []
+    for section in raw.get("sections") or []:
+        nodes = (section.get("layout_content") or {}).get("medias") or []
+        for node in nodes:
+            if len(posts) >= amount:
+                break
+            serialized = _serialize_media(node.get("media") or {})
+            if serialized and serialized["pk"]:
+                posts.append(serialized)
+        if len(posts) >= amount:
+            break
+    return posts
 
 
 @app.post("/user/info", response_model=UserInfoByPkResponse)
@@ -367,3 +434,68 @@ async def get_user_info_by_pk(data: UserInfoByPkRequest):
         )
     except Exception as e:
         return UserInfoByPkResponse(success=False, error=str(e))
+
+
+@app.post("/search/hashtag", response_model=SearchResponse)
+def search_hashtag(data: SearchHashtagRequest):
+    try:
+        cl = _make_client(data.session_data)
+        raw = cl.private_request(
+            f"tags/{quote(data.hashtag, safe='')}/sections/",
+            data={
+                "media_recency_filter": "top_recent_posts",
+                "_uuid": cl.uuid,
+                "include_persistent": "false",
+                "rank_token": cl.rank_token,
+            },
+            with_signature=False,
+        )
+        return SearchResponse(success=True, items=_extract_sections_posts(raw, data.amount))
+    except Exception as e:
+        return SearchResponse(success=False, error=str(e))
+
+
+@app.post("/search/locations", response_model=SearchLocationsResponse)
+def search_locations(data: SearchLocationsRequest):
+    try:
+        cl = _make_client(data.session_data)
+        places = cl.fbsearch_places(data.query)
+        locations = []
+        for place in places:
+            locations.append({
+                "pk": int(place.pk),
+                "name": place.name or "",
+                "address": getattr(place, 'address', "") or "",
+                "lat": float(getattr(place, 'lat', 0.0) or 0.0),
+                "lng": float(getattr(place, 'lng', 0.0) or 0.0)
+            })
+        return SearchLocationsResponse(success=True, locations=locations)
+    except Exception as e:
+        return SearchLocationsResponse(success=False, error=str(e))
+
+
+@app.post("/search/location", response_model=SearchResponse)
+def search_location_medias(data: SearchLocationRequest):
+    try:
+        cl = _make_client(data.session_data)
+        raw = cl.private_request(
+            f"locations/{data.location_pk}/sections/",
+            data={
+                "_uuid": cl.uuid,
+                "session_id": cl.client_session_id,
+                "tab": "recent",
+            },
+        )
+        return SearchResponse(success=True, items=_extract_sections_posts(raw, data.amount))
+    except Exception as e:
+        return SearchResponse(success=False, error=str(e))
+
+
+@app.post("/media/comment", response_model=CommentResponse)
+def comment_media(data: CommentRequest):
+    try:
+        cl = _make_client(data.session_data)
+        comment = cl.media_comment(data.media_pk, data.text)
+        return CommentResponse(success=True, comment_pk=str(comment.pk))
+    except Exception as e:
+        return CommentResponse(success=False, error=str(e))

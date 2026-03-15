@@ -38,6 +38,14 @@ export interface MediaPost {
   videoHeight: Nullable<number>
 }
 
+export interface Location {
+  pk: number
+  name: string
+  address: string
+  lat: number
+  lng: number
+}
+
 export interface InstagramUserDetail {
   pk: string
   username: string

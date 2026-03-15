@@ -1,14 +1,19 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
-  import { formatCount, formatDate } from '@/shared/lib'
+  import { useSearchStore } from '@/entities/media-post'
+  import { formatCount, formatDate, notifyError, notifySuccess } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
+  import { MediaDisplay } from '@/shared/ui/media-display'
+  import { InputComponent } from '@/shared/ui/input-component'
+  import { ButtonComponent } from '@/shared/ui/button-component'
 
   const props = defineProps<{
     post: MediaPost
     isLiking?: (postId: string) => boolean
     loadingUserPk?: Nullable<string>
+    accountId?: number
   }>()
 
   const emit = defineEmits(['like', 'openUser'])
@@ -16,40 +21,22 @@
   const INFO_PANEL_WIDTH = '350px'
 
   const isOpen = defineModel<boolean>({ default: false })
-  const carouselSlide = ref(0)
+
+  const searchStore = useSearchStore()
+  const commentText = ref('')
 
   const isUserLoading = computed(() => props.loadingUserPk === props.post.user.pk)
 
-  const videoAspectRatio = computed(() =>
-    props.post.videoWidth && props.post.videoHeight
-      ? `${String(props.post.videoWidth)} / ${String(props.post.videoHeight)}`
-      : '9 / 16'
-  )
-
-  const carouselStyle = computed(() => {
-    const first = props.post.resources.at(0)
-    const maxWidth = `calc(70vw - ${INFO_PANEL_WIDTH})`
-    return first?.width && first.height
-      ? {
-        height: '100%',
-        width: 'auto',
-        maxWidth,
-        aspectRatio: `${String(first.width)} / ${String(first.height)}`
-      }
-      : {
-        width: maxWidth,
-        height: '100%'
-      }
-  })
-
-  const displayImages = computed(() => {
-    if (props.post.mediaType === 8 && props.post.resources.length > 0) {
-      return props.post.resources
-        .map((resource) => resource.thumbnailUrl ?? '')
-        .filter(Boolean)
+  const sendCommentHandler = async () => {
+    if (!commentText.value.trim() || !props.accountId) return
+    try {
+      await searchStore.sendComment(props.post.pk, props.accountId, commentText.value.trim())
+      notifySuccess('Комментарий отправлен')
+      commentText.value = ''
+    } catch {
+      notifyError('Ошибка отправки комментария')
     }
-    return props.post.thumbnailUrl ? [props.post.thumbnailUrl] : []
-  })
+  }
 </script>
 
 <template>
@@ -59,38 +46,7 @@
   >
     <div class="body">
       <div class="media">
-        <video
-          v-if="post.mediaType === 2 && post.videoUrl"
-          :src="post.videoUrl"
-          :style="{ aspectRatio: videoAspectRatio }"
-          controls
-        />
-        <q-carousel
-          v-else-if="displayImages.length > 1"
-          v-model="carouselSlide"
-          transition-prev="slide-right"
-          transition-next="slide-left"
-          animated
-          arrows
-          navigation
-          swipeable
-          :style="carouselStyle"
-        >
-          <q-carousel-slide
-            v-for="(imgUrl, idx) in displayImages"
-            :key="idx"
-            :name="idx"
-            :img-src="imgUrl"
-          />
-        </q-carousel>
-        <img
-          v-else-if="displayImages.length === 1"
-          :src="displayImages[0]"
-          :alt="post.captionText"
-        >
-        <div v-else class="no-image">
-          <q-icon name="image" size="64px" color="grey-4" />
-        </div>
+        <MediaDisplay :post="post" :max-width="`calc(70vw - ${INFO_PANEL_WIDTH})`" />
       </div>
 
       <div class="info">
@@ -116,25 +72,58 @@
           <span>{{ formatDate(post.takenAt) }}</span>
         </div>
 
-        <div class="actions">
-          <q-btn
-            flat
-            round
-            :icon="post.hasLiked ? 'favorite' : 'favorite_border'"
-            :color="post.hasLiked ? 'red' : 'grey-7'"
-            :loading="isLiking?.(post.id)"
-            :disable="post.hasLiked"
-            @click="emit('like', post)"
-          />
-          <span>{{ formatCount(post.likeCount) }}</span>
+        <div class="bottom-section">
+          <div class="actions">
+            <q-btn
+              flat
+              round
+              :icon="post.hasLiked ? 'favorite' : 'favorite_border'"
+              :color="post.hasLiked ? 'red' : 'grey-7'"
+              :loading="isLiking?.(post.id)"
+              :disable="post.hasLiked"
+              @click="emit('like', post)"
+            />
+            <span>{{ formatCount(post.likeCount) }}</span>
 
-          <q-icon name="chat_bubble_outline" color="grey-7" size="20px" class="q-ml-md" />
-          <span>{{ formatCount(post.commentCount) }}</span>
+            <q-icon name="chat_bubble_outline" color="grey-7" size="20px" class="q-ml-md" />
+            <span>{{ formatCount(post.commentCount) }}</span>
 
-          <template v-if="post.viewCount > 0">
-            <q-icon name="play_arrow" color="grey-7" size="20px" class="q-ml-md" />
-            <span>{{ formatCount(post.viewCount) }}</span>
-          </template>
+            <template v-if="post.viewCount > 0">
+              <q-icon name="play_arrow" color="grey-7" size="20px" class="q-ml-md" />
+              <span>{{ formatCount(post.viewCount) }}</span>
+            </template>
+          </div>
+
+          <div v-if="accountId" class="comment-section">
+            <InputComponent
+              v-model="commentText"
+              label-text="Комментарий"
+              outlined
+              dense
+              autogrow
+              :max-length="2200"
+            />
+            <div class="comment-actions">
+              <ButtonComponent
+                label="Сгенерировать"
+                icon="auto_awesome"
+                flat
+                dense
+                color="grey-7"
+                disable
+                title="Будет доступно в Фазе 4 (LLM интеграция)"
+              />
+              <ButtonComponent
+                label="Отправить"
+                icon="send"
+                color="primary"
+                dense
+                :loading="searchStore.sendCommentLoading"
+                :disable="!commentText.trim()"
+                @click="sendCommentHandler"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -175,20 +164,6 @@
       align-items: center;
       justify-content: center;
 
-      video, img {
-        height: 100%;
-        width: auto;
-        max-width: calc(70vw - $info-panel-width);
-        display: block;
-      }
-
-      .no-image {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 300px;
-      }
     }
 
     .info {
@@ -236,10 +211,16 @@
         gap: 4px;
       }
 
+      .bottom-section {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
       .actions {
         display: flex;
         align-items: center;
-        margin-top: auto;
         padding-top: 16px;
         border-top: 1px solid #eee;
 
@@ -247,6 +228,20 @@
           font-size: 14px;
           color: #555;
           margin-left: 4px;
+        }
+      }
+
+      .comment-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-top: 16px;
+        border-top: 1px solid #eee;
+
+        .comment-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
         }
       }
     }
