@@ -2,11 +2,13 @@
   import { ref, computed } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
   import { formatCount, formatDate } from '@/shared/lib'
+  import type { Nullable } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
 
   const props = defineProps<{
     post: MediaPost
     isLiking?: (postId: string) => boolean
+    loadingUserPk?: Nullable<string>
   }>()
 
   const emit = defineEmits(['like', 'openUser'])
@@ -15,6 +17,8 @@
 
   const isOpen = defineModel<boolean>({ default: false })
   const carouselSlide = ref(0)
+
+  const isUserLoading = computed(() => props.loadingUserPk === props.post.user.pk)
 
   const videoAspectRatio = computed(() =>
     props.post.videoWidth && props.post.videoHeight
@@ -90,9 +94,10 @@
       </div>
 
       <div class="info">
-        <div class="user" @click="emit('openUser', post)">
+        <div class="user" :class="{ loading: isUserLoading }" @click="!isUserLoading && emit('openUser', post)" @selectstart="isUserLoading && $event.preventDefault()">
           <q-avatar size="40px">
-            <img v-if="post.user.profilePicUrl" :src="post.user.profilePicUrl">
+            <q-spinner v-if="isUserLoading" size="22px" color="primary" />
+            <img v-else-if="post.user.profilePicUrl" :src="post.user.profilePicUrl">
             <q-icon v-else name="person" />
           </q-avatar>
           <div>
@@ -118,6 +123,7 @@
             :icon="post.hasLiked ? 'favorite' : 'favorite_border'"
             :color="post.hasLiked ? 'red' : 'grey-7'"
             :loading="isLiking?.(post.id)"
+            :disable="post.hasLiked"
             @click="emit('like', post)"
           />
           <span>{{ formatCount(post.likeCount) }}</span>
@@ -208,6 +214,11 @@
 
         &:hover {
           opacity: 0.8;
+        }
+
+        &.loading {
+          cursor: wait;
+          opacity: 0.6;
         }
       }
 

@@ -19,6 +19,7 @@
 
   const selectedAccount = ref<Nullable<InstagramAccount>>(null)
   const selectedPost = ref<Nullable<MediaPost>>(null)
+  const loadingUserPk = ref<Nullable<string>>(null)
   const postModal = useModal()
   const userModal = useModal()
 
@@ -81,10 +82,13 @@
   }
 
   const openUserHandler = (post: MediaPost) => {
-    if (!selectedAccount.value) return
+    if (!selectedAccount.value || loadingUserPk.value) return
+    
+    loadingUserPk.value = post.user.pk
     feedStore.fetchUserInfo(selectedAccount.value.id, post.user.pk)
       .then(() => userModal.open())
       .catch(() => notifyError('Не удалось загрузить профиль'))
+      .finally(() => { loadingUserPk.value = null })
   }
 
   onMounted(() => {
@@ -186,6 +190,7 @@
             :post="item"
             :is-mock="isMockMode"
             :is-liking="feedStore.isLiking"
+            :loading-user-pk="loadingUserPk"
             @open="openPostHandler"
             @like="likePostHandler"
             @open-user="openUserHandler"
@@ -217,6 +222,7 @@
       v-model="postModal.isVisible"
       :post="selectedPost"
       :is-liking="feedStore.isLiking"
+      :loading-user-pk="loadingUserPk"
       @like="likePostHandler"
       @open-user="openUserHandler"
     />

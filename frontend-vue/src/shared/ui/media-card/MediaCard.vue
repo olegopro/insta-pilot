@@ -1,14 +1,19 @@
 <script setup lang="ts">
+  import { computed } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
   import { formatCount } from '@/shared/lib'
+  import type { Nullable } from '@/shared/lib'
 
-  defineProps<{
+  const props = defineProps<{
     post: MediaPost
     isMock?: boolean
     isLiking?: (postId: string) => boolean
+    loadingUserPk?: Nullable<string>
   }>()
 
   defineEmits(['open', 'like', 'openUser'])
+
+  const isUserLoading = computed(() => props.loadingUserPk === props.post.user.pk)
 </script>
 
 <template>
@@ -53,6 +58,7 @@
           :text-color="post.hasLiked ? 'white' : 'red'"
           :icon="post.hasLiked ? 'favorite' : 'favorite_border'"
           :loading="isLiking?.(post.id)"
+          :disable="post.hasLiked"
           @click.stop="$emit('like', post)"
         />
       </div>
@@ -61,11 +67,13 @@
     <div class="footer">
       <div
         class="user"
-        :class="{ clickable: !isMock }"
-        @click.stop="!isMock && $emit('openUser', post)"
+        :class="{ clickable: !isMock && !isUserLoading, loading: isUserLoading }"
+        @click.stop="!isMock && !isUserLoading && $emit('openUser', post)"
+        @selectstart="isUserLoading && $event.preventDefault()"
       >
         <q-avatar size="22px" class="q-mr-xs">
-          <img v-if="post.user.profilePicUrl" :src="post.user.profilePicUrl">
+          <q-spinner v-if="isUserLoading" size="14px" color="primary" />
+          <img v-else-if="post.user.profilePicUrl" :src="post.user.profilePicUrl">
           <q-icon v-else name="person" />
         </q-avatar>
         <span class="username">{{ post.user.username }}</span>
@@ -167,6 +175,11 @@
       &:hover .username {
         text-decoration: underline;
       }
+    }
+
+    &.loading {
+      cursor: wait;
+      opacity: 0.6;
     }
   }
 
