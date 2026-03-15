@@ -1,17 +1,18 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
   import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
-  import { useSearchStore } from '@/entities/media-post'
+  import { useSearchStore, useFeedStore } from '@/entities/media-post'
   import type { MediaPost, Location } from '@/entities/media-post'
   import type { InstagramAccount } from '@/entities/instagram-account/model/types'
   import type { Nullable } from '@/shared/lib'
-  import { notifyError, useModal } from '@/shared/lib'
+  import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { InputComponent } from '@/shared/ui/input-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { MediaCard } from '@/shared/ui/media-card'
   import { PostDetailModal } from '@/features/post-detail'
+  import { InstagramUserModal } from '@/features/instagram-user'
 
   type SearchMode = 'hashtag' | 'location'
 
@@ -19,6 +20,7 @@
 
   const accountStore = useAccountStore()
   const searchStore = useSearchStore()
+  const feedStore = useFeedStore()
 
   const selectedAccount = ref<Nullable<InstagramAccount>>(null)
   const selectedPost = ref<Nullable<MediaPost>>(null)
@@ -26,8 +28,10 @@
   const hashtagInput = ref('')
   const selectedLocation = ref<Nullable<Location>>(null)
   const isInitializing = ref(true)
+  const loadingUserPk = ref<Nullable<string>>(null)
 
   const postModal = useModal()
+  const userModal = useModal()
 
   const searchModeOptions = [
     { label: 'Хэштег', value: 'hashtag' as SearchMode },
@@ -99,6 +103,22 @@
       .catch(() => notifyError('Ошибка загрузки медиа локации'))
   }
 
+  const likePostHandler = (post: MediaPost) => {
+    if (!selectedAccount.value) return
+    feedStore.likePost(selectedAccount.value.id, post)
+      .then(() => notifySuccess('Лайк поставлен'))
+      .catch(() => notifyError('Ошибка лайка'))
+  }
+
+  const openUserHandler = (post: MediaPost) => {
+    if (!selectedAccount.value || loadingUserPk.value) return
+    loadingUserPk.value = post.user.pk
+    feedStore.fetchUserInfo(selectedAccount.value.id, post.user.pk)
+      .then(() => userModal.open())
+      .catch(() => notifyError('Не удалось загрузить профиль'))
+      .finally(() => { loadingUserPk.value = null })
+  }
+
   const openPostHandler = (post: MediaPost) => {
     selectedPost.value = post
     postModal.open()
@@ -132,7 +152,22 @@
         style="min-width: 260px"
         emit-value
         map-options
-      />
+      >
+        <template #option="scope">
+          <q-item v-bind="scope.itemProps">
+            <q-item-section avatar>
+              <q-avatar size="32px">
+                <img v-if="scope.opt.profile_pic_url" :src="proxyImageUrl(scope.opt.profile_pic_url) ?? undefined">
+                <q-icon v-else name="person" />
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>{{ scope.opt.instagram_login }}</q-item-label>
+              <q-item-label v-if="scope.opt.full_name" caption>{{ scope.opt.full_name }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </SelectComponent>
     </div>
 
     <div class="controls q-mb-md">
@@ -222,7 +257,11 @@
           <MediaCard
             :key="item.pk"
             :post="item"
+            :is-liking="feedStore.isLiking"
+            :loading-user-pk="loadingUserPk"
             @open="openPostHandler"
+            @like="likePostHandler"
+            @open-user="openUserHandler"
           />
         </template>
       </MasonryGrid>
@@ -243,6 +282,16 @@
       v-model="postModal.isVisible"
       :post="selectedPost"
       :account-id="selectedAccount.id"
+      :is-liking="feedStore.isLiking"
+      :loading-user-pk="loadingUserPk"
+      @like="likePostHandler"
+      @open-user="openUserHandler"
+    />
+
+    <InstagramUserModal
+      v-model="userModal.isVisible"
+      :user="feedStore.userDetail"
+      :loading="feedStore.userInfoLoading"
     />
   </q-page>
 </template>
