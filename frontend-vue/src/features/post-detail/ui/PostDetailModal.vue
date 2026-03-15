@@ -30,7 +30,7 @@
   const sendCommentHandler = async () => {
     if (!commentText.value.trim() || !props.accountId) return
     try {
-      await searchStore.sendComment(props.post.pk, props.accountId, commentText.value.trim())
+      await searchStore.sendComment(props.post.id, props.accountId, commentText.value.trim())
       notifySuccess('Комментарий отправлен')
       commentText.value = ''
     } catch {

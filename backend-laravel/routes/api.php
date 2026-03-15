@@ -55,7 +55,7 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
     });
 
     // Comments
-    Route::post('/media/{mediaPk}/comment', [CommentController::class, 'store']);
+    Route::post('/media/{mediaId}/comment', [CommentController::class, 'store']);
 
     // Admin
     Route::prefix('admin')->middleware('role:admin')->group(function () {

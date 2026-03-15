@@ -242,7 +242,7 @@ class SearchLocationsResponse(BaseModel):
 
 
 class CommentRequest(SessionRequest):
-    media_pk: str
+    media_id: str
     text: str
 
 
@@ -495,7 +495,7 @@ def search_location_medias(data: SearchLocationRequest):
 def comment_media(data: CommentRequest):
     try:
         cl = _make_client(data.session_data)
-        comment = cl.media_comment(data.media_pk, data.text)
+        comment = cl.media_comment(data.media_id, data.text)
         return CommentResponse(success=True, comment_pk=str(comment.pk))
     except Exception as e:
         return CommentResponse(success=False, error=str(e))

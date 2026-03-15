@@ -32,9 +32,9 @@ export const useSearchStore = defineStore('search', () => {
       }).then((response) => response.data)
   )
 
-  const sendCommentApi = useApi<ApiResponseWrapper<SendCommentResponseApi>, { mediaPk: string; accountId: number; text: string }>(
-    ({ mediaPk, accountId, text }) =>
-      api.post(`/media/${mediaPk}/comment`, { account_id: accountId, text }).then((response) => response.data)
+  const sendCommentApi = useApi<ApiResponseWrapper<SendCommentResponseApi>, { mediaId: string; accountId: number; text: string }>(
+    ({ mediaId, accountId, text }) =>
+      api.post(`/media/${mediaId}/comment`, { account_id: accountId, text }).then((response) => response.data)
   )
 
   const clearResults = () => {
@@ -87,8 +87,8 @@ export const useSearchStore = defineStore('search', () => {
     }
   }
 
-  const sendComment = (mediaPk: string, accountId: number, text: string) =>
-    sendCommentApi.execute({ mediaPk, accountId, text })
+  const sendComment = (mediaId: string, accountId: number, text: string) =>
+    sendCommentApi.execute({ mediaId, accountId, text })
 
   const searchLoading = computed(() => searchHashtagApi.loading.value || fetchLocationMediasApi.loading.value)
   const locationsLoading = computed(() => fetchLocationsApi.loading.value)

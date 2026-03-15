@@ -15,7 +15,7 @@ final class CommentController extends Controller {
         private readonly InstagramAccountRepositoryInterface $accountRepository
     ) {}
 
-    public function store(string $mediaPk, Request $request): JsonResponse {
+    public function store(string $mediaId, Request $request): JsonResponse {
         $validated = $request->validate([
             'account_id' => 'required|integer',
             'text'       => 'required|string|max:2200'
@@ -33,7 +33,7 @@ final class CommentController extends Controller {
 
         $result = $this->instagramClient->commentMedia(
             $account->session_data,
-            $mediaPk,
+            $mediaId,
             $validated['text']
         );
 

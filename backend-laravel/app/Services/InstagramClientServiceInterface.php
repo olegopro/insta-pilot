@@ -13,5 +13,5 @@ interface InstagramClientServiceInterface {
     public function searchHashtag(string $sessionData, string $hashtag, int $amount = 30): array;
     public function searchLocations(string $sessionData, string $query): array;
     public function searchLocationMedias(string $sessionData, int $locationPk, int $amount = 30): array;
-    public function commentMedia(string $sessionData, string $mediaPk, string $text): array;
+    public function commentMedia(string $sessionData, string $mediaId, string $text): array;
 }

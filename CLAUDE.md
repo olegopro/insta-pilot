@@ -45,6 +45,7 @@ Context7 library ID: `/subzeroid/instagrapi`
 - Не логировать пароль, cookie, full session dump и другие чувствительные данные.
 - Таймауты/ретраи делать ограниченными и аккуратными, чтобы не провоцировать антибот-защиту.
 - Не использовать массовые/агрессивные действия без явной бизнес-необходимости (rate-limit first).
+- В Instagram API суффикс `_pk` — всегда числовой ID сущности (`user_pk`, `location_pk`, `media_pk`), суффикс `_id` — составной (`media_id` = `{media_pk}_{user_pk}`); использовать тот суффикс, который принимает конкретный метод instagrapi.
 
 ## User Preferences
 - Answer in Russian

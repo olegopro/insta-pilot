@@ -131,12 +131,12 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
         )->json();
     }
 
-    public function commentMedia(string $sessionData, string $mediaPk, string $text): array {
+    public function commentMedia(string $sessionData, string $mediaId, string $text): array {
         return Http::post(
             "$this->pythonUrl/media/comment",
             [
                 'session_data' => $sessionData,
-                'media_pk'     => $mediaPk,
+                'media_id'     => $mediaId,
                 'text'         => $text
             ]
         )->json();
