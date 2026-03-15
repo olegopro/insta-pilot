@@ -11,6 +11,7 @@ use Illuminate\Encryption\Encrypter;
 
 class InstagramAccount extends Model {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
         'instagram_login',

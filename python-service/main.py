@@ -218,6 +218,7 @@ class UserInfoByPkResponse(BaseModel):
 class SearchHashtagRequest(SessionRequest):
     hashtag: str
     amount: int = 30
+    next_max_id: Optional[str] = None
 
 
 class SearchLocationsRequest(SessionRequest):
@@ -227,11 +228,13 @@ class SearchLocationsRequest(SessionRequest):
 class SearchLocationRequest(SessionRequest):
     location_pk: int
     amount: int = 30
+    next_max_id: Optional[str] = None
 
 
 class SearchResponse(BaseModel):
     success: bool
     items: List[dict] = []
+    next_max_id: Optional[str] = None
     error: Optional[str] = None
 
 
@@ -396,19 +399,57 @@ async def get_feed(data: FeedRequest):
         return FeedResponse(success=False, error=str(e))
 
 
-def _extract_sections_posts(raw: dict, amount: int) -> list[dict]:
+def _extract_sections_posts(raw: dict, amount: Optional[int] = None) -> list[dict]:
     posts = []
     for section in raw.get("sections") or []:
         nodes = (section.get("layout_content") or {}).get("medias") or []
         for node in nodes:
-            if len(posts) >= amount:
+            if amount is not None and len(posts) >= amount:
                 break
             serialized = _serialize_media(node.get("media") or {})
             if serialized and serialized["pk"]:
                 posts.append(serialized)
-        if len(posts) >= amount:
+        if amount is not None and len(posts) >= amount:
             break
     return posts
+
+
+def _build_sections_cursor(raw: dict) -> Optional[str]:
+    next_max_id = raw.get("next_max_id")
+    if not next_max_id or not raw.get("more_available"):
+        return None
+    return json.dumps({
+        "max_id": next_max_id,
+        "page": raw.get("next_page"),
+        "media_ids": raw.get("next_media_ids") or []
+    })
+
+
+def _parse_sections_cursor(cursor: str) -> dict:
+    data = json.loads(cursor)
+    params: dict = {"max_id": data["max_id"]}
+    if data.get("page") is not None:
+        params["page"] = data["page"]
+    if data.get("media_ids"):
+        params["media_ids"] = ",".join(str(m) for m in data["media_ids"])
+    return params
+
+
+def _fetch_sections(
+    cl: Client,
+    endpoint: str,
+    base_data: dict,
+    next_cursor: Optional[str],
+    amount: Optional[int],
+    with_signature: bool = True,
+) -> tuple[list[dict], Optional[str]]:
+    data = {**base_data}
+    if next_cursor:
+        data.update(_parse_sections_cursor(next_cursor))
+    raw = cl.private_request(endpoint, data=data, with_signature=with_signature)
+    posts = _extract_sections_posts(raw, amount)
+    cursor = _build_sections_cursor(raw)
+    return posts, cursor
 
 
 @app.post("/user/info", response_model=UserInfoByPkResponse)
@@ -440,17 +481,15 @@ async def get_user_info_by_pk(data: UserInfoByPkRequest):
 def search_hashtag(data: SearchHashtagRequest):
     try:
         cl = _make_client(data.session_data)
-        raw = cl.private_request(
-            f"tags/{quote(data.hashtag, safe='')}/sections/",
-            data={
-                "media_recency_filter": "top_recent_posts",
-                "_uuid": cl.uuid,
-                "include_persistent": "false",
-                "rank_token": cl.rank_token,
-            },
-            with_signature=False,
-        )
-        return SearchResponse(success=True, items=_extract_sections_posts(raw, data.amount))
+        base_data = {
+            "media_recency_filter": "top_recent_posts",
+            "_uuid": cl.uuid,
+            "include_persistent": "false",
+            "rank_token": cl.rank_token,
+        }
+        amount = data.amount if not data.next_max_id else None
+        items, cursor = _fetch_sections(cl, f"tags/{quote(data.hashtag, safe='')}/sections/", base_data, data.next_max_id, amount, with_signature=False)
+        return SearchResponse(success=True, items=items, next_max_id=cursor)
     except Exception as e:
         return SearchResponse(success=False, error=str(e))
 
@@ -478,15 +517,14 @@ def search_locations(data: SearchLocationsRequest):
 def search_location_medias(data: SearchLocationRequest):
     try:
         cl = _make_client(data.session_data)
-        raw = cl.private_request(
-            f"locations/{data.location_pk}/sections/",
-            data={
-                "_uuid": cl.uuid,
-                "session_id": cl.client_session_id,
-                "tab": "recent",
-            },
-        )
-        return SearchResponse(success=True, items=_extract_sections_posts(raw, data.amount))
+        base_data = {
+            "_uuid": cl.uuid,
+            "session_id": cl.client_session_id,
+            "tab": "recent",
+        }
+        amount = data.amount if not data.next_max_id else None
+        items, cursor = _fetch_sections(cl, f"locations/{data.location_pk}/sections/", base_data, data.next_max_id, amount)
+        return SearchResponse(success=True, items=items, next_max_id=cursor)
     except Exception as e:
         return SearchResponse(success=False, error=str(e))
 

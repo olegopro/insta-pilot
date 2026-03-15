@@ -17,9 +17,10 @@ final class SearchController extends Controller {
 
     public function hashtag(Request $request): JsonResponse {
         $validated = $request->validate([
-            'account_id' => 'required|integer',
-            'tag'        => 'required|string',
-            'amount'     => 'nullable|integer|min:1|max:100'
+            'account_id'  => 'required|integer',
+            'tag'         => 'required|string',
+            'amount'      => 'nullable|integer|min:1|max:100',
+            'next_max_id' => 'nullable|string'
         ]);
 
         $account = $this->accountRepository->findByIdAndUser((int) $validated['account_id'], $request->user()->id);
@@ -35,7 +36,8 @@ final class SearchController extends Controller {
         $result = $this->instagramClient->searchHashtag(
             $account->session_data,
             $validated['tag'],
-            (int) ($validated['amount'] ?? 30)
+            (int) ($validated['amount'] ?? 30),
+            $validated['next_max_id'] ?? null
         );
 
         if (empty($result['success'])) {
@@ -44,7 +46,10 @@ final class SearchController extends Controller {
 
         return response()->json([
             'success' => true,
-            'data'    => ['items' => $result['items'] ?? []],
+            'data'    => [
+                'items'       => $result['items'] ?? [],
+                'next_max_id' => $result['next_max_id'] ?? null
+            ],
             'message' => 'OK'
         ]);
     }
@@ -85,7 +90,8 @@ final class SearchController extends Controller {
         $validated = $request->validate([
             'account_id'  => 'required|integer',
             'location_pk' => 'required|integer',
-            'amount'      => 'nullable|integer|min:1|max:100'
+            'amount'      => 'nullable|integer|min:1|max:100',
+            'next_max_id' => 'nullable|string'
         ]);
 
         $account = $this->accountRepository->findByIdAndUser((int) $validated['account_id'], $request->user()->id);
@@ -101,7 +107,8 @@ final class SearchController extends Controller {
         $result = $this->instagramClient->searchLocationMedias(
             $account->session_data,
             (int) $validated['location_pk'],
-            (int) ($validated['amount'] ?? 30)
+            (int) ($validated['amount'] ?? 30),
+            $validated['next_max_id'] ?? null
         );
 
         if (empty($result['success'])) {
@@ -110,7 +117,10 @@ final class SearchController extends Controller {
 
         return response()->json([
             'success' => true,
-            'data'    => ['items' => $result['items'] ?? []],
+            'data'    => [
+                'items'       => $result['items'] ?? [],
+                'next_max_id' => $result['next_max_id'] ?? null
+            ],
             'message' => 'OK'
         ]);
     }

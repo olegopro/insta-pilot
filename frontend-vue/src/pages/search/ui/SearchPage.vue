@@ -16,7 +16,6 @@
   type SearchMode = 'hashtag' | 'location'
 
   const SELECTED_ACCOUNT_KEY = 'search_selected_account_id'
-  const LOAD_STEP = 30
 
   const accountStore = useAccountStore()
   const searchStore = useSearchStore()
@@ -26,7 +25,6 @@
   const searchMode = ref<SearchMode>('hashtag')
   const hashtagInput = ref('')
   const selectedLocation = ref<Nullable<Location>>(null)
-  const currentAmount = ref(LOAD_STEP)
   const isInitializing = ref(true)
 
   const postModal = useModal()
@@ -37,10 +35,6 @@
   ]
 
   const canSearch = computed(() => !!selectedAccount.value)
-
-  const hasMore = computed(() =>
-    searchStore.searchResults.length > 0 && searchStore.searchResults.length >= currentAmount.value
-  )
 
   watch(selectedAccount, (account) => {
     if (account) {
@@ -58,7 +52,6 @@
   }
 
   const resetSearch = () => {
-    currentAmount.value = LOAD_STEP
     selectedLocation.value = null
     hashtagInput.value = ''
     searchStore.clearResults()
@@ -72,23 +65,19 @@
 
   const searchHashtagHandler = () => {
     if (!selectedAccount.value || !hashtagInput.value.trim()) return
-    currentAmount.value = LOAD_STEP
     const tag = hashtagInput.value.trim().replace(/^#/, '')
-    searchStore.searchHashtag(selectedAccount.value.id, tag, LOAD_STEP)
+    searchStore.searchHashtag(selectedAccount.value.id, tag)
       .catch(() => notifyError('Ошибка поиска по хэштегу'))
   }
 
   const loadMoreHandler = () => {
     if (!selectedAccount.value) return
-    const nextAmount = currentAmount.value + LOAD_STEP
-    currentAmount.value = nextAmount
-
     if (searchMode.value === 'hashtag') {
       const tag = hashtagInput.value.trim().replace(/^#/, '')
-      searchStore.loadMoreHashtag(selectedAccount.value.id, tag, nextAmount)
+      searchStore.loadMoreHashtag(selectedAccount.value.id, tag)
         .catch(() => notifyError('Ошибка загрузки'))
     } else if (selectedLocation.value) {
-      searchStore.loadMoreLocationMedias(selectedAccount.value.id, selectedLocation.value.pk, nextAmount)
+      searchStore.loadMoreLocationMedias(selectedAccount.value.id, selectedLocation.value.pk)
         .catch(() => notifyError('Ошибка загрузки'))
     }
   }
@@ -105,9 +94,8 @@
 
   const selectLocationHandler = (location: Location) => {
     if (!selectedAccount.value) return
-    currentAmount.value = LOAD_STEP
     selectedLocation.value = location
-    searchStore.fetchLocationMedias(selectedAccount.value.id, location.pk, LOAD_STEP)
+    searchStore.fetchLocationMedias(selectedAccount.value.id, location.pk)
       .catch(() => notifyError('Ошибка загрузки медиа локации'))
   }
 
@@ -239,7 +227,7 @@
         </template>
       </MasonryGrid>
 
-      <div v-if="hasMore" class="row justify-center q-pa-md">
+      <div v-if="searchStore.canLoadMore" class="row justify-center q-pa-md">
         <q-btn
           label="Загрузить ещё"
           color="primary"

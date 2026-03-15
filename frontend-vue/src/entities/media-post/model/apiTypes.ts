@@ -46,6 +46,7 @@ export interface FeedResponseApi {
 
 export interface SearchResponseApi {
   items: MediaPostApi[]
+  next_max_id: Nullable<string>
 }
 
 export interface LocationApi {

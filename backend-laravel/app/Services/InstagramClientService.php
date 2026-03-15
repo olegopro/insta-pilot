@@ -99,15 +99,18 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
         )->json();
     }
 
-    public function searchHashtag(string $sessionData, string $hashtag, int $amount = 30): array {
-        return Http::timeout(30)->post(
-            "$this->pythonUrl/search/hashtag",
-            [
-                'session_data' => $sessionData,
-                'hashtag'      => $hashtag,
-                'amount'       => $amount
-            ]
-        )->json();
+    public function searchHashtag(string $sessionData, string $hashtag, int $amount = 30, ?string $nextMaxId = null): array {
+        $payload = [
+            'session_data' => $sessionData,
+            'hashtag'      => $hashtag,
+            'amount'       => $amount
+        ];
+
+        if ($nextMaxId !== null) {
+            $payload['next_max_id'] = $nextMaxId;
+        }
+
+        return Http::timeout(30)->post("$this->pythonUrl/search/hashtag", $payload)->json();
     }
 
     public function searchLocations(string $sessionData, string $query): array {
@@ -120,15 +123,18 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
         )->json();
     }
 
-    public function searchLocationMedias(string $sessionData, int $locationPk, int $amount = 30): array {
-        return Http::timeout(30)->post(
-            "$this->pythonUrl/search/location",
-            [
-                'session_data' => $sessionData,
-                'location_pk'  => $locationPk,
-                'amount'       => $amount
-            ]
-        )->json();
+    public function searchLocationMedias(string $sessionData, int $locationPk, int $amount = 30, ?string $nextMaxId = null): array {
+        $payload = [
+            'session_data' => $sessionData,
+            'location_pk'  => $locationPk,
+            'amount'       => $amount
+        ];
+
+        if ($nextMaxId !== null) {
+            $payload['next_max_id'] = $nextMaxId;
+        }
+
+        return Http::timeout(30)->post("$this->pythonUrl/search/location", $payload)->json();
     }
 
     public function commentMedia(string $sessionData, string $mediaId, string $text): array {
