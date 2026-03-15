@@ -25,5 +25,10 @@ docker/postgres/data/
 # IDE
 .idea/
 
+# Debug / Testing
+_TEST/
+python-service/session_*.json
+backend-laravel/session_*.json
+
 # Claude Code
 .claude/
