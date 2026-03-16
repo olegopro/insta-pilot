@@ -99,51 +99,51 @@
 
 ---
 
-### Фаза 3 — Поиск по тегам/гео + комментарии
+### Фаза 3 — Поиск по тегам/гео + комментарии ✅
 
 > [Backend →](PLAN-EXTEND-BACK.md#фаза-3--поиск-по-тегамгео) | [Frontend →](PLAN-EXTEND-FRONT.md#фаза-3--поиск-по-тегамгео)
 
 **Python:**
-- [ ] 3.1 `POST /search/hashtag` (медиа по хэштегу)
-- [ ] 3.2 `POST /search/locations` (поиск мест по названию)
-- [ ] 3.3 `POST /search/location` (медиа по локации)
-- [ ] 3.4 `POST /media/comment` (отправка комментария)
+- [x] 3.1 `POST /search/hashtag` (медиа по хэштегу)
+- [x] 3.2 `POST /search/locations` (поиск мест по названию)
+- [x] 3.3 `POST /search/location` (медиа по локации)
+- [x] 3.4 `POST /media/comment` (отправка комментария)
 
 **Laravel:**
-- [ ] 3.5 SearchController (хэштег, локации, медиа по локации)
-- [ ] 3.6 CommentController (отправка комментария)
-- [ ] 3.7 Обновить InstagramClientService (searchHashtag, searchLocations, searchLocationMedias, commentMedia)
+- [x] 3.5 SearchController (хэштег, локации, медиа по локации)
+- [x] 3.6 CommentController (отправка комментария)
+- [x] 3.7 Обновить InstagramClientService (searchHashtag, searchLocations, searchLocationMedias, commentMedia)
 
 **Frontend:**
-- [ ] 3.8 Страница поиска (SearchPage: toggle хэштег/гео, поле ввода)
-- [ ] 3.9 Masonry с результатами (переиспользование MasonryGrid + MediaCard)
-- [ ] 3.10 Модалка поста с комментарием (SearchPostModal: автор, контент, статистика, ввод)
-- [ ] 3.11 Кнопки "Сгенерировать" + "Отправить" (UI готов, генерация → Фаза 4)
-- [ ] 3.12 searchStore (Pinia: searchHashtag, searchLocations, searchLocation, sendComment)
+- [x] 3.8 Страница поиска (SearchPage: toggle хэштег/гео, поле ввода)
+- [x] 3.9 Masonry с результатами (переиспользование MasonryGrid + MediaCard)
+- [x] 3.10 Модалка поста с комментарием (SearchPostModal: автор, контент, статистика, ввод)
+- [x] 3.11 Кнопки "Сгенерировать" + "Отправить" (UI готов, генерация → Фаза 4)
+- [x] 3.12 searchStore (Pinia: searchHashtag, searchLocations, searchLocation, sendComment)
 
 ---
 
-### Фаза 4 — LLM интеграция (настройки + генерация + WebSocket)
+### Фаза 4 — LLM интеграция (настройки + генерация + WebSocket) ✅
 
 > [Backend →](PLAN-EXTEND-BACK.md#фаза-4--llm-интеграция) | [Frontend →](PLAN-EXTEND-FRONT.md#фаза-4--llm-интеграция)
 
 **Laravel:**
-- [ ] 4.1 LlmSetting модель + миграция (provider, api_key, model_name, system_prompt, tone)
-- [ ] 4.2 LlmSettingsController (show, update, testConnection)
-- [ ] 4.3 LlmService (z.ai API: скачать изображение → отправить с промптом)
-- [ ] 4.4 GenerateCommentJob (queue: download → LLM → broadcast result)
-- [ ] 4.5 CommentGenerationProgress event (ShouldBroadcast)
-- [ ] 4.6 CommentGenerateController (`POST /api/comments/generate` → dispatch job)
-- [ ] 4.7 Laravel Reverb (WebSocket сервер, `php artisan install:broadcasting`)
-- [ ] 4.8 Docker: reverb + queue-worker сервисы
+- [x] 4.1 LlmSetting модель + миграция (provider, api_key, model_name, system_prompt, tone)
+- [x] 4.2 LlmSettingsController (show, update, testConnection)
+- [x] 4.3 LlmService (z.ai API: скачать изображение → отправить с промптом)
+- [x] 4.4 GenerateCommentJob (queue: download → LLM → broadcast result)
+- [x] 4.5 CommentGenerationProgress event (ShouldBroadcast)
+- [x] 4.6 CommentGenerateController (`POST /api/comments/generate` → dispatch job)
+- [x] 4.7 Laravel Reverb (WebSocket сервер, `php artisan install:broadcasting`)
+- [x] 4.8 Docker: reverb + queue-worker сервисы
 
 **Frontend:**
-- [ ] 4.9 entities/llm-settings (типы, llmSettingsStore)
-- [ ] 4.10 Страница настроек LLM (LlmSettingsPage: форма + тест)
-- [ ] 4.11 shared/lib/useEcho (Laravel Echo + pusher-js инициализация)
-- [ ] 4.12 features/generate-comment: useCommentGeneration composable (WebSocket + статус)
-- [ ] 4.13 Блок статуса генерации в SearchPostModal (QTimeline/stepper)
-- [ ] 4.14 Вставка сгенерированного комментария в поле ввода
+- [x] 4.9 entities/llm-settings (типы, llmSettingsStore)
+- [x] 4.10 Страница настроек LLM (LlmSettingsPage: форма + тест)
+- [x] 4.11 shared/lib/useEcho (Laravel Echo + pusher-js инициализация)
+- [x] 4.12 features/generate-comment: useCommentGeneration composable (WebSocket + статус)
+- [x] 4.13 Блок статуса генерации в SearchPostModal (QTimeline/stepper)
+- [x] 4.14 Вставка сгенерированного комментария в поле ввода
 
 ---
 

@@ -16,11 +16,13 @@ insta-pilot/
 ```
 
 ## Docker Services
-- `vue`      → port 9000
-- `laravel`  → port 8000
-- `python`   → port 8001
-- `postgres` → port 5432 (PostgreSQL 16)
-- `redis`    → port 6379
+- `vue`          → port 9000 (Vite dev server)
+- `laravel`      → port 8000 (PHP-FPM + Artisan serve)
+- `python`       → port 8001 (FastAPI + instagrapi)
+- `postgres`     → port 5432 (PostgreSQL 16)
+- `redis`        → port 6379 (Queue + Broadcasting)
+- `reverb`       → port 8080 (WebSocket сервер, Laravel Reverb)
+- `queue-worker` → Redis queue worker (обработка Jobs)
 
 ## Environment
 Root `.env`: `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `INSTAGRAM_SALT`
@@ -29,7 +31,13 @@ Laravel: `INSTAGRAM_PYTHON_URL=http://python:8001` (внутренний Docker 
 
 ## Data Flow
 ```
-Quasar Form → Laravel API → Python FastAPI (instagrapi) → Instagram
+[Vue SPA] → [Laravel API] → [Python FastAPI] → [Instagram (instagrapi)]
+                ↓
+          [Redis Queue]
+                ↓
+          [GenerateCommentJob] → [LLM API (GLM / OpenAI)]
+                ↓
+          [Laravel Reverb] ←→ [Frontend (Echo + pusher-js)]
 ```
 
 ## Python service — instagrapi
@@ -58,6 +66,8 @@ Context7 library ID: `/subzeroid/instagrapi`
 - [PLAN.md](PLAN.md) — Master Plan (фазы, чеклист, архитектура)
 - [PLAN-EXTEND-BACK.md](PLAN-EXTEND-BACK.md) — Backend детали (Laravel + Python)
 - [PLAN-EXTEND-FRONT.md](PLAN-EXTEND-FRONT.md) — Frontend детали (Vue + Quasar, FSD)
+- [PLAN-EXTEND-LOGGING-BACKEND.md](PLAN-EXTEND-LOGGING-BACKEND.md) — Мониторинг: Backend
+- [PLAN-EXTEND-LOGGING-FRONT.md](PLAN-EXTEND-LOGGING-FRONT.md) — Мониторинг: Frontend
 
 ---
 
@@ -79,10 +89,14 @@ Context7 library ID: `/subzeroid/instagrapi`
 ## Структура app/
 ```
 Http/Controllers/             # final class, readonly DI, JsonResponse
+Http/Middleware/               # EnsureUserIsActive и другие
 Models/                       # Eloquent, шифрование через Accessors
+Models/Concerns/              # Trait-ы моделей (HasEncryption)
 Providers/AppServiceProvider  # все bindings в register()
 Repositories/                 # Interface + Implementation
-Services/                     # Interface + Implementation
+Services/                     # Interface + Implementation (LlmService, InstagramClientService)
+Jobs/                         # Queue jobs (GenerateCommentJob)
+Events/                       # Broadcasting events (CommentGenerationProgress)
 Facades/                      # extends Facade → aliases в config/app.php
 ```
 
@@ -109,6 +123,24 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 | created_at / updated_at | timestamps            |                         |
 
 Шифрование через Accessors в модели с `INSTAGRAM_SALT` → `config('app.instagram_salt')`.
+
+## Таблица llm_settings
+| Поле          | Тип                   | Описание                        |
+|---------------|-----------------------|---------------------------------|
+| id            | bigIncrements         | PK                              |
+| provider      | string                | glm / openai                    |
+| api_key       | text                  | зашифрован (hidden по умолчанию)|
+| model_name    | string                | имя модели LLM                  |
+| system_prompt | text, nullable        | системный промпт                |
+| tone          | string, nullable      | friendly/professional/casual/humorous |
+| use_caption   | boolean, default true | передавать ли описание поста в LLM |
+| is_default    | boolean, default false| провайдер по умолчанию          |
+
+## WebSocket (Laravel Reverb)
+- Broadcasting через Laravel Echo + pusher-js
+- Канал: `private:comment-generation.{jobId}` — прогресс генерации комментария
+- Event: `CommentGenerationProgress` (step: starting → downloading → analyzing → completed/failed)
+- Frontend: `echo` instance в `shared/lib/echo.ts`
 
 ---
 
@@ -179,39 +211,53 @@ router/                  # Quasar router (не трогать расположе
 layouts/                 # MainLayout
 
 shared/
-  api/
-    index.ts             # export { useApi, type ApiResponseWrapper }
-    types.ts             # ApiResponseWrapper<T>
-    useApi.ts            # generic composable { execute, loading, response, error }
-  lib/
-    index.ts             # export { type Nullable }
-    types.ts             # Nullable<T>
+  api/                   # useApi, ApiResponseWrapper
+  lib/                   # Nullable, notify, formatters, echo, useModal, useFilterColumns,
+                         # useSearchQuery, useForwardProps, validators, proxyImageUrl
   ui/
     button-component/    # каждый компонент — своя папка (kebab-case) + index.ts
     input-component/
     modal-component/
     select-component/
     toggle-component/
+    table-component/
+    table-tools-wrapper/
+    masonry-grid/        # CSS columns Masonry
+    media-card/          # Карточка поста (thumbnail + overlay)
+    media-display/       # Фото/видео/карусель с preload
 
 entities/
-  instagram-account/
-    model/
-      types.ts           # InstagramAccount, LoginRequest, LoginResponse
-      accountStore.ts    # Pinia store
-    ui/
-      ProfileCard.vue
+  instagram-account/     # InstagramAccount, accountStore, ProfileCard
+  media-post/            # MediaPost, feedStore, searchStore, MEDIA_TYPE constants
+  llm-settings/          # LlmSetting, llmSettingsStore, LLM_PROVIDERS/MODELS constants
+  user/                  # User, authStore, token management
 
-features/                # действия пользователя (add-instagram-account, delete-...)
-widgets/                 # крупные блоки страниц (instagram-accounts-list)
+features/
+  add-instagram-account/ # Добавление аккаунта
+  delete-instagram-account/
+  view-instagram-account/
+  auth-login/            # Форма логина
+  post-detail/           # PostDetailModal (фото/видео, комментарии, лайки)
+  instagram-user/        # InstagramUserModal (профиль пользователя)
+  generate-comment/      # useCommentGeneration (WebSocket), GenerationStatus
+
+widgets/
+  instagram-accounts-list/ # Таблица аккаунтов
 
 pages/
-  login/ui/LoginPage.vue
-  instagram-accounts/ui/InstagramAccountsPage.vue
+  login/                 # LoginPage
+  instagram-accounts/    # InstagramAccountsPage
+  feed/                  # FeedPage (Masonry-лента)
+  search/                # SearchPage (хэштеги/гео + комментарии)
+  llm-settings/          # LlmSettingsPage (admin)
+  admin-users/           # AdminUsersPage (admin)
 ```
 
 ## Нейминг
 - `instagram-account` — Instagram аккаунт в системе
-- `user` — пользователь системы insta-pilot (будет позже, с авторизацией)
+- `user` — пользователь системы insta-pilot (Sanctum auth + Spatie roles: admin/user)
+- `media-post` — публикация Instagram (фото/видео/карусель)
+- `llm-settings` — настройки LLM-провайдера (GLM / OpenAI)
 
 ## Pinia и .value
 - В компоненте через `store.someProperty`: `.value` НЕ нужно — Pinia применяет `UnwrapRef` рекурсивно
