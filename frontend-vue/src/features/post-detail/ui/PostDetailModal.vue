@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onBeforeUnmount } from 'vue'
+  import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
-  import { useSearchStore } from '@/entities/media-post'
+  import { useSearchStore, MEDIA_TYPE } from '@/entities/media-post'
   import { formatCount, formatDate, notifyError, notifySuccess } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
@@ -9,6 +9,9 @@
   import { InputComponent } from '@/shared/ui/input-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { useCommentGeneration, GenerationStatus } from '@/features/generate-comment'
+  import type { GenerationStep } from '@/features/generate-comment'
+
+  interface PostState { commentText: string; step: GenerationStep; comment: Nullable<string>; error: Nullable<string> }
 
   const props = defineProps<{
     post: MediaPost
@@ -25,13 +28,22 @@
 
   const searchStore = useSearchStore()
   const commentText = ref('')
-  const { step, generatedComment, error, loading, generate, cleanup } = useCommentGeneration()
+  const carouselSlide = ref(0)
+  const postStateCache = new Map<string, PostState>()
+  const { step, generatedComment, error, loading, generate, reset, restore, cleanup } = useCommentGeneration()
 
   const isUserLoading = computed(() => props.loadingUserPk === props.post.user.pk)
 
   const generateHandler = async () => {
-    const url = props.post.thumbnailUrl
+    let url: string | null | undefined
+    if (props.post.mediaType === MEDIA_TYPE.CAROUSEL && props.post.resources.length > 0) {
+      url = props.post.resources[carouselSlide.value]?.thumbnailUrl
+    } else {
+      url = props.post.thumbnailUrl
+    }
+
     if (!url) return
+
     await generate(url, props.post.captionText)
   }
 
@@ -50,8 +62,31 @@
     comment && (commentText.value = comment)
   })
 
+  watch(() => props.post.id, (newId, oldId) => {
+    if (oldId) {
+      postStateCache.set(oldId, {
+        commentText: commentText.value,
+        step: step.value,
+        comment: generatedComment.value,
+        error: error.value
+      })
+    }
+    const cached = postStateCache.get(newId)
+    if (cached) {
+      restore(cached.step, cached.comment, cached.error)
+      void nextTick(() => { commentText.value = cached.commentText })
+    } else {
+      reset()
+      commentText.value = ''
+    }
+    carouselSlide.value = 0
+  })
+
   watch(isOpen, (opened) => {
-    !opened && cleanup()
+    if (!opened) {
+      cleanup()
+      carouselSlide.value = 0
+    }
   })
 
   onBeforeUnmount(cleanup)
@@ -64,7 +99,7 @@
   >
     <div class="body">
       <div class="media">
-        <MediaDisplay :post="post" :max-width="`calc(70vw - ${INFO_PANEL_WIDTH})`" />
+        <MediaDisplay v-model:slide="carouselSlide" :post="post" :max-width="`calc(70vw - ${INFO_PANEL_WIDTH})`" />
       </div>
 
       <div class="info">
@@ -124,13 +159,14 @@
             <GenerationStatus :step="step" :error="error" />
             <div class="comment-actions">
               <ButtonComponent
+                v-if="post.mediaType !== MEDIA_TYPE.VIDEO"
                 label="Сгенерировать"
                 icon="auto_awesome"
                 flat
                 dense
                 color="grey-7"
                 :loading="loading"
-                :disable="!post.thumbnailUrl"
+                :disable="!post.thumbnailUrl && post.resources.length === 0"
                 @click="generateHandler"
               />
               <ButtonComponent

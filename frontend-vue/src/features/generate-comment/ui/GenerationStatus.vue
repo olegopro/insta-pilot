@@ -45,3 +45,13 @@
     </q-banner>
   </div>
 </template>
+
+<style scoped>
+  :deep(.q-timeline__title) {
+    font-size: 1rem;
+  }
+  
+  :deep(.q-timeline__subtitle) {
+    margin-bottom: 0;
+  }
+</style>

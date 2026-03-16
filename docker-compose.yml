@@ -10,6 +10,7 @@ services:
       - /app/node_modules
     depends_on:
       - laravel
+    restart: unless-stopped
 
   laravel:
     build:

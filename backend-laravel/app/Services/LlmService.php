@@ -36,6 +36,8 @@ class LlmService implements LlmServiceInterface {
 
         $imageBase64 = $this->downloadImageAsBase64($imageUrl);
 
+        $captionText = $setting->use_caption ? $captionText : null;
+
         $userText = $captionText
             ? "Caption: {$captionText}\n\nWrite a natural comment for this post."
             : 'Write a natural comment for this post.';

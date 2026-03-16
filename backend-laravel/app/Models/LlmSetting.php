@@ -16,12 +16,16 @@ class LlmSetting extends Model {
         'model_name',
         'system_prompt',
         'tone',
+        'use_caption',
         'is_default'
     ];
 
     protected $hidden = ['api_key'];
 
-    protected $casts = ['is_default' => 'boolean'];
+    protected $casts = [
+        'is_default'  => 'boolean',
+        'use_caption' => 'boolean'
+    ];
 
     public function setApiKeyAttribute(string $value): void {
         $this->attributes['api_key'] = $this->encryptData($value);

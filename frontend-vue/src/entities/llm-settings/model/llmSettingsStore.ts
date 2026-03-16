@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import { api } from '@/boot/axios'
 import type { LlmSetting, LlmSettingFormData, LlmProvider } from './types'
-import type { LlmSettingApi } from './apiTypes'
+import type { LlmSettingApi, LlmSettingDetailApi } from './apiTypes'
 
 const toLocal = (item: LlmSettingApi): LlmSetting => ({
   id: item.id,
@@ -11,6 +11,7 @@ const toLocal = (item: LlmSettingApi): LlmSetting => ({
   modelName: item.model_name,
   systemPrompt: item.system_prompt,
   tone: item.tone as LlmSetting['tone'],
+  useCaption: item.use_caption,
   isDefault: item.is_default,
   createdAt: item.created_at,
   updatedAt: item.updated_at
@@ -21,13 +22,18 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
     () => api.get('/llm-settings').then((response) => response.data)
   )
 
+  const fetchOneApi = useApi<ApiResponseWrapper<LlmSettingDetailApi>, { id: number }>(
+    ({ id }) => api.get(`/llm-settings/${String(id)}`).then((response) => response.data)
+  )
+
   const storeApi = useApi<ApiResponseWrapper<LlmSettingApi>, LlmSettingFormData>(
     (data) => api.post('/llm-settings', {
       provider: data.provider,
       api_key: data.apiKey,
       model_name: data.modelName,
       system_prompt: data.systemPrompt,
-      tone: data.tone
+      tone: data.tone,
+      use_caption: data.useCaption
     }).then((response) => response.data)
   )
 
@@ -54,6 +60,9 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
     settings.value = data.map(toLocal)
   }
   const fetchAllLoading = computed(() => fetchAllApi.loading.value)
+
+  const fetchOne = (id: number) => fetchOneApi.execute({ id })
+  const fetchOneLoading = computed(() => fetchOneApi.loading.value)
 
   const saveSetting = async (formData: LlmSettingFormData) => {
     await storeApi.execute(formData)
@@ -82,6 +91,8 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
     settings,
     fetchAll,
     fetchAllLoading,
+    fetchOne,
+    fetchOneLoading,
     saveSetting,
     saveSettingLoading,
     saveSettingError,

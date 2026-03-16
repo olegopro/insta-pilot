@@ -77,5 +77,12 @@ export function useCommentGeneration() {
     error.value = null
   }
 
-  return { step, generatedComment, error, loading, generate, reset, cleanup: leaveChannel }
+  const restore = (cachedStep: GenerationStep, cachedComment: Nullable<string>, cachedError: Nullable<string>) => {
+    leaveChannel()
+    step.value = cachedStep
+    generatedComment.value = cachedComment
+    error.value = cachedError
+  }
+
+  return { step, generatedComment, error, loading, generate, reset, restore, cleanup: leaveChannel }
 }

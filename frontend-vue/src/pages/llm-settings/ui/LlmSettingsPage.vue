@@ -5,6 +5,7 @@
   import { InputComponent } from '@/shared/ui/input-component'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
+  import { ToggleComponent } from '@/shared/ui/toggle-component'
   import { notifySuccess, notifyError } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
 
@@ -18,12 +19,14 @@
     modelName: string
     systemPrompt: Nullable<string>
     tone: LlmTone
+    useCaption: boolean
   }>({
     provider: 'glm',
     apiKey: '',
     modelName: 'glm-4.6v-flash',
     systemPrompt: null,
-    tone: 'friendly'
+    tone: 'friendly',
+    useCaption: true
   })
 
   const modelOptions = computed(() => MODELS_BY_PROVIDER[form.value.provider])
@@ -39,7 +42,8 @@
       apiKey: form.value.apiKey,
       modelName: form.value.modelName,
       systemPrompt: form.value.systemPrompt,
-      tone: form.value.tone
+      tone: form.value.tone,
+      useCaption: form.value.useCaption
     }
 
     store.saveSetting(data)
@@ -63,13 +67,17 @@
       .catch(() => notifyError('Ошибка удаления'))
   }
 
-  const editHandler = (setting: LlmSetting) => {
+  const editHandler = async (setting: LlmSetting) => {
     form.value.provider = setting.provider
     form.value.apiKey = ''
     form.value.modelName = setting.modelName
     form.value.systemPrompt = setting.systemPrompt
     form.value.tone = setting.tone
+    form.value.useCaption = setting.useCaption
     showForm.value = true
+
+    const { data } = await store.fetchOne(setting.id)
+    form.value.apiKey = data.api_key
   }
 
   const testHandler = () => {
@@ -89,7 +97,8 @@
       apiKey: '',
       modelName: 'glm-4.6v-flash',
       systemPrompt: null,
-      tone: 'friendly'
+      tone: 'friendly',
+      useCaption: true
     }
   }
 
@@ -111,7 +120,7 @@
             <q-badge v-if="setting.isDefault" color="primary" class="q-ml-sm">По умолчанию</q-badge>
           </q-item-label>
           <q-item-label caption>
-            Модель: {{ setting.modelName }} · Тон: {{ setting.tone }}
+            Модель: {{ setting.modelName }} · Тон: {{ setting.tone }} · Описание: {{ setting.useCaption ? 'да' : 'нет' }}
           </q-item-label>
         </q-item-section>
 
@@ -199,6 +208,11 @@
           option-label="label"
           emit-value
           map-options
+        />
+
+        <ToggleComponent
+          v-model="form.useCaption"
+          label="Передавать описание поста в LLM"
         />
 
         <InputComponent

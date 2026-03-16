@@ -27,15 +27,15 @@ final class LlmSettingsController extends Controller {
     }
 
     public function show(int $id): JsonResponse {
-        $settings = $this->repository->findById($id);
+        $setting = $this->repository->findById($id);
 
-        if (!$settings) {
+        if (!$setting) {
             return response()->json(['success' => false, 'error' => 'Not found'], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data'    => $settings,
+            'data'    => $setting->makeVisible(['api_key']),
             'message' => 'OK'
         ]);
     }
@@ -46,7 +46,8 @@ final class LlmSettingsController extends Controller {
             'api_key'       => 'required|string',
             'model_name'    => 'required|string',
             'system_prompt' => 'nullable|string',
-            'tone'          => 'nullable|string|in:friendly,professional,casual,humorous'
+            'tone'          => 'nullable|string|in:friendly,professional,casual,humorous',
+            'use_caption'   => 'nullable|boolean'
         ]);
 
         $setting = $this->repository->upsert($data['provider'], $data);

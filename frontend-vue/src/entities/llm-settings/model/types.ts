@@ -9,6 +9,7 @@ export interface LlmSetting {
   modelName: string
   systemPrompt: Nullable<string>
   tone: LlmTone
+  useCaption: boolean
   isDefault: boolean
   createdAt: string
   updatedAt: string
@@ -20,4 +21,5 @@ export interface LlmSettingFormData {
   modelName: string
   systemPrompt: Nullable<string>
   tone: LlmTone
+  useCaption: boolean
 }

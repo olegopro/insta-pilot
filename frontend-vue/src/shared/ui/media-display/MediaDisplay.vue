@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { computed } from 'vue'
+  import { MEDIA_TYPE } from '@/entities/media-post'
   import type { MediaPost } from '@/entities/media-post'
 
   const props = defineProps<{
@@ -7,7 +8,7 @@
     maxWidth: string
   }>()
 
-  const carouselSlide = ref(0)
+  const carouselSlide = defineModel<number>('slide', { default: 0 })
 
   const videoAspectRatio = computed(() =>
     props.post.videoWidth && props.post.videoHeight
@@ -31,7 +32,7 @@
   })
 
   const displayImages = computed(() => {
-    if (props.post.mediaType === 8 && props.post.resources.length > 0) {
+    if (props.post.mediaType === MEDIA_TYPE.CAROUSEL && props.post.resources.length > 0) {
       return props.post.resources
         .map((resource) => resource.thumbnailUrl ?? '')
         .filter(Boolean)
@@ -42,7 +43,7 @@
 
 <template>
   <video
-    v-if="post.mediaType === 2 && post.videoUrl"
+    v-if="post.mediaType === MEDIA_TYPE.VIDEO && post.videoUrl"
     :src="post.videoUrl"
     :style="{ aspectRatio: videoAspectRatio, maxWidth, height: '100%', width: 'auto', display: 'block' }"
     controls
@@ -73,6 +74,9 @@
   >
   <div v-else class="no-image">
     <q-icon name="image" size="64px" color="grey-4" />
+  </div>
+  <div v-if="post.mediaType === MEDIA_TYPE.CAROUSEL && displayImages[carouselSlide + 1]" style="display:none" aria-hidden="true">
+    <img :src="displayImages[carouselSlide + 1]">
   </div>
 </template>
 

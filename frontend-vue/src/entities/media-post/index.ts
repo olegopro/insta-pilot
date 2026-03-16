@@ -2,3 +2,4 @@ export type { MediaPost, MediaUser, MediaResource, InstagramUserDetail, Location
 export { useFeedStore } from './model/feedStore'
 export { useSearchStore } from './model/searchStore'
 export { MOCK_FEED } from './model/mockFeed'
+export { MEDIA_TYPE } from './model/constants'
