@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\EncryptsWithSalt;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Encryption\Encrypter;
 
 class InstagramAccount extends Model {
     use HasFactory;
+    use EncryptsWithSalt;
 
     protected $fillable = [
         'user_id',
@@ -21,29 +22,13 @@ class InstagramAccount extends Model {
         'full_name',
         'profile_pic_url',
         'is_active',
-        'last_used_at',
+        'last_used_at'
     ];
 
     protected $hidden = [
         'instagram_password',
         'session_data'
     ];
-
-    private function encryptData(string $data): string {
-        $salt       = config('app.instagram_salt');
-        $derivedKey = substr(hash('sha256', config('app.key') . $salt, true), 0, 32);
-        $encrypted  = new Encrypter($derivedKey, 'AES-256-CBC');
-
-        return $encrypted->encrypt($data);
-    }
-
-    private function decryptData(string $data): string {
-        $salt       = config('app.instagram_salt');
-        $derivedKey = substr(hash('sha256', config('app.key') . $salt, true), 0, 32);
-        $decrypted  = new Encrypter($derivedKey, 'AES-256-CBC');
-
-        return $decrypted->decrypt($data);
-    }
 
     public function setInstagramPasswordAttribute(string $value): void {
         $this->attributes['instagram_password'] = $this->encryptData($value);
@@ -58,7 +43,7 @@ class InstagramAccount extends Model {
     }
 
     public function getSessionDataAttribute(?string $value): ?string {
-        return  $value === null ? null : $this->decryptData($value);
+        return $value === null ? null : $this->decryptData($value);
     }
 
     public function user(): BelongsTo {

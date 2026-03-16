@@ -5,13 +5,21 @@ declare(strict_types=1);
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommentGenerateController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InstagramAccountController;
 use App\Http\Controllers\InstagramUserController;
+use App\Http\Controllers\LlmSettingsController;
 use App\Http\Controllers\ProxyImageController;
 use App\Http\Controllers\SearchController;
 use App\Http\Middleware\EnsureUserIsActive;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
+
+// --- Broadcasting auth ---
+Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
+    return Broadcast::auth($request);
+});
 
 // --- Auth ---
 Route::prefix('auth')->group(function () {
@@ -57,10 +65,23 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
     // Comments
     Route::post('/media/{mediaId}/comment', [CommentController::class, 'store']);
 
+    // Comment generation (LLM + WebSocket)
+    Route::post('/comments/generate', [CommentGenerateController::class, 'generate']);
+
     // Admin
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::patch('/users/{id}/toggle-active', [AdminUserController::class, 'toggleActive']);
         Route::patch('/users/{id}/role', [AdminUserController::class, 'updateRole']);
+    });
+
+    // LLM Settings (admin only)
+    Route::prefix('llm-settings')->middleware('role:admin')->group(function () {
+        Route::get('/', [LlmSettingsController::class, 'index']);
+        Route::post('/', [LlmSettingsController::class, 'store']);
+        Route::post('/test', [LlmSettingsController::class, 'testConnection']);
+        Route::get('/{id}', [LlmSettingsController::class, 'show']);
+        Route::patch('/{id}/default', [LlmSettingsController::class, 'setDefault']);
+        Route::delete('/{id}', [LlmSettingsController::class, 'destroy']);
     });
 });

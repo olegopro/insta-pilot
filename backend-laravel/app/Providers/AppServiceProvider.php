@@ -6,10 +6,14 @@ namespace App\Providers;
 
 use App\Repositories\InstagramAccountRepository;
 use App\Repositories\InstagramAccountRepositoryInterface;
+use App\Repositories\LlmSettingsRepository;
+use App\Repositories\LlmSettingsRepositoryInterface;
 use App\Repositories\UserRepository;
 use App\Repositories\UserRepositoryInterface;
 use App\Services\InstagramClientService;
 use App\Services\InstagramClientServiceInterface;
+use App\Services\LlmService;
+use App\Services\LlmServiceInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider {
@@ -30,6 +34,16 @@ class AppServiceProvider extends ServiceProvider {
         $this->app->singleton(
             InstagramClientServiceInterface::class,
             fn () => new InstagramClientService(config('services.instagram.python_url'))
+        );
+
+        $this->app->bind(
+            LlmSettingsRepositoryInterface::class,
+            LlmSettingsRepository::class
+        );
+
+        $this->app->bind(
+            LlmServiceInterface::class,
+            LlmService::class
         );
     }
 

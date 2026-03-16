@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch, onBeforeUnmount } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
   import { useSearchStore } from '@/entities/media-post'
   import { formatCount, formatDate, notifyError, notifySuccess } from '@/shared/lib'
@@ -8,6 +8,7 @@
   import { MediaDisplay } from '@/shared/ui/media-display'
   import { InputComponent } from '@/shared/ui/input-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
+  import { useCommentGeneration, GenerationStatus } from '@/features/generate-comment'
 
   const props = defineProps<{
     post: MediaPost
@@ -24,8 +25,15 @@
 
   const searchStore = useSearchStore()
   const commentText = ref('')
+  const { step, generatedComment, error, loading, generate, cleanup } = useCommentGeneration()
 
   const isUserLoading = computed(() => props.loadingUserPk === props.post.user.pk)
+
+  const generateHandler = async () => {
+    const url = props.post.thumbnailUrl
+    if (!url) return
+    await generate(url, props.post.captionText)
+  }
 
   const sendCommentHandler = async () => {
     if (!commentText.value.trim() || !props.accountId) return
@@ -37,6 +45,16 @@
       notifyError('Ошибка отправки комментария')
     }
   }
+
+  watch(generatedComment, (comment) => {
+    comment && (commentText.value = comment)
+  })
+
+  watch(isOpen, (opened) => {
+    !opened && cleanup()
+  })
+
+  onBeforeUnmount(cleanup)
 </script>
 
 <template>
@@ -103,6 +121,7 @@
               autogrow
               :max-length="2200"
             />
+            <GenerationStatus :step="step" :error="error" />
             <div class="comment-actions">
               <ButtonComponent
                 label="Сгенерировать"
@@ -110,8 +129,9 @@
                 flat
                 dense
                 color="grey-7"
-                disable
-                title="Будет доступно в Фазе 4 (LLM интеграция)"
+                :loading="loading"
+                :disable="!post.thumbnailUrl"
+                @click="generateHandler"
               />
               <ButtonComponent
                 label="Отправить"

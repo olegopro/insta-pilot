@@ -60,6 +60,38 @@ services:
       timeout: 5s
       retries: 5
 
+  reverb:
+    build:
+      context: .
+      dockerfile: docker/laravel/Dockerfile
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend-laravel:/var/www/html
+    env_file:
+      - ./backend-laravel/.env
+    depends_on:
+      laravel:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  queue-worker:
+    build:
+      context: .
+      dockerfile: docker/laravel/Dockerfile
+    command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90
+    volumes:
+      - ./backend-laravel:/var/www/html
+    env_file:
+      - ./backend-laravel/.env
+    depends_on:
+      laravel:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
   redis:
     image: redis:7-alpine
     ports:

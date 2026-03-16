@@ -27,6 +27,19 @@
         <exclude name="Squiz.WhiteSpace.ScopeClosingBrace.ContentBefore"/>
     </rule>
 
+    <!-- Разрешить несколько трейтов в одном use-statement -->
+    <rule ref="PSR12.Traits.UseDeclaration.MultipleDeclarations">
+        <exclude name="PSR12.Traits.UseDeclaration.MultipleDeclarations"/>
+    </rule>
+    <rule ref="PSR12.Traits.UseDeclaration.MultipleImport">
+        <exclude name="PSR12.Traits.UseDeclaration.MultipleImport"/>
+    </rule>
+
+    <!-- Разрешить пустую строку в конце control structure (catch, if и др.) -->
+    <rule ref="Squiz.WhiteSpace.ControlStructureSpacing.SpacingBeforeClose">
+        <exclude name="Squiz.WhiteSpace.ControlStructureSpacing.SpacingBeforeClose"/>
+    </rule>
+
     <!-- PHPUnit требует snake_case в именах тестов (test_foo_bar) -->
     <rule ref="PSR1.Methods.CamelCapsMethodName">
         <exclude-pattern>tests/</exclude-pattern>
