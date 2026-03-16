@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\DeviceProfile;
 use App\Repositories\InstagramAccountRepositoryInterface;
 use App\Services\InstagramClientServiceInterface;
 use Illuminate\Http\JsonResponse;
@@ -25,24 +26,44 @@ final class InstagramAccountController extends Controller {
         ]);
     }
 
+    public function deviceProfiles(): JsonResponse {
+        $profiles = DeviceProfile::query()
+            ->where('is_active', true)
+            ->orderBy('title')
+            ->get(['id', 'code', 'title']);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $profiles,
+            'message' => 'OK'
+        ]);
+    }
+
     public function login(Request $request): JsonResponse {
-        try {
-            $validated = $request->validate([
-                'instagram_login'    => 'required|string|unique:instagram_accounts,instagram_login',
-                'instagram_password' => 'required|string',
-                'proxy'              => 'nullable|string'
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        $validated = $request->validate([
+            'instagram_login'    => 'required|string|unique:instagram_accounts,instagram_login',
+            'instagram_password' => 'required|string',
+            'proxy'              => 'nullable|string',
+            'device_profile_id'  => 'required|integer|exists:device_profiles,id'
+        ]);
+
+        $deviceProfile = DeviceProfile::query()->find((int) $validated['device_profile_id']);
+
+        if (!$deviceProfile) {
             return response()->json([
                 'success' => false,
-                'error'   => 'Аккаунт с таким логином уже существует'
+                'error'   => 'Профиль устройства не найден'
             ], 422);
         }
 
         $result = $this->instagramClient->login(
             $validated['instagram_login'],
             $validated['instagram_password'],
-            $validated['proxy'] ?? null
+            $validated['proxy'] ?? null,
+            [
+                'device_settings' => $deviceProfile->device_settings,
+                'user_agent'      => $deviceProfile->user_agent
+            ]
         );
 
         if (empty($result['success'])) {
@@ -59,7 +80,9 @@ final class InstagramAccountController extends Controller {
             'session_data'       => $result['session_data'],
             'full_name'          => $result['full_name'] ?? null,
             'profile_pic_url'    => $result['profile_pic_url'] ?? null,
-            'proxy'              => $validated['proxy'] ?? null
+            'proxy'              => $validated['proxy'] ?? null,
+            'device_profile_id'  => $deviceProfile->id,
+            'device_model_name'  => $deviceProfile->title
         ]);
 
         return response()->json([

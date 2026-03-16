@@ -41,6 +41,7 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
     // Instagram accounts
     Route::prefix('accounts')->group(function () {
         Route::get('/', [InstagramAccountController::class, 'index']);
+        Route::get('/device-profiles', [InstagramAccountController::class, 'deviceProfiles']);
         Route::post('/login', [InstagramAccountController::class, 'login']);
         Route::get('/{id}', [InstagramAccountController::class, 'show']);
         Route::delete('/{id}', [InstagramAccountController::class, 'destroy']);

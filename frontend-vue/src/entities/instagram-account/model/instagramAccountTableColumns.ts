@@ -5,6 +5,7 @@ export interface InstagramAccountRowModel {
   id: number
   instagramLogin: string
   fullName: Nullable<string>
+  deviceModelName: Nullable<string>
   isActive: boolean
   createdAt: string
 }
@@ -21,6 +22,13 @@ export default [
     name: 'fullName',
     label: 'Имя',
     field: (row) => row.fullName ?? '—',
+    align: 'left',
+    sortable: true
+  },
+  {
+    name: 'deviceModelName',
+    label: 'Модель устройства',
+    field: (row) => row.deviceModelName ?? '—',
     align: 'left',
     sortable: true
   },

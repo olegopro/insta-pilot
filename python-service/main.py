@@ -160,6 +160,7 @@ class LoginRequest(BaseModel):
     login: str
     password: str
     proxy: Optional[str] = None
+    device_profile: Optional[dict] = None
 
 
 class LoginResponse(BaseModel):
@@ -268,6 +269,13 @@ async def login(data: LoginRequest):
         cl = Client()
         if data.proxy:
             cl.set_proxy(data.proxy)
+        if data.device_profile:
+            device_settings = data.device_profile.get("device_settings")
+            user_agent = data.device_profile.get("user_agent")
+            if isinstance(device_settings, dict):
+                cl.set_device(device_settings)
+            if isinstance(user_agent, str) and user_agent:
+                cl.set_user_agent(user_agent)
         cl.login(data.login, data.password)
         session_data = json.dumps(cl.get_settings())
         user_info = cl.account_info()

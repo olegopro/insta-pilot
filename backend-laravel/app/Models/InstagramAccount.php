@@ -19,6 +19,8 @@ class InstagramAccount extends Model {
         'instagram_password',
         'session_data',
         'proxy',
+        'device_profile_id',
+        'device_model_name',
         'full_name',
         'profile_pic_url',
         'is_active',
@@ -48,5 +50,9 @@ class InstagramAccount extends Model {
 
     public function user(): BelongsTo {
         return $this->belongsTo(User::class);
+    }
+
+    public function deviceProfile(): BelongsTo {
+        return $this->belongsTo(DeviceProfile::class);
     }
 }

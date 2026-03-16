@@ -9,10 +9,11 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder {
     public function run(): void {
-        // Создаёт роли, admin@insta-pilot.local (пароль: password) с ролью admin
-        $this->call([AdminSeeder::class]);
+        $this->call([
+            AdminSeeder::class,
+            DeviceProfileSeeder::class
+        ]);
 
-        // Обычный пользователь для E2E тестов
         $user = User::firstOrCreate(
             ['email' => 'user@insta-pilot.local'],
             [

@@ -18,6 +18,8 @@ class InstagramAccountFactory extends Factory {
             'instagram_password' => 'password',
             'session_data'       => null,
             'proxy'              => null,
+            'device_profile_id'  => null,
+            'device_model_name'  => null,
             'full_name'          => fake()->name(),
             'profile_pic_url'    => null,
             'is_active'          => true,

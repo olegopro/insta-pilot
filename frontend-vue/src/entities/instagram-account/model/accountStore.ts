@@ -7,7 +7,8 @@ import type {
   InstagramAccount,
   InstagramAccountDetailed,
   AddAccountRequest,
-  AddAccountResponse
+  AddAccountResponse,
+  DeviceProfile
 } from '@/entities/instagram-account/model/types'
 
 export const useAccountStore = defineStore('accounts', () => {
@@ -23,12 +24,17 @@ export const useAccountStore = defineStore('accounts', () => {
     (id) => api.get(`/accounts/${String(id)}`).then((response) => response.data)
   )
 
+  const fetchDeviceProfilesApi = useApi<ApiResponseWrapper<DeviceProfile[]>>(
+    () => api.get('/accounts/device-profiles').then((response) => response.data)
+  )
+
   const deleteAccountApi = useApi<ApiResponseWrapper<null>, number>(
     (id) => api.delete(`/accounts/${String(id)}`).then((response) => response.data)
   )
 
   const accounts = ref<InstagramAccount[]>([])
   const accountDetail = ref<Nullable<InstagramAccountDetailed>>(null)
+  const deviceProfiles = ref<DeviceProfile[]>([])
 
   const fetchAccounts = async () => {
     const { data } = await fetchAccountsApi.execute()
@@ -46,6 +52,12 @@ export const useAccountStore = defineStore('accounts', () => {
   }
   const fetchAccountDetailsLoading = computed(() => fetchAccountDetailsApi.loading.value)
 
+  const fetchDeviceProfiles = async () => {
+    const { data } = await fetchDeviceProfilesApi.execute()
+    deviceProfiles.value = data
+  }
+  const fetchDeviceProfilesLoading = computed(() => fetchDeviceProfilesApi.loading.value)
+
   const deleteAccount = (id: number) => deleteAccountApi.execute(id)
   const deleteAccountLoading = computed(() => deleteAccountApi.loading.value)
   const deleteAccountError = computed(() => deleteAccountApi.error.value)
@@ -53,6 +65,7 @@ export const useAccountStore = defineStore('accounts', () => {
   return {
     accounts,
     accountDetail,
+    deviceProfiles,
     fetchAccounts,
     fetchAccountsLoading,
     addAccount,
@@ -60,6 +73,8 @@ export const useAccountStore = defineStore('accounts', () => {
     addAccountError,
     fetchAccountDetails,
     fetchAccountDetailsLoading,
+    fetchDeviceProfiles,
+    fetchDeviceProfilesLoading,
     deleteAccount,
     deleteAccountLoading,
     deleteAccountError

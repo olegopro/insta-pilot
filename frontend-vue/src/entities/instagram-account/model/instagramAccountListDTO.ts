@@ -7,6 +7,7 @@ class InstagramAccountListDTO {
       id: item.id,
       instagramLogin: item.instagram_login,
       fullName: item.full_name,
+      deviceModelName: item.device_model_name,
       isActive: item.is_active,
       createdAt: item.created_at
     }))

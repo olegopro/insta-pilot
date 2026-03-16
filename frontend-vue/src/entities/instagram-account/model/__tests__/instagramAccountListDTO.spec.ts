@@ -8,6 +8,8 @@ const makeAccount = (overrides: Partial<InstagramAccount> = {}): InstagramAccoun
   full_name: 'Test Account',
   profile_pic_url: null,
   proxy: null,
+  device_profile_id: null,
+  device_model_name: 'Samsung Galaxy S24 Ultra',
   is_active: true,
   created_at: '2026-01-01T00:00:00Z',
   ...overrides
@@ -21,6 +23,7 @@ describe('instagramAccountListDTO.toLocal', () => {
       id: 1,
       instagramLogin: 'testuser',
       fullName: 'Test Account',
+      deviceModelName: 'Samsung Galaxy S24 Ultra',
       isActive: true,
       createdAt: '2026-01-01T00:00:00Z'
     })

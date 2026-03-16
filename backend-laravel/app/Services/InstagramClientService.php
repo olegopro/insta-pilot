@@ -12,12 +12,16 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
     public function login(
         string $login,
         string $password,
-        ?string $proxy = null
+        ?string $proxy = null,
+        ?array $deviceProfile = null
     ): array {
-        return Http::post(
-            "$this->pythonUrl/auth/login",
-            compact('login', 'password', 'proxy')
-        )->json();
+        $payload = compact('login', 'password', 'proxy');
+
+        if ($deviceProfile !== null) {
+            $payload['device_profile'] = $deviceProfile;
+        }
+
+        return Http::post("$this->pythonUrl/auth/login", $payload)->json();
     }
 
     public function getUserInfo(string $sessionData): array {

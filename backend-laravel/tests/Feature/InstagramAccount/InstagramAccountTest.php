@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\InstagramAccount;
 
+use App\Models\DeviceProfile;
 use App\Models\InstagramAccount;
 use App\Models\User;
 use App\Services\InstagramClientServiceInterface;
@@ -63,6 +64,14 @@ class InstagramAccountTest extends TestCase {
     }
 
     public function test_account_login_creates_account_with_user_id(): void {
+        $profile = DeviceProfile::create([
+            'code'            => 'pixel-8-pro',
+            'title'           => 'Google Pixel 8 Pro',
+            'device_settings' => ['model' => 'Pixel 8 Pro'],
+            'user_agent'      => 'Instagram Test Agent',
+            'is_active'       => true
+        ]);
+
         $this->mock(InstagramClientServiceInterface::class, function ($mock) {
             $mock->shouldReceive('login')
                 ->once()
@@ -77,6 +86,7 @@ class InstagramAccountTest extends TestCase {
         $response = $this->withToken($this->token)->postJson('/api/accounts/login', [
             'instagram_login'    => 'testaccount',
             'instagram_password' => 'secret123',
+            'device_profile_id'  => $profile->id
         ]);
 
         $response->assertStatus(200)
@@ -86,12 +96,22 @@ class InstagramAccountTest extends TestCase {
             ]);
 
         $this->assertDatabaseHas('instagram_accounts', [
-            'instagram_login' => 'testaccount',
-            'user_id'         => $this->user->id,
+            'instagram_login'   => 'testaccount',
+            'user_id'           => $this->user->id,
+            'device_profile_id' => $profile->id,
+            'device_model_name' => 'Google Pixel 8 Pro'
         ]);
     }
 
     public function test_account_login_fails_if_client_returns_error(): void {
+        $profile = DeviceProfile::create([
+            'code'            => 'galaxy-s24',
+            'title'           => 'Samsung Galaxy S24 Ultra',
+            'device_settings' => ['model' => 'SM-S928B'],
+            'user_agent'      => 'Instagram Test Agent',
+            'is_active'       => true
+        ]);
+
         $this->mock(InstagramClientServiceInterface::class, function ($mock) {
             $mock->shouldReceive('login')
                 ->once()
@@ -104,6 +124,7 @@ class InstagramAccountTest extends TestCase {
         $response = $this->withToken($this->token)->postJson('/api/accounts/login', [
             'instagram_login'    => 'failaccount',
             'instagram_password' => 'wrongpass',
+            'device_profile_id'  => $profile->id
         ]);
 
         $response->assertStatus(422)
@@ -125,5 +146,32 @@ class InstagramAccountTest extends TestCase {
             ->assertJson(['success' => true]);
 
         $this->assertDatabaseMissing('instagram_accounts', ['id' => $account->id]);
+    }
+
+    public function test_user_can_get_device_profiles(): void {
+        DeviceProfile::create([
+            'code'            => 'pixel-8',
+            'title'           => 'Google Pixel 8',
+            'device_settings' => ['model' => 'Pixel 8'],
+            'user_agent'      => 'Instagram Test Agent',
+            'is_active'       => true
+        ]);
+
+        DeviceProfile::create([
+            'code'            => 'disabled',
+            'title'           => 'Disabled Device',
+            'device_settings' => ['model' => 'Disabled'],
+            'user_agent'      => 'Instagram Test Agent',
+            'is_active'       => false
+        ]);
+
+        $response = $this->withToken($this->token)->getJson('/api/accounts/device-profiles');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data'    => [['code' => 'pixel-8']]
+            ])
+            ->assertJsonMissing(['code' => 'disabled']);
     }
 }
