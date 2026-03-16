@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
@@ -68,6 +69,13 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
 
     // Comment generation (LLM + WebSocket)
     Route::post('/comments/generate', [CommentGenerateController::class, 'generate']);
+
+    // Activity logs
+    Route::prefix('accounts/{accountId}/activity')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'index']);
+        Route::get('/stats', [ActivityLogController::class, 'stats']);
+    });
+    Route::get('/activity/summary', [ActivityLogController::class, 'summary']);
 
     // Admin
     Route::prefix('admin')->middleware('role:admin')->group(function () {

@@ -13,7 +13,8 @@ final class CommentGenerateController extends Controller {
     public function generate(Request $request): JsonResponse {
         $request->validate([
             'image_url'    => 'required|url',
-            'caption_text' => 'nullable|string|max:2000'
+            'caption_text' => 'nullable|string|max:2000',
+            'account_id'   => 'nullable|integer',
         ]);
 
         $jobId = (string) Str::uuid();
@@ -21,7 +22,9 @@ final class CommentGenerateController extends Controller {
         GenerateCommentJob::dispatch(
             $jobId,
             $request->input('image_url'),
-            $request->input('caption_text')
+            $request->input('caption_text'),
+            $request->input('account_id') ? (int) $request->input('account_id') : null,
+            $request->user()?->id,
         );
 
         return response()->json([

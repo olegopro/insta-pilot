@@ -65,6 +65,7 @@ final class FeedController extends Controller {
 
         $result = $this->instagramClient->getFeed(
             $account->session_data,
+            $account->id,
             $maxId,
             $seenPosts,
             $reason,
@@ -113,7 +114,7 @@ final class FeedController extends Controller {
         }
 
         $validated = $request->validate(['media_id' => 'required|string']);
-        $result    = $this->instagramClient->addLike($account->session_data, $validated['media_id']);
+        $result    = $this->instagramClient->addLike($account->session_data, $validated['media_id'], $account->id);
 
         if (empty($result['success'])) {
             return response()->json([

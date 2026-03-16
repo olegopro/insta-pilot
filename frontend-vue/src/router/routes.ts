@@ -30,6 +30,14 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/search/ui/SearchPage.vue')
       },
       {
+        path: 'logs',
+        component: () => import('@/pages/logs/ui/LogsPage.vue')
+      },
+      {
+        path: 'logs/:accountId',
+        component: () => import('@/pages/logs/ui/LogsPage.vue')
+      },
+      {
         path: 'settings/llm',
         component: () => import('@/pages/llm-settings/ui/LlmSettingsPage.vue'),
         meta: { requiresAdmin: true }

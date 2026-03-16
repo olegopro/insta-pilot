@@ -35,6 +35,7 @@ final class SearchController extends Controller {
 
         $result = $this->instagramClient->searchHashtag(
             $account->session_data,
+            $account->id,
             $validated['tag'],
             (int) ($validated['amount'] ?? 30),
             $validated['next_max_id'] ?? null
@@ -72,6 +73,7 @@ final class SearchController extends Controller {
 
         $result = $this->instagramClient->searchLocations(
             $account->session_data,
+            $account->id,
             $validated['query']
         );
 
@@ -106,6 +108,7 @@ final class SearchController extends Controller {
 
         $result = $this->instagramClient->searchLocationMedias(
             $account->session_data,
+            $account->id,
             (int) $validated['location_pk'],
             (int) ($validated['amount'] ?? 30),
             $validated['next_max_id'] ?? null

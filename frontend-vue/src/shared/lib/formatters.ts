@@ -1,3 +1,5 @@
+import type { Nullable } from './types'
+
 export const formatCount = (count: number): string => {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`
   if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`
@@ -11,4 +13,21 @@ export const formatDate = (iso: string): string => {
     month: 'long',
     year: 'numeric'
   })
+}
+
+export const formatTimeHMS = (iso: string): string => {
+  try {
+    return new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  } catch {
+    return iso
+  }
+}
+
+export const formatTimeHM = (iso: Nullable<string>): Nullable<string> => {
+  if (!iso) return null
+  try {
+    return new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return iso
+  }
 }

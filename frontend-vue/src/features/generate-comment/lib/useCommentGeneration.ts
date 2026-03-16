@@ -29,7 +29,7 @@ export function useCommentGeneration() {
     }
   }
 
-  const generate = async (imageUrl: string, captionText?: string) => {
+  const generate = async (imageUrl: string, captionText?: string, accountId?: number) => {
     leaveChannel()
     step.value = 'starting'
     generatedComment.value = null
@@ -38,7 +38,7 @@ export function useCommentGeneration() {
     try {
       const response = await api.post<{ success: boolean; data: { job_id: string } }>(
         '/comments/generate',
-        { image_url: imageUrl, caption_text: captionText }
+        { image_url: imageUrl, caption_text: captionText, account_id: accountId }
       )
 
       const jobId = response.data.data.job_id

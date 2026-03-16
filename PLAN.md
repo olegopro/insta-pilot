@@ -149,7 +149,7 @@
 
 ### Фаза 5 — Мониторинг активности аккаунтов
 
-> [Backend →](PLAN-EXTEND-LOGGING-BACKEND.md) | [Frontend →](PLAN-EXTEND-LOGGING-FRONT.md)
+> [Полный план →](PLAN-EXTEND-LOGGING-FULL.md) | [Backend →](PLAN-EXTEND-LOGGING-BACKEND.md) | [Frontend →](PLAN-EXTEND-LOGGING-FRONT.md)
 
 **Python:**
 - [ ] 5.1 Структурированные ошибки: добавить `error_code` в ответы Python-сервиса (rate_limited, challenge_required, login_required, timeout)

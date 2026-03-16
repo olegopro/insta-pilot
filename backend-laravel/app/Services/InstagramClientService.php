@@ -6,39 +6,135 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 
-readonly class InstagramClientService implements InstagramClientServiceInterface {
-    public function __construct(private string $pythonUrl) {}
+class InstagramClientService implements InstagramClientServiceInterface {
+    public function __construct(
+        private readonly string $pythonUrl,
+        private readonly ActivityLoggerServiceInterface $activityLogger,
+    ) {}
 
     public function login(
         string $login,
         string $password,
         ?string $proxy = null,
-        ?array $deviceProfile = null
+        ?array $deviceProfile = null,
+        ?int $accountId = null,
     ): array {
-        $payload = compact('login', 'password', 'proxy');
+        $start    = microtime(true);
+        $endpoint = '/auth/login';
+        $payload  = compact('login', 'password', 'proxy');
 
         if ($deviceProfile !== null) {
             $payload['device_profile'] = $deviceProfile;
         }
 
-        return Http::post("$this->pythonUrl/auth/login", $payload)->json();
+        $response   = Http::post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        if ($accountId !== null) {
+            $this->activityLogger->log(
+                accountId:       $accountId,
+                userId:          (int) auth()->id(),
+                action:          'login',
+                status:          $isSuccess ? 'success' : $this->detectStatus($result),
+                httpCode:        $response->status(),
+                endpoint:        $endpoint,
+                requestPayload:  [
+                    'instagram_login' => $login,
+                    'has_proxy'       => $proxy !== null,
+                    'python_request'  => [
+                        'endpoint'        => $endpoint,
+                        'instagram_login' => $login,
+                        'has_proxy'       => $proxy !== null,
+                    ],
+                ],
+                responseSummary: [
+                    'session_restored' => false,
+                    'python_response'  => ['http_code' => $response->status()],
+                ],
+                errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+                errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+                durationMs:      $durationMs,
+            );
+        }
+
+        return $result;
     }
 
-    public function getUserInfo(string $sessionData): array {
-        return Http::post(
-            "$this->pythonUrl/account/info",
-            ['session_data' => $sessionData]
-        )->json();
+    public function getUserInfo(string $sessionData, ?int $accountId = null): array {
+        $start    = microtime(true);
+        $endpoint = '/account/info';
+
+        $response   = Http::post("$this->pythonUrl$endpoint", ['session_data' => $sessionData]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        if ($accountId !== null) {
+            $this->activityLogger->log(
+                accountId:       $accountId,
+                userId:          (int) auth()->id(),
+                action:          'fetch_user_info',
+                status:          $isSuccess ? 'success' : $this->detectStatus($result),
+                httpCode:        $response->status(),
+                endpoint:        $endpoint,
+                requestPayload:  [
+                    'python_request' => ['endpoint' => $endpoint],
+                ],
+                responseSummary: $isSuccess ? [
+                    'followers_count' => $result['followers_count'] ?? null,
+                    'following_count' => $result['following_count'] ?? null,
+                    'python_response' => [
+                        'http_code'       => $response->status(),
+                        'followers_count' => $result['followers_count'] ?? null,
+                        'following_count' => $result['following_count'] ?? null,
+                    ],
+                ] : null,
+                errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+                errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+                durationMs:      $durationMs,
+            );
+        }
+
+        return $result;
     }
 
-    public function addLike(string $sessionData, string $mediaId): array {
-        return Http::post(
-            "$this->pythonUrl/media/like",
-            [
-                'session_data' => $sessionData,
-                'media_id'     => $mediaId
-            ]
-        )->json();
+    public function addLike(string $sessionData, string $mediaId, int $accountId): array {
+        $start    = microtime(true);
+        $endpoint = '/media/like';
+
+        $response   = Http::post("$this->pythonUrl$endpoint", [
+            'session_data' => $sessionData,
+            'media_id'     => $mediaId,
+        ]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'like',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'media_pk'          => $mediaId,
+                'python_request'    => ['endpoint' => $endpoint, 'media_id' => $mediaId],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+            ],
+            responseSummary: $isSuccess ? [
+                'media_pk'           => $mediaId,
+                'python_response'    => ['http_code' => $response->status()],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        return $result;
     }
 
     /**
@@ -60,95 +156,358 @@ readonly class InstagramClientService implements InstagramClientServiceInterface
      * и передаёт оба поля в тело запроса к Instagram API.
      *
      * @param string      $sessionData  JSON сессии instagrapi (расшифрованный)
+     * @param int         $accountId    ID аккаунта для логирования
      * @param string|null $maxId        Курсор следующей страницы из предыдущего ответа
      * @param string|null $seenPosts    Comma-separated media_id просмотренных постов
      */
     public function getFeed(
         string $sessionData,
+        int $accountId,
         ?string $maxId = null,
         ?string $seenPosts = null,
         ?string $reason = null,
         ?int $minPosts = null
     ): array {
-        $payload = ['session_data' => $sessionData];
+        $start    = microtime(true);
+        $endpoint = '/account/feed';
+        $payload  = ['session_data' => $sessionData];
 
-        if ($maxId !== null) {
-            $payload['max_id'] = $maxId;
-        }
+        $maxId !== null && $payload['max_id'] = $maxId;
+        $seenPosts !== null && $payload['seen_posts'] = $seenPosts;
+        $reason !== null && $payload['reason'] = $reason;
+        $minPosts !== null && $payload['min_posts'] = $minPosts;
 
-        if ($seenPosts !== null) {
-            $payload['seen_posts'] = $seenPosts;
-        }
+        $timeout    = $minPosts !== null ? 60 : 15;
+        $response   = Http::timeout($timeout)->post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
 
-        if ($reason !== null) {
-            $payload['reason'] = $reason;
-        }
+        $seenPostsCount = $seenPosts ? count(array_filter(explode(',', $seenPosts))) : 0;
 
-        if ($minPosts !== null) {
-            $payload['min_posts'] = $minPosts;
-        }
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'fetch_feed',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'max_id'            => $maxId,
+                'seen_posts_count'  => $seenPostsCount,
+                'python_request'    => [
+                    'endpoint'         => $endpoint,
+                    'max_id'           => $maxId,
+                    'seen_posts_count' => $seenPostsCount,
+                    'reason'           => $reason,
+                ],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+            ],
+            responseSummary: $isSuccess ? [
+                'items_count'        => count($result['posts'] ?? []),
+                'has_more'           => $result['more_available'] ?? false,
+                'items_preview'      => array_slice(
+                    array_map(
+                        fn($post) => [
+                            'pk'         => $post['pk'] ?? null,
+                            'media_type' => $post['media_type'] ?? null,
+                            'username'   => $post['user']['username'] ?? null,
+                        ],
+                        $result['posts'] ?? []
+                    ),
+                    0,
+                    5
+                ),
+                'python_response'    => [
+                    'http_code'   => $response->status(),
+                    'items_count' => count($result['posts'] ?? []),
+                    'has_more'    => $result['more_available'] ?? false,
+                ],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
 
-        $timeout = $minPosts !== null ? 60 : 15;
-
-        return Http::timeout($timeout)->post("$this->pythonUrl/account/feed", $payload)->json();
+        return $result;
     }
 
-    public function getUserInfoByPk(string $sessionData, string $userPk): array {
-        return Http::post(
-            "$this->pythonUrl/user/info",
-            [
-                'session_data' => $sessionData,
-                'user_pk'      => $userPk
-            ]
-        )->json();
+    public function getUserInfoByPk(string $sessionData, string $userPk, int $accountId): array {
+        $start    = microtime(true);
+        $endpoint = '/user/info';
+
+        $response   = Http::post("$this->pythonUrl$endpoint", [
+            'session_data' => $sessionData,
+            'user_pk'      => $userPk,
+        ]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'fetch_user_info',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'user_pk'        => $userPk,
+                'python_request' => ['endpoint' => $endpoint, 'user_pk' => $userPk],
+            ],
+            responseSummary: $isSuccess ? [
+                'user_pk'         => $userPk,
+                'username'        => $result['user']['username'] ?? null,
+                'python_response' => [
+                    'http_code' => $response->status(),
+                    'username'  => $result['user']['username'] ?? null,
+                ],
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        return $result;
     }
 
-    public function searchHashtag(string $sessionData, string $hashtag, int $amount = 30, ?string $nextMaxId = null): array {
-        $payload = [
+    public function searchHashtag(string $sessionData, int $accountId, string $hashtag, int $amount = 30, ?string $nextMaxId = null): array {
+        $start    = microtime(true);
+        $endpoint = '/search/hashtag';
+        $payload  = [
             'session_data' => $sessionData,
             'hashtag'      => $hashtag,
-            'amount'       => $amount
+            'amount'       => $amount,
         ];
 
-        if ($nextMaxId !== null) {
-            $payload['next_max_id'] = $nextMaxId;
-        }
+        $nextMaxId !== null && $payload['next_max_id'] = $nextMaxId;
 
-        return Http::timeout(30)->post("$this->pythonUrl/search/hashtag", $payload)->json();
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'search_hashtag',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'hashtag'           => $hashtag,
+                'amount'            => $amount,
+                'python_request'    => [
+                    'endpoint'    => $endpoint,
+                    'hashtag'     => $hashtag,
+                    'amount'      => $amount,
+                    'next_max_id' => $nextMaxId,
+                ],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+            ],
+            responseSummary: $isSuccess ? [
+                'results_count'      => count($result['items'] ?? []),
+                'items_preview'      => array_slice(
+                    array_map(
+                        fn($item) => [
+                            'pk'         => $item['pk'] ?? null,
+                            'code'       => $item['code'] ?? null,
+                            'username'   => $item['user']['username'] ?? null,
+                            'likes'      => $item['like_count'] ?? null,
+                            'media_type' => $item['media_type'] ?? null,
+                        ],
+                        $result['items'] ?? []
+                    ),
+                    0,
+                    5
+                ),
+                'python_response'    => [
+                    'http_code'     => $response->status(),
+                    'results_count' => count($result['items'] ?? []),
+                ],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        return $result;
     }
 
-    public function searchLocations(string $sessionData, string $query): array {
-        return Http::post(
-            "$this->pythonUrl/search/locations",
-            [
-                'session_data' => $sessionData,
-                'query'        => $query
-            ]
-        )->json();
+    public function searchLocations(string $sessionData, int $accountId, string $query): array {
+        $start    = microtime(true);
+        $endpoint = '/search/locations';
+
+        $response   = Http::post("$this->pythonUrl$endpoint", [
+            'session_data' => $sessionData,
+            'query'        => $query,
+        ]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'search_locations',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'query'             => $query,
+                'python_request'    => ['endpoint' => $endpoint, 'query' => $query],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+            ],
+            responseSummary: $isSuccess ? [
+                'results_count'      => count($result['locations'] ?? []),
+                'locations_preview'  => array_slice(
+                    array_map(
+                        fn($location) => [
+                            'pk'   => $location['pk'] ?? null,
+                            'name' => $location['name'] ?? null,
+                        ],
+                        $result['locations'] ?? []
+                    ),
+                    0,
+                    5
+                ),
+                'python_response'    => [
+                    'http_code'     => $response->status(),
+                    'results_count' => count($result['locations'] ?? []),
+                ],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        return $result;
     }
 
-    public function searchLocationMedias(string $sessionData, int $locationPk, int $amount = 30, ?string $nextMaxId = null): array {
-        $payload = [
+    public function searchLocationMedias(string $sessionData, int $accountId, int $locationPk, int $amount = 30, ?string $nextMaxId = null): array {
+        $start    = microtime(true);
+        $endpoint = '/search/location';
+        $payload  = [
             'session_data' => $sessionData,
             'location_pk'  => $locationPk,
-            'amount'       => $amount
+            'amount'       => $amount,
         ];
 
-        if ($nextMaxId !== null) {
-            $payload['next_max_id'] = $nextMaxId;
-        }
+        $nextMaxId !== null && $payload['next_max_id'] = $nextMaxId;
 
-        return Http::timeout(30)->post("$this->pythonUrl/search/location", $payload)->json();
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'search_location_medias',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'location_pk'       => $locationPk,
+                'amount'            => $amount,
+                'python_request'    => [
+                    'endpoint'    => $endpoint,
+                    'location_pk' => $locationPk,
+                    'amount'      => $amount,
+                    'next_max_id' => $nextMaxId,
+                ],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+            ],
+            responseSummary: $isSuccess ? [
+                'results_count'      => count($result['items'] ?? []),
+                'items_preview'      => array_slice(
+                    array_map(
+                        fn($item) => [
+                            'pk'         => $item['pk'] ?? null,
+                            'code'       => $item['code'] ?? null,
+                            'username'   => $item['user']['username'] ?? null,
+                            'likes'      => $item['like_count'] ?? null,
+                            'media_type' => $item['media_type'] ?? null,
+                        ],
+                        $result['items'] ?? []
+                    ),
+                    0,
+                    5
+                ),
+                'python_response'    => [
+                    'http_code'     => $response->status(),
+                    'results_count' => count($result['items'] ?? []),
+                ],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        return $result;
     }
 
-    public function commentMedia(string $sessionData, string $mediaId, string $text): array {
-        return Http::post(
-            "$this->pythonUrl/media/comment",
-            [
-                'session_data' => $sessionData,
-                'media_id'     => $mediaId,
-                'text'         => $text
-            ]
-        )->json();
+    public function commentMedia(string $sessionData, int $accountId, string $mediaId, string $text): array {
+        $start    = microtime(true);
+        $endpoint = '/media/comment';
+
+        $response   = Http::post("$this->pythonUrl$endpoint", [
+            'session_data' => $sessionData,
+            'media_id'     => $mediaId,
+            'text'         => $text,
+        ]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'comment',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'media_pk'          => $mediaId,
+                'text'              => $text,
+                'text_length'       => mb_strlen($text),
+                'python_request'    => [
+                    'endpoint'    => $endpoint,
+                    'media_id'    => $mediaId,
+                    'text_length' => mb_strlen($text),
+                ],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+            ],
+            responseSummary: $isSuccess ? [
+                'media_pk'           => $mediaId,
+                'comment_pk'         => $result['comment_pk'] ?? null,
+                'python_response'    => [
+                    'http_code'  => $response->status(),
+                    'comment_pk' => $result['comment_pk'] ?? null,
+                ],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        return $result;
+    }
+
+    private function detectStatus(array $result): string {
+        $code = $result['error_code'] ?? null;
+
+        return match ($code) {
+            'rate_limited'       => 'rate_limited',
+            'challenge_required' => 'challenge_required',
+            'login_required'     => 'login_required',
+            'timeout'            => 'timeout',
+            default              => 'error',
+        };
     }
 }

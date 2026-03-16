@@ -27,7 +27,7 @@ class LlmService implements LlmServiceInterface {
         private readonly LlmSettingsRepositoryInterface $repository
     ) {}
 
-    public function generateComment(string $imageUrl, ?string $captionText = null): string {
+    public function generateComment(string $imageUrl, ?string $captionText = null): array {
         $setting = $this->repository->getDefault();
 
         if ($setting === null) {
@@ -68,12 +68,30 @@ class LlmService implements LlmServiceInterface {
             ]
         ];
 
-        return $this->sendRequest(
+        $result = $this->sendRequest(
             $setting->provider,
             $setting->api_key,
             $setting->model_name,
             $messages
         );
+
+        return [
+            'comment'      => $result['comment'],
+            'llm_request'  => [
+                'provider'      => $setting->provider,
+                'model'         => $setting->model_name,
+                'system_prompt' => $systemPrompt,
+                'user_text'     => $userText,
+                'image_url'     => $imageUrl,
+                'use_caption'   => $setting->use_caption,
+            ],
+            'llm_response' => [
+                'comment'       => $result['comment'],
+                'usage'         => $result['usage'],
+                'model'         => $result['model'],
+                'finish_reason' => $result['finish_reason'],
+            ],
+        ];
     }
 
     public function testConnection(string $provider, string $apiKey, string $modelName): bool {
@@ -118,7 +136,7 @@ class LlmService implements LlmServiceInterface {
         string $modelName,
         array $messages,
         int $maxTokens = 512
-    ): string {
+    ): array {
         $endpoint = match ($provider) {
             'glm'    => 'https://api.z.ai/api/paas/v4/chat/completions',
             'openai' => 'https://api.openai.com/v1/chat/completions',
@@ -147,7 +165,14 @@ class LlmService implements LlmServiceInterface {
 
         $data = $response->json();
 
-        return $data['choices'][0]['message']['content']
+        $comment = $data['choices'][0]['message']['content']
             ?? throw new RuntimeException('Unexpected LLM response format: missing content');
+
+        return [
+            'comment'       => $comment,
+            'usage'         => $data['usage'] ?? null,
+            'model'         => $data['model'] ?? null,
+            'finish_reason' => $data['choices'][0]['finish_reason'] ?? null,
+        ];
     }
 }

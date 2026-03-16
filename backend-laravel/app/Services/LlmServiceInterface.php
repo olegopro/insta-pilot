@@ -10,9 +10,9 @@ interface LlmServiceInterface {
      *
      * @param string $imageUrl URL изображения поста
      * @param string|null $captionText Текст описания поста (для контекста)
-     * @return string Сгенерированный комментарий
+     * @return array{comment: string, llm_request: array, llm_response: array}
      */
-    public function generateComment(string $imageUrl, ?string $captionText = null): string;
+    public function generateComment(string $imageUrl, ?string $captionText = null): array;
 
     /**
      * Тест подключения к LLM API (простой текстовый промпт).

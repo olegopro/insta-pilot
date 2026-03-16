@@ -7,8 +7,11 @@ from typing import Optional, List
 from urllib.parse import quote
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from instagrapi import Client
+
+from utils import error_to_code, error_to_http_status
 
 app = FastAPI(title="insta-pilot python service")
 
@@ -169,6 +172,7 @@ class LoginResponse(BaseModel):
     full_name: Optional[str] = None
     profile_pic_url: Optional[str] = None
     error: Optional[str] = None
+    error_code: Optional[str] = None
 
 
 class SessionRequest(BaseModel):
@@ -180,6 +184,7 @@ class AccountInfoResponse(BaseModel):
     followers_count: Optional[int] = None
     following_count: Optional[int] = None
     error: Optional[str] = None
+    error_code: Optional[str] = None
 
 
 class MediaLikeRequest(SessionRequest):
@@ -189,6 +194,8 @@ class MediaLikeRequest(SessionRequest):
 class MediaLikeResponse(BaseModel):
     success: bool
     error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
 
 
 class FeedRequest(SessionRequest):
@@ -204,6 +211,8 @@ class FeedResponse(BaseModel):
     next_max_id: Optional[str] = None
     more_available: bool = False
     error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
 
 
 class UserInfoByPkRequest(SessionRequest):
@@ -214,6 +223,7 @@ class UserInfoByPkResponse(BaseModel):
     success: bool
     user: Optional[dict] = None
     error: Optional[str] = None
+    error_code: Optional[str] = None
 
 
 class SearchHashtagRequest(SessionRequest):
@@ -237,12 +247,16 @@ class SearchResponse(BaseModel):
     items: List[dict] = []
     next_max_id: Optional[str] = None
     error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
 
 
 class SearchLocationsResponse(BaseModel):
     success: bool
     locations: List[dict] = []
     error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
 
 
 class CommentRequest(SessionRequest):
@@ -254,6 +268,8 @@ class CommentResponse(BaseModel):
     success: bool
     comment_pk: Optional[str] = None
     error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
 
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
@@ -263,7 +279,7 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/auth/login", response_model=LoginResponse)
+@app.post("/auth/login")
 async def login(data: LoginRequest):
     try:
         cl = Client()
@@ -286,10 +302,14 @@ async def login(data: LoginRequest):
             profile_pic_url=str(user_info.profile_pic_url)
         )
     except Exception as e:
-        return LoginResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=LoginResponse(success=False, error=str(e), error_code=code).model_dump()
+        )
 
 
-@app.post("/account/info", response_model=AccountInfoResponse)
+@app.post("/account/info")
 async def account_info(data: SessionRequest):
     try:
         cl = _make_client(data.session_data)
@@ -300,17 +320,79 @@ async def account_info(data: SessionRequest):
             following_count=info.following_count
         )
     except Exception as e:
-        return AccountInfoResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=AccountInfoResponse(success=False, error=str(e), error_code=code).model_dump()
+        )
 
 
-@app.post("/media/like", response_model=MediaLikeResponse)
+@app.post("/media/like")
 async def like_media(data: MediaLikeRequest):
     try:
         cl = _make_client(data.session_data)
         cl.media_like(data.media_id)
-        return MediaLikeResponse(success=True)
+        debug_info = {
+            "instagram_request": {"method": "media_like", "media_id": data.media_id},
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+        return MediaLikeResponse(success=True, debug_info=debug_info)
     except Exception as e:
-        return MediaLikeResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=MediaLikeResponse(success=False, error=str(e), error_code=code).model_dump()
+        )
+
+
+def _instagram_response_debug(raw: Optional[dict]) -> dict:
+    """Compact debug representation of an Instagram API response (strips large post arrays)."""
+    if not raw:
+        return {}
+
+    result: dict = {"status": raw.get("status")}
+
+    if "feed_items" in raw:
+        feed_items = raw.get("feed_items") or []
+        result["feed_items_count"] = len(feed_items)
+        result["more_available"] = raw.get("more_available")
+        result["has_next_max_id"] = bool(raw.get("next_max_id"))
+        result["items_preview"] = [
+            str((item.get("media_or_ad") or {}).get("pk", ""))
+            for item in feed_items[:5]
+            if (item.get("media_or_ad") or {}).get("pk")
+        ]
+        return result
+
+    if "sections" in raw:
+        sections = raw.get("sections") or []
+        result["sections_count"] = len(sections)
+        result["more_available"] = raw.get("more_available")
+        result["has_next_max_id"] = bool(raw.get("next_max_id"))
+        result["sections_preview"] = [
+            {
+                "layout_type": s.get("layout_type"),
+                "medias_count": len((s.get("layout_content") or {}).get("medias") or []),
+                "media_pks": [
+                    str((m.get("media") or {}).get("pk", ""))
+                    for m in ((s.get("layout_content") or {}).get("medias") or [])
+                    if (m.get("media") or {}).get("pk")
+                ]
+            }
+            for s in sections[:3]
+        ]
+        return result
+
+    if "comment" in raw:
+        c = raw.get("comment") or {}
+        result["comment"] = {
+            "pk": str(c.get("pk", "")),
+            "text": c.get("text", ""),
+            "created_at": c.get("created_at"),
+        }
+        return result
+
+    return raw
 
 
 def _extract_posts(raw: dict) -> list[dict]:
@@ -376,11 +458,21 @@ async def get_feed(data: FeedRequest):
                 cl, data.max_id, seen, all_posts, data.min_posts, "pagination"
             )
 
+            debug_info = {
+                "instagram_request": {
+                    "method": "feed/timeline/ (pagination)",
+                    "max_id": data.max_id,
+                    "seen_posts_count": len(seen),
+                },
+                "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+            }
+
             return FeedResponse(
                 success=True,
                 posts=all_posts,
                 next_max_id=next_max_id,
-                more_available=more_available
+                more_available=more_available,
+                debug_info=debug_info,
             )
         else:
             reason = data.reason if data.reason in ("cold_start_fetch", "pull_to_refresh", "warm_start_fetch") else "cold_start_fetch"
@@ -397,14 +489,24 @@ async def get_feed(data: FeedRequest):
                     cl, next_max_id, seen, all_posts, data.min_posts, "extra"
                 )
 
+            debug_info = {
+                "instagram_request": {"method": "get_timeline_feed", "reason": reason},
+                "instagram_response": _instagram_response_debug(raw),
+            }
+
             return FeedResponse(
                 success=True,
                 posts=all_posts,
                 next_max_id=next_max_id,
-                more_available=more_available
+                more_available=more_available,
+                debug_info=debug_info,
             )
     except Exception as e:
-        return FeedResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=FeedResponse(success=False, error=str(e), error_code=code).model_dump()
+        )
 
 
 def _extract_sections_posts(raw: dict, amount: Optional[int] = None) -> list[dict]:
@@ -460,7 +562,7 @@ def _fetch_sections(
     return posts, cursor
 
 
-@app.post("/user/info", response_model=UserInfoByPkResponse)
+@app.post("/user/info")
 async def get_user_info_by_pk(data: UserInfoByPkRequest):
     try:
         cl = _make_client(data.session_data)
@@ -482,10 +584,14 @@ async def get_user_info_by_pk(data: UserInfoByPkRequest):
             }
         )
     except Exception as e:
-        return UserInfoByPkResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=UserInfoByPkResponse(success=False, error=str(e), error_code=code).model_dump()
+        )
 
 
-@app.post("/search/hashtag", response_model=SearchResponse)
+@app.post("/search/hashtag")
 def search_hashtag(data: SearchHashtagRequest):
     try:
         cl = _make_client(data.session_data)
@@ -496,13 +602,28 @@ def search_hashtag(data: SearchHashtagRequest):
             "rank_token": cl.rank_token,
         }
         amount = data.amount if not data.next_max_id else None
-        items, cursor = _fetch_sections(cl, f"tags/{quote(data.hashtag, safe='')}/sections/", base_data, data.next_max_id, amount, with_signature=False)
-        return SearchResponse(success=True, items=items, next_max_id=cursor)
+        ig_endpoint = f"tags/{quote(data.hashtag, safe='')}/sections/"
+        items, cursor = _fetch_sections(cl, ig_endpoint, base_data, data.next_max_id, amount, with_signature=False)
+        debug_info = {
+            "instagram_request": {
+                "method": "private_request",
+                "endpoint": ig_endpoint,
+                "hashtag": data.hashtag,
+                "amount": data.amount,
+                "is_pagination": bool(data.next_max_id),
+            },
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+        return SearchResponse(success=True, items=items, next_max_id=cursor, debug_info=debug_info)
     except Exception as e:
-        return SearchResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=SearchResponse(success=False, error=str(e), error_code=code).model_dump()
+        )
 
 
-@app.post("/search/locations", response_model=SearchLocationsResponse)
+@app.post("/search/locations")
 def search_locations(data: SearchLocationsRequest):
     try:
         cl = _make_client(data.session_data)
@@ -516,12 +637,23 @@ def search_locations(data: SearchLocationsRequest):
                 "lat": float(getattr(place, 'lat', 0.0) or 0.0),
                 "lng": float(getattr(place, 'lng', 0.0) or 0.0)
             })
-        return SearchLocationsResponse(success=True, locations=locations)
+        debug_info = {
+            "instagram_request": {"method": "fbsearch_places", "query": data.query},
+            "instagram_response": {
+                "status": "ok",
+                "results_count": len(locations),
+            },
+        }
+        return SearchLocationsResponse(success=True, locations=locations, debug_info=debug_info)
     except Exception as e:
-        return SearchLocationsResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=SearchLocationsResponse(success=False, error=str(e), error_code=code).model_dump()
+        )
 
 
-@app.post("/search/location", response_model=SearchResponse)
+@app.post("/search/location")
 def search_location_medias(data: SearchLocationRequest):
     try:
         cl = _make_client(data.session_data)
@@ -531,17 +663,44 @@ def search_location_medias(data: SearchLocationRequest):
             "tab": "recent",
         }
         amount = data.amount if not data.next_max_id else None
-        items, cursor = _fetch_sections(cl, f"locations/{data.location_pk}/sections/", base_data, data.next_max_id, amount)
-        return SearchResponse(success=True, items=items, next_max_id=cursor)
+        ig_endpoint = f"locations/{data.location_pk}/sections/"
+        items, cursor = _fetch_sections(cl, ig_endpoint, base_data, data.next_max_id, amount)
+        debug_info = {
+            "instagram_request": {
+                "method": "private_request",
+                "endpoint": ig_endpoint,
+                "location_pk": data.location_pk,
+                "amount": data.amount,
+                "is_pagination": bool(data.next_max_id),
+            },
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+        return SearchResponse(success=True, items=items, next_max_id=cursor, debug_info=debug_info)
     except Exception as e:
-        return SearchResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=SearchResponse(success=False, error=str(e), error_code=code).model_dump()
+        )
 
 
-@app.post("/media/comment", response_model=CommentResponse)
+@app.post("/media/comment")
 def comment_media(data: CommentRequest):
     try:
         cl = _make_client(data.session_data)
         comment = cl.media_comment(data.media_id, data.text)
-        return CommentResponse(success=True, comment_pk=str(comment.pk))
+        debug_info = {
+            "instagram_request": {
+                "method": "media_comment",
+                "media_id": data.media_id,
+                "text": data.text,
+            },
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+        return CommentResponse(success=True, comment_pk=str(comment.pk), debug_info=debug_info)
     except Exception as e:
-        return CommentResponse(success=False, error=str(e))
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content=CommentResponse(success=False, error=str(e), error_code=code).model_dump()
+        )

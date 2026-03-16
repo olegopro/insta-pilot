@@ -44,7 +44,7 @@
 
     if (!url) return
 
-    await generate(url, props.post.captionText)
+    await generate(url, props.post.captionText, props.accountId)
   }
 
   const sendCommentHandler = async () => {

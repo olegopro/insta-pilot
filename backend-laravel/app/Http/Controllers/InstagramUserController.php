@@ -32,7 +32,7 @@ final class InstagramUserController extends Controller {
             ], 422);
         }
 
-        $result = $this->instagramClient->getUserInfoByPk($account->session_data, $userPk);
+        $result = $this->instagramClient->getUserInfoByPk($account->session_data, $userPk, $account->id);
 
         if (empty($result['success'])) {
             return response()->json([

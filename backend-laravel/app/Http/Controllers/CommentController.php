@@ -33,6 +33,7 @@ final class CommentController extends Controller {
 
         $result = $this->instagramClient->commentMedia(
             $account->session_data,
+            $account->id,
             $mediaId,
             $validated['text']
         );
