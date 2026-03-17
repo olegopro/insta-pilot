@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type { SidebarActivityEntry, ActionType } from './types'
 import type { ActivityLogApi } from './apiTypes'
@@ -6,6 +6,13 @@ import { summarizeResponse } from './activityLogListDTO'
 
 const MAX_ENTRIES = 200
 const SIDEBAR_WIDTH_KEY = 'sidebar_width'
+const SIDEBAR_ENTRIES_KEY = 'sidebar_entries'
+const SIDEBAR_UNREAD_KEY = 'sidebar_unread'
+
+const loadEntries = (): SidebarActivityEntry[] => {
+  try { return JSON.parse(localStorage.getItem(SIDEBAR_ENTRIES_KEY) ?? '[]') }
+  catch { return [] }
+}
 
 type QuickFilter = 'all' | 'errors' | 'likes' | 'comments'
 
@@ -27,11 +34,14 @@ function mapToSidebarEntry(event: ActivityLogApi): SidebarActivityEntry {
 }
 
 export const useSidebarActivityStore = defineStore('sidebarActivity', () => {
-  const entries = ref<SidebarActivityEntry[]>([])
-  const unreadCount = ref(0)
+  const entries = ref<SidebarActivityEntry[]>(loadEntries())
+  const unreadCount = ref(Number(localStorage.getItem(SIDEBAR_UNREAD_KEY) ?? 0))
   const isOpen = ref(false)
   const width = ref(Number(localStorage.getItem(SIDEBAR_WIDTH_KEY) ?? 320))
   const quickFilter = ref<QuickFilter>('all')
+
+  watch(entries, (value) => localStorage.setItem(SIDEBAR_ENTRIES_KEY, JSON.stringify(value)))
+  watch(unreadCount, (value) => localStorage.setItem(SIDEBAR_UNREAD_KEY, String(value)))
 
   const FILTER_ACTIONS: Partial<Record<Exclude<QuickFilter, 'all' | 'errors'>, ActionType[]>> = {
     likes:    ['like'],

@@ -67,9 +67,7 @@ class ActivityLogRepository implements ActivityLogRepositoryInterface {
             ->where('id', '<=', $aroundId)
             ->orderBy('id', 'desc')
             ->limit($half + 1)
-            ->get()
-            ->reverse()
-            ->values();
+            ->get();
 
         $after = AccountActivityLog::where('instagram_account_id', $accountId)
             ->where('id', '>', $aroundId)
@@ -78,7 +76,7 @@ class ActivityLogRepository implements ActivityLogRepositoryInterface {
             ->get();
 
         $hasMoreBefore = $before->count() > $half;
-        $items = $before->take($half)->merge($after)->values();
+        $items = $before->take($half)->reverse()->values()->merge($after)->values();
 
         $total = AccountActivityLog::where('instagram_account_id', $accountId)->count();
 

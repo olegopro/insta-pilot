@@ -86,6 +86,7 @@
 <style scoped>
 .activity-sidebar {
   border-right: 1px solid rgba(0, 0, 0, 0.12);
+  overflow: hidden;
 }
 .sidebar-header {
   background: rgba(0, 0, 0, 0.02);
@@ -93,5 +94,7 @@
 }
 .sidebar-scroll {
   overflow-y: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
 }
 </style>

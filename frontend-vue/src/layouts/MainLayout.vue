@@ -21,11 +21,7 @@
   }
 
   const entryClickHandler = (entry: SidebarActivityEntry) => {
-    const url = router.resolve({
-      path: `/logs/${String(entry.accountId)}`,
-      query: { highlight: entry.id }
-    }).href
-    window.open(url, '_blank')
+    void router.push({ path: `/logs/${String(entry.accountId)}`, query: { highlight: String(entry.id) } })
   }
 
   onMounted(subscribe)
@@ -33,7 +29,7 @@
 </script>
 
 <template>
-  <q-layout view="lHh lpR fFf">
+  <q-layout view="LHh LpR fFf">
     <q-header elevated>
       <q-toolbar>
         <q-toolbar-title>Insta Pilot</q-toolbar-title>

@@ -118,7 +118,7 @@ export const useActivityLogStore = defineStore('activityLog', () => {
 
   const loadAroundId = async (accountId: number, aroundId: number) => {
     const { data } = await fetchLogsApi.execute({ accountId, aroundId })
-    logs.value = data.items.map(mapLog)
+    logs.value = data.items.reverse().map(mapLog)
     hasMoreBefore.value = data.has_more_before
     hasMoreAfter.value = data.has_more_after
     totalCount.value = data.total

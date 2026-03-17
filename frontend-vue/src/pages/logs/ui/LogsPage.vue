@@ -57,27 +57,29 @@
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
-  watch(accountId, async (id) => {
-    if (id !== null) {
-      filters.value = {}
-      const highlight = highlightId.value
-      if (highlight) {
-        await Promise.all([
-          store.loadAroundId(id, highlight),
-          store.fetchStats(id)
-        ])
-        await scrollToHighlight(highlight)
+  watch(
+    () => [accountId.value, highlightId.value] as const,
+    async ([id, highlight], prev) => {
+      const prevId = prev?.[0] ?? null
+      if (id !== null) {
+        if (id !== prevId) {
+          filters.value = {}
+          await Promise.all([
+            highlight ? store.loadAroundId(id, highlight) : store.fetchLogs(id),
+            store.fetchStats(id)
+          ])
+          highlight && await scrollToHighlight(highlight)
+        } else if (highlight !== null) {
+          await store.loadAroundId(id, highlight)
+          await scrollToHighlight(highlight)
+        }
       } else {
-        await Promise.all([
-          store.fetchLogs(id),
-          store.fetchStats(id)
-        ])
+        store.resetLogs()
+        await store.fetchSummary()
       }
-    } else {
-      store.resetLogs()
-      await store.fetchSummary()
-    }
-  }, { immediate: true })
+    },
+    { immediate: true }
+  )
 
   onBeforeUnmount(() => store.resetLogs())
 </script>
