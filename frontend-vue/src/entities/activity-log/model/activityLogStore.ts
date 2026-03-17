@@ -98,7 +98,7 @@ export const useActivityLogStore = defineStore('activityLog', () => {
 
   const fetchLogs = async (accountId: number, filters?: ActivityFilters) => {
     const { data } = await fetchLogsApi.execute({ accountId, ...(filters ? { filters } : {}) })
-    logs.value = data.items.map(mapLog).reverse()
+    logs.value = data.items.map(mapLog)
     hasMoreBefore.value = data.has_more_before
     hasMoreAfter.value = data.has_more_after
     totalCount.value = data.total
@@ -110,7 +110,7 @@ export const useActivityLogStore = defineStore('activityLog', () => {
     if (!firstId || !hasMoreBefore.value || fetchLogsApi.loading.value) return
 
     const { data } = await fetchLogsApi.execute({ accountId, ...(filters ? { filters } : {}), beforeId: firstId })
-    const older = data.items.map(mapLog).reverse()
+    const older = data.items.map(mapLog)
     logs.value = [...older, ...logs.value]
     hasMoreBefore.value = data.has_more_before
     totalCount.value = data.total
@@ -118,7 +118,7 @@ export const useActivityLogStore = defineStore('activityLog', () => {
 
   const loadAroundId = async (accountId: number, aroundId: number) => {
     const { data } = await fetchLogsApi.execute({ accountId, aroundId })
-    logs.value = data.items.map(mapLog).reverse()
+    logs.value = data.items.map(mapLog)
     hasMoreBefore.value = data.has_more_before
     hasMoreAfter.value = data.has_more_after
     totalCount.value = data.total
@@ -126,7 +126,7 @@ export const useActivityLogStore = defineStore('activityLog', () => {
   }
 
   const appendNewLog = (item: ActivityLogApi) => {
-    logs.value.push(mapLog(item))
+    logs.value.unshift(mapLog(item))
     totalCount.value += 1
   }
 

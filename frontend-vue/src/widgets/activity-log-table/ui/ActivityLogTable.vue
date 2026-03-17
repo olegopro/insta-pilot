@@ -70,7 +70,7 @@
       <template #body="{ row }: { row: ActivityLogRowModel }">
         <q-tr
           :id="`log-${row.id}`"
-          :class="highlightId === row.id ? 'bg-yellow-1' : ''"
+          :class="[highlightId === row.id ? 'bg-yellow-1' : '', expandedRows.has(row.id) ? 'bg-grey-2' : '']"
           :props="{ row }"
           class="cursor-pointer"
           @click="toggleExpandHandler(row.id)"
