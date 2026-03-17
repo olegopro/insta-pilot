@@ -47,12 +47,13 @@ export const useFeedStore = defineStore('feed', () => {
   }
 
   const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; reason?: string; minPosts?: number }>(
-    ({ accountId, reason, minPosts }) =>
+    ({ accountId, reason, minPosts }, signal) =>
       api.get(`/feed/${String(accountId)}`, {
         params: {
           ...(reason ? { reason } : {}),
           ...(minPosts ? { min_posts: minPosts } : {})
-        }
+        },
+        signal
       }).then((response) => response.data)
   )
 
@@ -62,8 +63,8 @@ export const useFeedStore = defineStore('feed', () => {
   )
 
   const fetchUserInfoApi = useApi<ApiResponseWrapper<InstagramUserDetailApi>, { accountId: number; userPk: string }>(
-    ({ accountId, userPk }) =>
-      api.get(`/instagram-user/${String(accountId)}/${userPk}`).then((response) => response.data)
+    ({ accountId, userPk }, signal) =>
+      api.get(`/instagram-user/${String(accountId)}/${userPk}`, { signal }).then((response) => response.data)
   )
 
   const loadFeed = async (accountId: number, reason?: string) => {
@@ -103,13 +104,14 @@ export const useFeedStore = defineStore('feed', () => {
   }
 
   const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>,{ accountId: number; maxId?: string; seenPostsParam?: string; minPosts?: number }>(
-    ({ accountId, maxId, seenPostsParam, minPosts }) =>
+    ({ accountId, maxId, seenPostsParam, minPosts }, signal) =>
       api.get(`/feed/${String(accountId)}`, {
         params: {
           ...(maxId ? { max_id: maxId } : {}),
           ...(seenPostsParam ? { seen_posts: seenPostsParam } : {}),
           ...(minPosts ? { min_posts: minPosts } : {})
-        }
+        },
+        signal
       }).then((response) => response.data)
   )
 
@@ -175,6 +177,10 @@ export const useFeedStore = defineStore('feed', () => {
   const userInfoLoading = computed(() => fetchUserInfoApi.loading.value)
   const loadMoreLoading = computed(() => loadMoreApi.loading.value)
 
+  const cancelFeedLoad = () => fetchFeedApi.abort()
+  const cancelLoadMore = () => loadMoreApi.abort()
+  const cancelUserInfo = () => fetchUserInfoApi.abort()
+
   return {
     posts,
     nextMaxId,
@@ -193,6 +199,9 @@ export const useFeedStore = defineStore('feed', () => {
     feedLoading,
     feedError,
     userInfoLoading,
-    loadMoreLoading
+    loadMoreLoading,
+    cancelFeedLoad,
+    cancelLoadMore,
+    cancelUserInfo
   }
 })

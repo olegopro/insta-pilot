@@ -62,16 +62,6 @@ Context7 library ID: `/subzeroid/instagrapi`
 
 ---
 
-## Plan & Progress
-- [PLAN.md](PLAN.md) — Master Plan (фазы, чеклист, архитектура)
-- [PLAN-EXTEND-BACK.md](PLAN-EXTEND-BACK.md) — Backend детали (Laravel + Python)
-- [PLAN-EXTEND-FRONT.md](PLAN-EXTEND-FRONT.md) — Frontend детали (Vue + Quasar, FSD)
-- [PLAN-EXTEND-LOGGING-BACKEND.md](PLAN-EXTEND-LOGGING-BACKEND.md) — Мониторинг: Backend
-- [PLAN-EXTEND-LOGGING-FRONT.md](PLAN-EXTEND-LOGGING-FRONT.md) — Мониторинг: Frontend
-- [PLAN-EXTEND-LOGGING-FULL.md](PLAN-EXTEND-LOGGING-FULL.md) — Полный план фазы логирования
-
----
-
 # Backend — Laravel 12
 
 ## Документация

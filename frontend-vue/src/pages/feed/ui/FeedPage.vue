@@ -1,11 +1,13 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
+  import { onBeforeRouteLeave } from 'vue-router'
   import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
   import { useFeedStore, MOCK_FEED } from '@/entities/media-post'
   import type { MediaPost } from '@/entities/media-post'
   import type { InstagramAccount } from '@/entities/instagram-account/model/types'
   import type { Nullable } from '@/shared/lib'
   import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
+  import { isCancelledRequest } from '@/shared/api'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { ToggleComponent } from '@/shared/ui/toggle-component'
@@ -33,7 +35,7 @@
     if (account) {
       localStorage.setItem(SELECTED_ACCOUNT_KEY, String(account.id))
       feedStore.loadFeed(account.id)
-        .catch(() => notifyError(feedStore.feedError ?? 'Ошибка загрузки ленты'))
+        .catch((error: unknown) => isCancelledRequest(error) || notifyError(feedStore.feedError ?? 'Ошибка загрузки ленты'))
     } else {
       localStorage.removeItem(SELECTED_ACCOUNT_KEY)
     }
@@ -42,7 +44,7 @@
   const refreshFeedHandler = () => {
     if (!selectedAccount.value) return
     feedStore.refreshFeed(selectedAccount.value.id)
-      .catch(() => notifyError('Ошибка обновления ленты'))
+      .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка обновления ленты'))
   }
 
   const cacheToggleHandler = (enabled: boolean) => {
@@ -59,7 +61,7 @@
   const loadMoreClickHandler = () => {
     if (!selectedAccount.value) return
     feedStore.loadMoreFeed(selectedAccount.value.id)
-      .catch(() => notifyError('Ошибка загрузки'))
+      .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка загрузки'))
   }
 
   const openPostHandler = (post: MediaPost) => {
@@ -100,6 +102,12 @@
       }
       isInitializing.value = false
     })
+  })
+
+  onBeforeRouteLeave(() => {
+    feedStore.cancelFeedLoad()
+    feedStore.cancelLoadMore()
+    feedStore.cancelUserInfo()
   })
 </script>
 

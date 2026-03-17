@@ -1,11 +1,13 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
+  import { onBeforeRouteLeave } from 'vue-router'
   import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
   import { useSearchStore, useFeedStore } from '@/entities/media-post'
   import type { MediaPost, Location } from '@/entities/media-post'
   import type { InstagramAccount } from '@/entities/instagram-account/model/types'
   import type { Nullable } from '@/shared/lib'
   import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
+  import { isCancelledRequest } from '@/shared/api'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { InputComponent } from '@/shared/ui/input-component'
@@ -71,7 +73,7 @@
     if (!selectedAccount.value || !hashtagInput.value.trim()) return
     const tag = hashtagInput.value.trim().replace(/^#/, '')
     searchStore.searchHashtag(selectedAccount.value.id, tag)
-      .catch(() => notifyError('Ошибка поиска по хэштегу'))
+      .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка поиска по хэштегу'))
   }
 
   const loadMoreHandler = () => {
@@ -79,10 +81,10 @@
     if (searchMode.value === 'hashtag') {
       const tag = hashtagInput.value.trim().replace(/^#/, '')
       searchStore.loadMoreHashtag(selectedAccount.value.id, tag)
-        .catch(() => notifyError('Ошибка загрузки'))
+        .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка загрузки'))
     } else if (selectedLocation.value) {
       searchStore.loadMoreLocationMedias(selectedAccount.value.id, selectedLocation.value.pk)
-        .catch(() => notifyError('Ошибка загрузки'))
+        .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка загрузки'))
     }
   }
 
@@ -99,8 +101,8 @@
   const selectLocationHandler = (location: Location) => {
     if (!selectedAccount.value) return
     selectedLocation.value = location
-    searchStore.fetchLocationMedias(selectedAccount.value.id, location.pk)
-      .catch(() => notifyError('Ошибка загрузки медиа локации'))
+    searchStore.fetchLocationMedias(selectedAccount.value.id, location)
+      .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка загрузки медиа локации'))
   }
 
   const likePostHandler = (post: MediaPost) => {
@@ -132,7 +134,24 @@
         account && (selectedAccount.value = account)
       }
       isInitializing.value = false
+
+      if (searchStore.lastHashtag) {
+        hashtagInput.value = searchStore.lastHashtag
+        searchMode.value = 'hashtag'
+      } else if (searchStore.lastLocation) {
+        selectedLocation.value = searchStore.lastLocation
+        searchMode.value = 'location'
+      }
     })
+  })
+
+  onBeforeRouteLeave(() => {
+    searchStore.cancelSearch()
+    searchStore.cancelSearchLoadMore()
+    searchStore.cancelLocationSearch()
+    searchStore.cancelLocationMedias()
+    searchStore.cancelLocationMediasLoadMore()
+    feedStore.cancelUserInfo()
   })
 </script>
 

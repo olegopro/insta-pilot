@@ -21,7 +21,11 @@
   }
 
   const entryClickHandler = (entry: SidebarActivityEntry) => {
-    void router.push({ path: `/logs/${String(entry.accountId)}`, query: { highlight: entry.id } })
+    const url = router.resolve({
+      path: `/logs/${String(entry.accountId)}`,
+      query: { highlight: entry.id }
+    }).href
+    window.open(url, '_blank')
   }
 
   onMounted(subscribe)
