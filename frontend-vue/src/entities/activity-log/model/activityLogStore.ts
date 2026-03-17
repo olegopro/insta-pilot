@@ -106,12 +106,12 @@ export const useActivityLogStore = defineStore('activityLog', () => {
   }
 
   const loadOlderLogs = async (accountId: number, filters?: ActivityFilters) => {
-    const firstId = logs.value[0]?.id
-    if (!firstId || !hasMoreBefore.value || fetchLogsApi.loading.value) return
+    const lastId = logs.value[logs.value.length - 1]?.id
+    if (!lastId || !hasMoreBefore.value || fetchLogsApi.loading.value) return
 
-    const { data } = await fetchLogsApi.execute({ accountId, ...(filters ? { filters } : {}), beforeId: firstId })
+    const { data } = await fetchLogsApi.execute({ accountId, ...(filters ? { filters } : {}), beforeId: lastId })
     const older = data.items.map(mapLog)
-    logs.value = [...older, ...logs.value]
+    logs.value = [...logs.value, ...older]
     hasMoreBefore.value = data.has_more_before
     totalCount.value = data.total
   }

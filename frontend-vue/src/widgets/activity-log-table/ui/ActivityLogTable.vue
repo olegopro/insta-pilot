@@ -1,9 +1,8 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
   import type { Nullable } from '@/shared/lib'
   import { TableComponent } from '@/shared/ui/table-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
-  import { useReverseInfiniteScroll } from '@/shared/lib'
   import { activityLogTableColumns } from '@/entities/activity-log'
   import type { ActivityLogRowModel } from '@/entities/activity-log'
   import ActivityLogExpandedRow from './ActivityLogExpandedRow.vue'
@@ -24,7 +23,7 @@
 
   const expandedRows = ref<Set<number>>(new Set())
 
-  const { isLoadingOlder, onScroll } = useReverseInfiniteScroll()
+  const isLoadingOlder = computed(() => props.loading && props.rows.length > 0)
 
   let lastScrollTime = 0
   const handleWindowScroll = () => {
@@ -32,7 +31,8 @@
     const now = Date.now()
     if (now - lastScrollTime < 150) return
     lastScrollTime = now
-    void onScroll(() => { emit('load-more'); return Promise.resolve() })
+    const scrolledToBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100
+    scrolledToBottom && emit('load-more')
   }
 
   const toggleExpandHandler = (id: number) => {
@@ -55,11 +55,6 @@
 
 <template>
   <div style="position: relative">
-    <div v-if="isLoadingOlder" class="row justify-center q-py-sm">
-      <q-spinner color="primary" size="sm" />
-      <span class="q-ml-sm text-caption text-grey">Загрузка старых записей...</span>
-    </div>
-
     <TableComponent
       :rows="rows"
       :columns="activityLogTableColumns"
@@ -123,15 +118,17 @@
 
     <div class="row items-center justify-between q-mt-sm q-px-xs">
       <span class="text-caption text-grey">Показано {{ rows.length }} из {{ total }}</span>
-      <ButtonComponent
-        v-if="hasMore"
-        flat
-        dense
-        label="Загрузить ещё"
-        icon="expand_more"
-        :loading="isLoadingOlder"
-        @click="emit('load-more')"
-      />
+      <div v-if="hasMore" class="row items-center q-gutter-xs">
+        <q-spinner v-if="isLoadingOlder" color="primary" size="xs" />
+        <ButtonComponent
+          flat
+          dense
+          label="Загрузить ещё"
+          icon="expand_more"
+          :loading="isLoadingOlder"
+          @click="emit('load-more')"
+        />
+      </div>
     </div>
   </div>
 </template>
