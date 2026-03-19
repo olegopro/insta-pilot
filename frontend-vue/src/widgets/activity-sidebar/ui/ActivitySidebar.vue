@@ -2,7 +2,7 @@
   import { ref, watch, nextTick } from 'vue'
   import { useSidebarActivityStore } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
-  import { BadgeComponent } from '@/shared/ui/badge-component'
+  import { ButtonComponent } from '@/shared/ui/button-component'
   import ActivitySidebarEntry from './ActivitySidebarEntry.vue'
   import SidebarResizeHandle from './SidebarResizeHandle.vue'
 
@@ -10,7 +10,7 @@
     { label: 'Все', value: 'all', icon: 'apps' },
     { label: 'Ошибки', value: 'errors', icon: 'error_outline' },
     { label: 'Лайки', value: 'likes', icon: 'favorite_border' },
-    { label: 'Коммент.', value: 'comments', icon: 'chat_bubble_outline' }
+    { label: 'Комментарии', value: 'comments', icon: 'chat_bubble_outline' }
   ]
 
   const emit = defineEmits<{
@@ -41,21 +41,21 @@
     <div class="sidebar-header row items-center justify-between q-pa-sm">
       <span class="text-subtitle2">Активность</span>
       <div class="row items-center q-gutter-xs">
-        <q-btn flat round dense size="xs" icon="delete_sweep" @click="store.clearEntries()" />
-        <q-btn flat round dense size="xs" icon="close" @click="store.close()" />
+        <ButtonComponent flat round dense size="xs" icon="delete_sweep" @click="store.clearEntries()" />
+        <ButtonComponent flat round dense size="xs" icon="close" @click="store.close()" />
       </div>
     </div>
 
     <div class="filter-bar">
-      <BadgeComponent
+      <ButtonComponent
         v-for="opt in FILTER_OPTIONS"
         :key="opt.value"
         :label="opt.label"
         :icon="opt.icon"
-        :color="store.quickFilter === opt.value ? 'primary' : 'grey'"
-        :outline="store.quickFilter !== opt.value"
         size="sm"
-        class="filter-chip"
+        :color="store.quickFilter === opt.value ? 'primary' : 'grey-6'"
+        :outline="store.quickFilter === opt.value"
+        :flat="store.quickFilter !== opt.value"
         @click="store.quickFilter = opt.value"
       />
     </div>
@@ -90,14 +90,6 @@
   padding: $indent-xs $indent-sm;
 }
 
-.filter-chip {
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover {
-    opacity: 0.8;
-  }
-}
 
 .activity-sidebar {
   border-right: $border-width-default $border-style-default $border-default;

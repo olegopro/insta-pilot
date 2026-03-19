@@ -8,6 +8,7 @@
   import type { Nullable } from '@/shared/lib'
   import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
   import { isCancelledRequest } from '@/shared/api'
+  import { PageComponent } from '@/shared/ui/page-component'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { ToggleComponent } from '@/shared/ui/toggle-component'
@@ -112,12 +113,8 @@
 </script>
 
 <template>
-  <q-page class="feed-page q-pa-md">
-    <div class="row items-center justify-between q-mb-lg">
-      <div class="row items-center">
-        <q-icon name="photo_library" size="28px" color="primary" class="q-mr-sm" />
-        <span class="text-h6">Лента</span>
-      </div>
+  <PageComponent title="Лента" icon="photo_library" class="feed-page">
+    <template #append>
       <div class="row items-center q-gutter-sm">
         <ButtonComponent
           icon="refresh"
@@ -177,7 +174,7 @@
           </template>
         </SelectComponent>
       </div>
-    </div>
+    </template>
 
     <div v-if="isMockMode" class="mock-notice row items-center q-mb-md text-grey-6 text-caption">
       <q-icon name="info_outline" size="16px" class="q-mr-xs" />
@@ -243,7 +240,7 @@
       :user="feedStore.userDetail"
       :loading="feedStore.userInfoLoading"
     />
-  </q-page>
+  </PageComponent>
 </template>
 
 <style scoped lang="scss">

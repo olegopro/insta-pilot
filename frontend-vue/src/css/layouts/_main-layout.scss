@@ -1,11 +1,5 @@
-// Main layout
-
-.main-content {
-  padding: $spacing-page-padding;
-}
-
 // Page content max width
-.q-page {
+.q-page.page-content {
   max-width: $page-max-width;
   margin-left: auto;
   margin-right: auto;
@@ -13,82 +7,25 @@
 
 // Header — white bg, soft bottom shadow
 .app-header {
-  background: $surface-primary !important;
-  color: $content-primary !important;
+  background: $surface-primary;
+  color: $content-primary;
   border-bottom: $border-width-default $border-style-default $border-default;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .app-logo {
   font-weight: $font-weight-bold;
-  font-size: $font-size-lg;
   color: $primary;
-  flex: 0 0 auto;
-  margin-right: $spacing-inline-gap;
 }
 
 // Nav buttons — transparent until hover
 .nav-btn {
-  border-radius: $radius-md !important;
-  font-weight: $font-weight-medium !important;
-  font-size: $font-size-base !important;
-  padding: $indent-xs $spacing-stack-gap !important;
-  min-height: 36px !important;
-  letter-spacing: 0 !important;
-  text-transform: none !important;
-  transition: background $transition-fast, color $transition-fast !important;
-  color: $content-primary !important;
-
-  .q-btn__content {
-    color: $content-primary;
-  }
-
-  &:hover {
-    background: $neutral-900 !important;
-
-    .q-btn__content {
-      color: #fff !important;
-    }
-  }
-
-  &.nav-btn--active {
-    background: $neutral-900 !important;
-
-    .q-btn__content {
-      color: #fff !important;
-    }
-  }
+  font-size: $font-size-base;
+  padding: $indent-xs $spacing-stack-gap;
 }
 
 // Sidebar toggle button
 .sidebar-toggle {
-  width: 44px !important;
-  height: 44px !important;
-
-  .q-btn__icon {
-    font-size: $font-size-xl !important;
-  }
-}
-
-// User menu dropdown button (color override поверх nav-btn)
-.user-menu {
-  color: $content-secondary !important;
-
-  .q-btn__content {
-    color: $content-secondary !important;
-  }
-}
-
-// Sidebar
-.q-drawer {
-  border-right: $border-width-default $border-style-default $border-default;
-}
-
-// Sidebar active item
-.sidebar-item {
-  &--active {
-    background-color: $primary;
-    border-radius: $radius-sm;
-    color: #fff;
-  }
+  width: 50px;
+  height: 44px;
 }

@@ -85,12 +85,14 @@
       v-model="form.instagram_login"
       label-text="Логин Instagram"
       :rules="requiredTextRule"
+      outlined
     />
     <InputComponent
       v-model="form.instagram_password"
       label-text="Пароль Instagram"
       type="password"
       :rules="requiredTextRule"
+      outlined
     />
     <SelectComponent
       v-model="form.device_profile_id"
@@ -102,12 +104,12 @@
       emit-value
       map-options
       outlined
-      dense
       :rules="requiredDeviceRule"
     />
     <InputComponent
       v-model="form.proxy"
       label-text="Прокси (необязательно)"
+      outlined
     />
   </ModalComponent>
 </template>

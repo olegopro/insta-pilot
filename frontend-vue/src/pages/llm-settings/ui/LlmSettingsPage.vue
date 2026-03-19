@@ -8,6 +8,7 @@
   import { ToggleComponent } from '@/shared/ui/toggle-component'
   import { BadgeComponent } from '@/shared/ui/badge-component'
   import { notifySuccess, notifyError } from '@/shared/lib'
+  import { PageComponent } from '@/shared/ui/page-component'
   import type { Nullable } from '@/shared/lib'
 
   const store = useLlmSettingsStore()
@@ -110,12 +111,7 @@
 </script>
 
 <template>
-  <q-page padding>
-    <div class="row items-center q-mb-lg">
-      <q-icon name="smart_toy" size="28px" color="primary" class="q-mr-sm" />
-      <span class="text-h5">Настройки LLM</span>
-    </div>
-
+  <PageComponent title="Настройки LLM" icon="smart_toy">
     <div class="llm-list q-mb-lg" style="max-width: 640px">
       <div
         v-for="setting in store.settings"
@@ -259,7 +255,7 @@
         />
       </q-card-actions>
     </q-card>
-  </q-page>
+  </PageComponent>
 </template>
 
 <style scoped lang="scss">

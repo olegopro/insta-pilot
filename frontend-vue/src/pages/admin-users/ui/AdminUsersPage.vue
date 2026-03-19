@@ -4,6 +4,7 @@
   import adminUsersTableColumns from '@/entities/user/model/adminUsersTableColumns'
   import adminUsersListDTO from '@/entities/user/model/adminUsersListDTO'
   import { useFilterColumns, useSearchQuery, notifyError } from '@/shared/lib'
+  import { PageComponent } from '@/shared/ui/page-component'
   import { TableComponent } from '@/shared/ui/table-component'
   import { TableToolsWrapper } from '@/shared/ui/table-tools-wrapper'
   import { SelectComponent } from '@/shared/ui/select-component'
@@ -37,12 +38,7 @@
 </script>
 
 <template>
-  <q-page padding>
-    <div class="row items-center q-mb-lg">
-      <q-icon name="people" size="28px" color="primary" class="q-mr-sm" />
-      <span class="text-h5">Пользователи</span>
-    </div>
-
+  <PageComponent title="Пользователи" icon="people">
     <TableToolsWrapper
       v-model:search="searchText"
       v-model:columns="columns"
@@ -84,5 +80,5 @@
         </template>
       </TableComponent>
     </TableToolsWrapper>
-  </q-page>
+  </PageComponent>
 </template>

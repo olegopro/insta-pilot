@@ -50,6 +50,27 @@ class ActivityLoggerService implements ActivityLoggerServiceInterface {
         return $log;
     }
 
+    public function logBatch(
+        int $accountId,
+        int $userId,
+        array $entries,
+    ): array {
+        $logs = [];
+        foreach ($entries as $entry) {
+            $logs[] = $this->log(
+                accountId: $accountId,
+                userId: $userId,
+                action: $entry['action'],
+                status: $entry['status'],
+                httpCode: $entry['http_code'] ?? null,
+                endpoint: $entry['endpoint'] ?? null,
+                requestPayload: $entry['request_payload'] ?? null,
+                responseSummary: $entry['response_summary'] ?? null,
+            );
+        }
+        return $logs;
+    }
+
     private function sanitize(array $payload): array {
         return array_filter(
             $payload,

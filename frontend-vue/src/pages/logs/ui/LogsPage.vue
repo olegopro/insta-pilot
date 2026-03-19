@@ -10,6 +10,8 @@
   import { ActivityGroupedStats } from '@/widgets/activity-grouped-stats'
   import { ActivityLogTable } from '@/widgets/activity-log-table'
   import { ActivitySummaryTable } from '@/widgets/activity-summary-table'
+  import { PageComponent } from '@/shared/ui/page-component'
+  import { ButtonComponent } from '@/shared/ui/button-component'
 
   const route = useRoute()
   const router = useRouter()
@@ -85,63 +87,56 @@
 </script>
 
 <template>
-  <q-page class="q-pa-md">
-    <template v-if="isDetailMode">
-      <div class="row items-center justify-between q-mb-md">
-        <div class="row items-center q-gutter-sm">
-          <q-btn flat dense icon="arrow_back" @click="backHandler" />
-          <span class="text-h6">Логи аккаунта</span>
-        </div>
-        <div class="row items-center q-gutter-xs">
-          <q-icon
-            name="circle"
-            :color="isConnected ? 'positive' : 'grey'"
-            size="xs"
-          />
-          <span class="text-caption text-grey">
-            Real-time: {{ isConnected ? 'подключено' : 'отключено' }}
-          </span>
-        </div>
-      </div>
-
-      <ActivityStatsCards
-        :stats="store.stats"
-        :loading="store.fetchStatsLoading"
-        class="q-mb-md"
-      />
-
-      <ActivityGroupedStats
-        :stats="store.stats"
-        class="q-mb-md"
-      />
-
-      <div class="q-mb-md">
-        <ActivityFilter
-          v-model="filters"
-          @apply="applyFiltersHandler"
+  <PageComponent v-if="isDetailMode" title="Логи аккаунта">
+    <template #prepend>
+      <ButtonComponent flat dense icon="arrow_back" @click="backHandler" />
+    </template>
+    <template #append>
+      <div class="row items-center q-gutter-xs">
+        <q-icon
+          name="circle"
+          :color="isConnected ? 'positive' : 'grey'"
+          size="xs"
         />
+        <span class="text-caption text-grey">
+          Real-time: {{ isConnected ? 'подключено' : 'отключено' }}
+        </span>
       </div>
-
-      <ActivityLogTable
-        :rows="rows"
-        :loading="store.fetchLogsLoading"
-        :has-more="store.hasMoreBefore"
-        :total="store.totalCount"
-        :highlight-id="highlightId"
-        @load-more="loadOlderHandler"
-      />
     </template>
 
-    <template v-else>
-      <div class="row items-center q-mb-md">
-        <span class="text-h6">Мониторинг активности</span>
-      </div>
+    <ActivityStatsCards
+      :stats="store.stats"
+      :loading="store.fetchStatsLoading"
+      class="q-mb-md"
+    />
 
-      <ActivitySummaryTable
-        :data="store.summary"
-        :loading="store.fetchSummaryLoading"
-        @row-click="rowClickHandler"
+    <ActivityGroupedStats
+      :stats="store.stats"
+      class="q-mb-md"
+    />
+
+    <div class="q-mb-md">
+      <ActivityFilter
+        v-model="filters"
+        @apply="applyFiltersHandler"
       />
-    </template>
-  </q-page>
+    </div>
+
+    <ActivityLogTable
+      :rows="rows"
+      :loading="store.fetchLogsLoading"
+      :has-more="store.hasMoreBefore"
+      :total="store.totalCount"
+      :highlight-id="highlightId"
+      @load-more="loadOlderHandler"
+    />
+  </PageComponent>
+
+  <PageComponent v-else title="Мониторинг активности" icon="analytics">
+    <ActivitySummaryTable
+      :data="store.summary"
+      :loading="store.fetchSummaryLoading"
+      @row-click="rowClickHandler"
+    />
+  </PageComponent>
 </template>

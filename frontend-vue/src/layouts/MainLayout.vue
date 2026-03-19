@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { onMounted, onBeforeUnmount } from 'vue'
-  import { useRouter, useRoute } from 'vue-router'
+  import { useRouter } from 'vue-router'
   import { useAuthStore } from '@/entities/user'
   import { useSidebarActivityStore } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
@@ -9,16 +9,8 @@
   import { ActivitySidebar } from '@/widgets/activity-sidebar'
 
   const router = useRouter()
-  const route = useRoute()
   const authStore = useAuthStore()
 
-  const isNavActive = (path: string) => {
-    if (path === '/') return route.path === '/'
-    return route.path === path || route.path.startsWith(path + '/')
-  }
-
-  const navClass = (path: string) =>
-    ['nav-btn', isNavActive(path) ? 'nav-btn--active' : '']
   const sidebarStore = useSidebarActivityStore()
 
   const { subscribe, unsubscribe } = useGlobalActivityLive()
@@ -46,15 +38,15 @@
         <q-space />
 
         <div class="row items-center q-gutter-xs">
-          <q-btn flat to="/" label="Аккаунты" :class="navClass('/')" />
-          <q-btn flat to="/feed" label="Лента" :class="navClass('/feed')" />
-          <q-btn flat to="/search" label="Поиск" :class="navClass('/search')" />
-          <q-btn flat to="/logs" label="Логи" :class="navClass('/logs')" />
-          <q-btn v-if="authStore.isAdmin" flat to="/settings/llm" label="Настройки LLM" :class="navClass('/settings/llm')" />
-          <q-btn v-if="authStore.isAdmin" flat to="/admin/users" label="Пользователи" :class="navClass('/admin/users')" />
+          <q-btn flat to="/" label="Аккаунты" class="nav-btn" />
+          <q-btn flat to="/feed" label="Лента" class="nav-btn" />
+          <q-btn flat to="/search" label="Поиск" class="nav-btn" />
+          <q-btn flat to="/logs" label="Логи" class="nav-btn" />
+          <q-btn v-if="authStore.isAdmin" flat to="/settings/llm" label="Настройки LLM" class="nav-btn" />
+          <q-btn v-if="authStore.isAdmin" flat to="/admin/users" label="Пользователи" class="nav-btn" />
         </div>
 
-        <q-btn-dropdown flat no-icon-animation class="nav-btn user-menu q-ml-sm" :label="authStore.user?.name ?? ''">
+        <q-btn-dropdown flat no-icon-animation class="nav-btn q-ml-sm" :label="authStore.user?.name ?? ''">
           <q-list style="min-width: 200px">
             <q-item>
               <q-item-section>

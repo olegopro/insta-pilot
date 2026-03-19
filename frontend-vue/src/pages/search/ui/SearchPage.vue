@@ -8,6 +8,7 @@
   import type { Nullable } from '@/shared/lib'
   import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
   import { isCancelledRequest } from '@/shared/api'
+  import { PageComponent } from '@/shared/ui/page-component'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { InputComponent } from '@/shared/ui/input-component'
@@ -156,12 +157,8 @@
 </script>
 
 <template>
-  <q-page class="search-page q-pa-md">
-    <div class="row items-center justify-between" style="margin-bottom: 24px">
-      <div class="row items-center">
-        <q-icon name="travel_explore" size="28px" color="primary" class="q-mr-sm" />
-        <span class="text-h6">Поиск</span>
-      </div>
+  <PageComponent title="Поиск" icon="travel_explore" class="search-page">
+    <template #append>
       <SelectComponent
         v-model="selectedAccount"
         :options="accountStore.accounts"
@@ -190,7 +187,7 @@
           </q-item>
         </template>
       </SelectComponent>
-    </div>
+    </template>
 
     <div class="controls q-mb-md">
       <div class="mode-toggle">
@@ -231,7 +228,6 @@
           option-label="name"
           label="Поиск места"
           outlined
-          dense
           use-input
           clearable
           input-debounce="400"
@@ -318,7 +314,7 @@
       :user="feedStore.userDetail"
       :loading="feedStore.userInfoLoading"
     />
-  </q-page>
+  </PageComponent>
 </template>
 
 <style scoped lang="scss">
