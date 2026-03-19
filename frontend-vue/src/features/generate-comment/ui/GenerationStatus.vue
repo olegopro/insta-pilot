@@ -46,11 +46,11 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
   :deep(.q-timeline__title) {
-    font-size: 1rem;
+    font-size: $font-size-md;
   }
-  
+
   :deep(.q-timeline__subtitle) {
     margin-bottom: 0;
   }

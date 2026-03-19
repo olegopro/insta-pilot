@@ -6,6 +6,7 @@
   import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { ToggleComponent } from '@/shared/ui/toggle-component'
+  import { BadgeComponent } from '@/shared/ui/badge-component'
   import { notifySuccess, notifyError } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
 
@@ -31,7 +32,7 @@
 
   const modelOptions = computed(() => MODELS_BY_PROVIDER[form.value.provider])
 
-  const onProviderChange = () => {
+  const providerChangeHandler = () => {
     const first = MODELS_BY_PROVIDER[form.value.provider][0]
     form.value.modelName = first?.value ?? ''
   }
@@ -110,83 +111,89 @@
 
 <template>
   <q-page padding>
-    <div class="text-h5 q-mb-lg">Настройки LLM</div>
+    <div class="row items-center q-mb-lg">
+      <q-icon name="smart_toy" size="28px" color="primary" class="q-mr-sm" />
+      <span class="text-h5">Настройки LLM</span>
+    </div>
 
-    <q-list bordered separator class="rounded-borders q-mb-lg">
-      <q-item v-for="setting in store.settings" :key="setting.id" class="q-pa-md">
-        <q-item-section>
-          <q-item-label class="text-weight-bold text-subtitle1">
+    <div class="llm-list q-mb-lg" style="max-width: 640px">
+      <div
+        v-for="setting in store.settings"
+        :key="setting.id"
+        class="llm-item"
+      >
+        <div class="llm-item__info">
+          <div class="text-weight-medium text-subtitle1 provider-name">
             {{ providerLabel(setting.provider) }}
-            <q-badge v-if="setting.isDefault" color="primary" class="q-ml-sm">По умолчанию</q-badge>
-          </q-item-label>
-          <q-item-label caption>
-            Модель: {{ setting.modelName }} · Тон: {{ setting.tone }} · Описание: {{ setting.useCaption ? 'да' : 'нет' }}
-          </q-item-label>
-        </q-item-section>
-
-        <q-item-section side>
-          <div class="row q-gutter-sm">
-            <ButtonComponent
-              v-if="!setting.isDefault"
-              flat
-              dense
-              icon="star_outline"
-              label="По умолчанию"
-              :loading="store.setDefaultLoading"
-              @click="setDefaultHandler(setting.id)"
-            />
-            <ButtonComponent
-              flat
-              dense
-              icon="edit"
-              @click="editHandler(setting)"
-            />
-            <ButtonComponent
-              flat
-              dense
-              color="negative"
-              icon="delete"
-              @click="deleteHandler(setting.id)"
-            />
+            <BadgeComponent v-if="setting.isDefault" color="primary" label="По умолчанию" size="md" />
           </div>
-        </q-item-section>
-      </q-item>
+          <div class="text-caption text-grey-6">
+            Модель: {{ setting.modelName }} · Тон: {{ setting.tone }} · Описание: {{ setting.useCaption ? 'да' : 'нет' }}
+          </div>
+        </div>
 
-      <q-item v-if="store.settings.length === 0 && !store.fetchAllLoading">
-        <q-item-section class="text-grey-6 text-center q-py-md">
-          Провайдеры не настроены
-        </q-item-section>
-      </q-item>
-    </q-list>
+        <div class="llm-item__actions">
+          <ButtonComponent
+            v-if="!setting.isDefault"
+            flat
+            dense
+            icon="star_outline"
+            label="По умолчанию"
+            :loading="store.setDefaultLoading"
+            @click="setDefaultHandler(setting.id)"
+          />
+          <ButtonComponent
+            flat
+            dense
+            icon="edit"
+            @click="editHandler(setting)"
+          />
+          <ButtonComponent
+            flat
+            dense
+            color="negative"
+            icon="delete"
+            @click="deleteHandler(setting.id)"
+          />
+        </div>
+      </div>
+
+      <div v-if="store.settings.length === 0 && !store.fetchAllLoading" class="text-grey-6 text-center q-py-lg">
+        Провайдеры не настроены
+      </div>
+    </div>
 
     <ButtonComponent
       v-if="!showForm"
       icon="add"
       label="Добавить провайдер"
+      color="primary"
       @click="showForm = true"
     />
 
-    <q-card v-if="showForm" class="q-mt-md" style="max-width: 600px">
-      <q-card-section>
+    <q-card v-if="showForm" class="llm-form q-mt-lg" style="max-width: 640px">
+      <q-card-section class="q-pb-sm">
         <div class="text-h6">{{ form.provider ? providerLabel(form.provider) : 'Новый провайдер' }}</div>
       </q-card-section>
 
-      <q-card-section class="q-gutter-md">
+      <q-card-section class="llm-form__fields">
         <SelectComponent
           v-model="form.provider"
           label="Провайдер"
           :options="PROVIDERS"
           option-value="value"
           option-label="label"
+          outlined
           emit-value
           map-options
-          @update:model-value="onProviderChange"
+          @update:model-value="providerChangeHandler"
         />
 
         <InputComponent
           v-model="form.apiKey"
           label-text="API Key"
           type="password"
+          outlined
           :placeholder="`Введите ключ ${providerLabel(form.provider)}`"
         />
 
@@ -196,6 +203,7 @@
           :options="modelOptions"
           option-value="value"
           option-label="label"
+          outlined
           emit-value
           map-options
         />
@@ -206,6 +214,7 @@
           :options="TONES"
           option-value="value"
           option-label="label"
+          outlined
           emit-value
           map-options
         />
@@ -219,28 +228,32 @@
           v-model="form.systemPrompt"
           label-text="Системный промпт (опционально)"
           type="textarea"
+          outlined
           autogrow
         />
       </q-card-section>
 
-      <q-card-section>
+      <q-card-actions class="q-pa-md q-pt-none" style="gap: 8px; flex-wrap: wrap">
         <ButtonComponent
-          flat
+          outline
           icon="bolt"
           label="Тест подключения"
+          color="positive"
           :loading="store.testConnectionLoading"
           @click="testHandler"
         />
-      </q-card-section>
-
-      <q-card-actions align="right" class="q-pa-md">
+        <q-space />
         <ButtonComponent
           flat
+          icon="close"
           label="Отмена"
+          color="grey-7"
           @click="showForm = false; resetForm()"
         />
         <ButtonComponent
+          icon="check"
           label="Сохранить"
+          color="primary"
           :loading="store.saveSettingLoading"
           @click="saveHandler"
         />
@@ -248,3 +261,48 @@
     </q-card>
   </q-page>
 </template>
+
+<style scoped lang="scss">
+.llm-list {
+  display: flex;
+  flex-direction: column;
+  gap: $indent-s;
+}
+
+.llm-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $indent-m $indent-ml;
+  background: $surface-primary;
+  border: $border-width-default $border-style-default $border-default;
+  border-radius: $radius-lg;
+  box-shadow: $elevation-card;
+  gap: $indent-m;
+
+  &__info {
+    & > .provider-name {
+      display: flex;
+      align-items: center;
+      gap: $indent-s;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $indent-xs;
+    flex-shrink: 0;
+  }
+}
+
+.llm-form {
+  border: $border-width-default $border-style-default $border-default;
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: $indent-m;
+  }
+}
+</style>

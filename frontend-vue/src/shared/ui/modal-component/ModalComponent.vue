@@ -74,32 +74,33 @@
 
 <style scoped lang="scss">
   .modal-inner {
-    background: white;
-    border-radius: 8px;
-    padding: 24px;
+    background: $surface-primary;
+    border-radius: $radius-xl;
+    padding: $spacing-section-gap;
     min-width: 450px;
     pointer-events: initial;
+    box-shadow: $elevation-modal;
   }
 
   .modal-header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: $indent-m;
   }
 
   .modal-title {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: $spacing-inline-gap;
     margin: 0;
   }
 
   .modal-footer {
     display: flex;
     justify-content: end;
-    gap: 8px;
-    padding-top: 24px;
+    gap: $spacing-inline-gap;
+    padding-top: $spacing-section-gap;
   }
 </style>

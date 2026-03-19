@@ -3,6 +3,7 @@
   import { formatCount } from '@/shared/lib'
   import type { InstagramUserDetail } from '@/entities/media-post'
   import { ModalComponent } from '@/shared/ui/modal-component'
+  import { BadgeComponent } from '@/shared/ui/badge-component'
 
   defineProps<{
     user: Nullable<InstagramUserDetail>
@@ -38,7 +39,7 @@
             </div>
             <div v-if="user.fullName" class="text-subtitle2 text-grey">{{ user.fullName }}</div>
           </div>
-          <q-badge v-if="user.isPrivate" color="grey-5" label="Приватный" />
+          <BadgeComponent v-if="user.isPrivate" color="grey-5" label="Приватный" size="sm" />
         </div>
 
         <div class="stats">
@@ -86,19 +87,19 @@
 
 <style scoped lang="scss">
   .body {
-    padding: 4px 0;
+    padding: $indent-xs 0;
 
     .content {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: $indent-m;
 
       .header {
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 8px;
+        gap: $spacing-inline-gap;
 
         .names {
           display: flex;
@@ -110,44 +111,44 @@
       .stats {
         display: flex;
         justify-content: space-around;
-        padding: 12px 0;
-        border-top: 1px solid #eee;
-        border-bottom: 1px solid #eee;
+        padding: $spacing-stack-gap 0;
+        border-top: $border-width-default $border-style-default $neutral-200;
+        border-bottom: $border-width-default $border-style-default $neutral-200;
 
         .stat {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 2px;
+          gap: $indent-2xs;
 
           .value {
-            font-size: 18px;
-            font-weight: 700;
-            color: #111;
+            font-size: $font-size-lg;
+            font-weight: $font-weight-bold;
+            color: $content-primary;
           }
 
           .label {
-            font-size: 12px;
-            color: #888;
+            font-size: $font-size-sm;
+            color: $content-secondary;
           }
         }
       }
 
       p {
         margin: 0;
-        font-size: 14px;
-        line-height: 1.5;
+        font-size: $font-size-base;
+        line-height: $line-height-normal;
         white-space: pre-wrap;
         word-break: break-word;
-        color: #333;
+        color: $content-primary;
       }
 
       .link {
         display: flex;
         align-items: center;
-        gap: 4px;
-        font-size: 13px;
-        color: #0095f6;
+        gap: $indent-xs;
+        font-size: $font-size-sm;
+        color: $primary;
         text-decoration: none;
         overflow: hidden;
         text-overflow: ellipsis;

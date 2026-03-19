@@ -50,7 +50,7 @@
   let wheelLocked = false
 
   // Только колёсико физической мыши (deltaY >= 50) — трекпад генерирует мелкие непрерывные deltaY < 20
-  const onWheel = (event: WheelEvent) => {
+  const wheelHandler = (event: WheelEvent) => {
     const deltaX = Math.abs(event.deltaX)
     const deltaY = Math.abs(event.deltaY)
     if (deltaX >= deltaY || deltaY < 50 || !swiperRef.value || wheelLocked) return
@@ -60,12 +60,12 @@
     event.deltaY > 0 ? swiperRef.value.slideNext() : swiperRef.value.slidePrev()
   }
 
-  const onSwiper = (swiper: SwiperClass) => {
+  const swiperInitHandler = (swiper: SwiperClass) => {
     swiperRef.value = swiper
-    swiper.el.addEventListener('wheel', onWheel, { passive: false })
+    swiper.el.addEventListener('wheel', wheelHandler, { passive: false })
   }
 
-  const onSlideChange = (swiper: SwiperClass) => carouselSlide.value = swiper.activeIndex
+  const slideChangeHandler = (swiper: SwiperClass) => carouselSlide.value = swiper.activeIndex
 
   watch(carouselSlide, (idx) => swiperRef.value?.activeIndex !== idx && swiperRef.value?.slideTo(idx))
   watch(() => props.post, () => swiperRef.value?.slideTo(0, 0))
@@ -89,8 +89,8 @@
     :initial-slide="carouselSlide"
     :style="carouselStyle"
     class="carousel-swiper"
-    @swiper="onSwiper"
-    @slide-change="onSlideChange"
+    @swiper="swiperInitHandler"
+    @slide-change="slideChangeHandler"
   >
     <SwiperSlide v-for="(imgUrl, index) in displayImages" :key="index">
       <img :src="imgUrl" :alt="post.captionText" loading="lazy" draggable="false">
@@ -107,7 +107,7 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
   .no-image {
     display: flex;
     align-items: center;
@@ -136,9 +136,9 @@
   }
 
   .carousel-swiper :deep(.swiper-pagination-bullet) {
-    width: 16px;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.5);
+    width: $indent-m;
+    height: $indent-m;
+    background: $overlay-light;
     opacity: 1;
   }
 

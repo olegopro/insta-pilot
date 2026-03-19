@@ -1,15 +1,24 @@
 <script setup lang="ts">
   import { onMounted, onBeforeUnmount } from 'vue'
-  import { useRouter } from 'vue-router'
-  import { Notify } from 'quasar'
+  import { useRouter, useRoute } from 'vue-router'
   import { useAuthStore } from '@/entities/user'
   import { useSidebarActivityStore } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
+  import { notifyError } from '@/shared/lib'
   import { useGlobalActivityLive } from '@/features/activity-live'
   import { ActivitySidebar } from '@/widgets/activity-sidebar'
 
   const router = useRouter()
+  const route = useRoute()
   const authStore = useAuthStore()
+
+  const isNavActive = (path: string) => {
+    if (path === '/') return route.path === '/'
+    return route.path === path || route.path.startsWith(path + '/')
+  }
+
+  const navClass = (path: string) =>
+    ['nav-btn', isNavActive(path) ? 'nav-btn--active' : '']
   const sidebarStore = useSidebarActivityStore()
 
   const { subscribe, unsubscribe } = useGlobalActivityLive()
@@ -17,7 +26,7 @@
   const logoutHandler = async () => {
     await authStore.logout()
       .then(() => router.push('/login'))
-      .catch(() => Notify.create({ type: 'negative', message: 'Ошибка выхода' }))
+      .catch(() => notifyError('Ошибка выхода'))
   }
 
   const entryClickHandler = (entry: SidebarActivityEntry) => {
@@ -30,21 +39,44 @@
 
 <template>
   <q-layout view="LHh LpR fFf">
-    <q-header elevated>
+    <q-header class="app-header">
       <q-toolbar>
-        <q-toolbar-title>Insta Pilot</q-toolbar-title>
+        <q-toolbar-title class="app-logo">Insta Pilot</q-toolbar-title>
 
-        <q-btn flat to="/" label="Аккаунты" />
-        <q-btn flat to="/feed" label="Лента" />
-        <q-btn flat to="/search" label="Поиск" />
-        <q-btn flat to="/logs" label="Логи" />
-        <q-btn v-if="authStore.isAdmin" flat to="/settings/llm" label="Настройки LLM" />
-        <q-btn v-if="authStore.isAdmin" flat to="/admin/users" label="Пользователи" />
+        <q-space />
 
-        <q-separator vertical inset class="q-mx-sm" />
+        <div class="row items-center q-gutter-xs">
+          <q-btn flat to="/" label="Аккаунты" :class="navClass('/')" />
+          <q-btn flat to="/feed" label="Лента" :class="navClass('/feed')" />
+          <q-btn flat to="/search" label="Поиск" :class="navClass('/search')" />
+          <q-btn flat to="/logs" label="Логи" :class="navClass('/logs')" />
+          <q-btn v-if="authStore.isAdmin" flat to="/settings/llm" label="Настройки LLM" :class="navClass('/settings/llm')" />
+          <q-btn v-if="authStore.isAdmin" flat to="/admin/users" label="Пользователи" :class="navClass('/admin/users')" />
+        </div>
 
-        <span class="q-mr-sm text-caption">{{ authStore.user?.name }}</span>
-        <q-btn flat icon="logout" @click="logoutHandler" />
+        <q-btn-dropdown flat no-icon-animation class="nav-btn user-menu q-ml-sm" :label="authStore.user?.name ?? ''">
+          <q-list style="min-width: 200px">
+            <q-item>
+              <q-item-section>
+                <q-item-label class="text-weight-medium">{{ authStore.user?.name }}</q-item-label>
+                <q-item-label caption>{{ authStore.user?.email }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item v-close-popup clickable disabled>
+              <q-item-section avatar>
+                <q-icon name="manage_accounts" />
+              </q-item-section>
+              <q-item-section>Настройки</q-item-section>
+            </q-item>
+            <q-item v-close-popup clickable @click="logoutHandler">
+              <q-item-section avatar>
+                <q-icon name="logout" color="negative" />
+              </q-item-section>
+              <q-item-section class="text-negative">Выйти</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </q-toolbar>
     </q-header>
 
@@ -67,8 +99,10 @@
     <q-btn
       v-if="!sidebarStore.isOpen"
       round
+      size="md"
       color="primary"
       icon="terminal"
+      class="sidebar-toggle"
       style="position: fixed; bottom: 16px; left: 16px; z-index: 100"
       @click="sidebarStore.open()"
     >

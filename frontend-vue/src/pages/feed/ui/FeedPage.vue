@@ -114,7 +114,10 @@
 <template>
   <q-page class="feed-page q-pa-md">
     <div class="row items-center justify-between q-mb-lg">
-      <span class="text-h6">Лента</span>
+      <div class="row items-center">
+        <q-icon name="photo_library" size="28px" color="primary" class="q-mr-sm" />
+        <span class="text-h6">Лента</span>
+      </div>
       <div class="row items-center q-gutter-sm">
         <ButtonComponent
           icon="refresh"
@@ -244,14 +247,9 @@
 </template>
 
 <style scoped lang="scss">
-  .feed-page {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
   .mock-notice {
-    padding: 8px 12px;
-    background: #f5f5f5;
-    border-radius: 6px;
+    padding: $spacing-inline-gap $spacing-stack-gap;
+    background: $surface-tertiary;
+    border-radius: $radius-md;
   }
 </style>

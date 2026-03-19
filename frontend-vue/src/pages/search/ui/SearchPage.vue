@@ -36,8 +36,8 @@
   const userModal = useModal()
 
   const searchModeOptions = [
-    { label: 'Хэштег', value: 'hashtag' as SearchMode },
-    { label: 'Геолокация', value: 'location' as SearchMode }
+    { label: 'Хэштег', value: 'hashtag' as SearchMode, icon: 'tag' },
+    { label: 'Геолокация', value: 'location' as SearchMode, icon: 'location_on' }
   ]
 
   const canSearch = computed(() => !!selectedAccount.value)
@@ -157,8 +157,11 @@
 
 <template>
   <q-page class="search-page q-pa-md">
-    <div class="row items-center justify-between q-mb-lg">
-      <span class="text-h6">Поиск</span>
+    <div class="row items-center justify-between" style="margin-bottom: 24px">
+      <div class="row items-center">
+        <q-icon name="travel_explore" size="28px" color="primary" class="q-mr-sm" />
+        <span class="text-h6">Поиск</span>
+      </div>
       <SelectComponent
         v-model="selectedAccount"
         :options="accountStore.accounts"
@@ -190,14 +193,17 @@
     </div>
 
     <div class="controls q-mb-md">
-      <q-btn-toggle
-        :model-value="searchMode"
-        :options="searchModeOptions"
-        toggle-color="primary"
-        unelevated
-        dense
-        @update:model-value="switchModeHandler"
-      />
+      <div class="mode-toggle">
+        <button
+          v-for="opt in searchModeOptions"
+          :key="opt.value"
+          :class="['mode-btn', searchMode === opt.value && 'mode-btn--active']"
+          @click="switchModeHandler(opt.value)"
+        >
+          <q-icon :name="opt.icon" size="18px" />
+          {{ opt.label }}
+        </button>
+      </div>
 
       <div v-if="searchMode === 'hashtag'" class="search-input-row q-mt-md">
         <InputComponent
@@ -316,20 +322,55 @@
 </template>
 
 <style scoped lang="scss">
-  .search-page {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
   .controls {
-    background: #f9f9f9;
-    border-radius: 8px;
-    padding: 16px;
+    background: $surface-primary;
+    border-radius: $radius-lg;
+    padding: $spacing-card-padding;
+    box-shadow: $elevation-card;
+    border: $border-width-default $border-style-default $border-default;
   }
 
   .search-input-row {
     display: flex;
-    gap: 8px;
+    gap: $spacing-inline-gap;
     align-items: flex-start;
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 0;
+    border: $border-width-default $border-style-default $border-default;
+    border-radius: $radius-md;
+    overflow: hidden;
+    width: fit-content;
+  }
+
+  .mode-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: $indent-xs;
+    padding: $indent-s $indent-ml;
+    background: $surface-primary;
+    border: none;
+    border-right: $border-width-default $border-style-default $border-default;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    color: $content-secondary;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &:hover:not(.mode-btn--active) {
+      background: $surface-tertiary;
+      color: $content-primary;
+    }
+
+    &--active {
+      background: $primary;
+      color: #fff;
+    }
   }
 </style>

@@ -35,18 +35,18 @@
       </div>
 
       <div class="badges">
-        <q-icon v-if="post.mediaType === 2" name="play_circle_filled" color="white" size="20px" />
-        <q-icon v-else-if="post.mediaType === 8" name="collections" color="white" size="20px" />
+        <q-icon v-if="post.mediaType === 2" name="play_circle_filled" color="white" size="28px" />
+        <q-icon v-else-if="post.mediaType === 8" name="collections" color="white" size="28px" />
       </div>
 
       <div class="overlay">
         <div class="stats">
           <span>
-            <q-icon name="favorite" size="16px" />
+            <q-icon name="favorite" size="20px" />
             {{ formatCount(post.likeCount) }}
           </span>
           <span>
-            <q-icon name="chat_bubble" size="16px" />
+            <q-icon name="chat_bubble" size="20px" />
             {{ formatCount(post.commentCount) }}
           </span>
         </div>
@@ -85,10 +85,11 @@
 <style scoped lang="scss">
   .card {
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: $radius-lg;
     overflow: hidden;
-    background: #f5f5f5;
-    transition: transform 0.15s ease;
+    background: $surface-tertiary;
+    box-shadow: $elevation-card;
+    transition: transform $transition-fast;
 
     &:hover {
       transform: translateY(-2px);
@@ -120,53 +121,54 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #e0e0e0;
+    background: $neutral-300;
   }
 
   .badges {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: $indent-s;
+    right: $indent-s;
     display: flex;
-    gap: 4px;
+    gap: $indent-xs;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
   }
 
   .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.45);
+    background: $overlay-dimmed;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: $spacing-stack-gap;
+    padding: $indent-sm;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity $transition-normal;
   }
 
   .stats {
     display: flex;
-    gap: 16px;
+    gap: $indent-m;
     color: white;
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-base;
 
     span {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: $indent-xs;
     }
   }
 
   .footer {
-    padding: 6px 8px;
+    padding: $indent-xs $indent-s;
   }
 
   .user {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: $indent-xs;
     min-width: 0;
 
     &.clickable {
@@ -184,9 +186,9 @@
   }
 
   .username {
-    font-size: 12px;
-    font-weight: 500;
-    color: #333;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $content-primary;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -101,7 +101,7 @@
 <style scoped lang="scss">
   .masonry-grid {
     display: flex;
-    gap: 12px;
+    gap: $spacing-stack-gap;
     align-items: flex-start;
   }
 
@@ -109,6 +109,6 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: $spacing-stack-gap;
   }
 </style>

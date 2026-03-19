@@ -12,6 +12,18 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   generate_comment:       'Генерация комм.'
 }
 
+export const ACTION_ICONS: Record<ActionType, string> = {
+  login:                  'login',
+  fetch_feed:             'dynamic_feed',
+  like:                   'favorite',
+  comment:                'chat_bubble',
+  search_hashtag:         'tag',
+  search_locations:       'place',
+  search_location_medias: 'photo_library',
+  fetch_user_info:        'person',
+  generate_comment:       'auto_awesome'
+}
+
 export const ACTION_COLORS: Record<ActionType, string> = {
   login:                  'blue-grey',
   fetch_feed:             'blue',

@@ -128,21 +128,21 @@
         <div class="bottom-section">
           <div class="actions">
             <q-btn
-              flat
-              round
+              class="like-btn"
+              :color="post.hasLiked ? 'red' : 'white'"
+              :text-color="post.hasLiked ? 'white' : 'red'"
               :icon="post.hasLiked ? 'favorite' : 'favorite_border'"
-              :color="post.hasLiked ? 'red' : 'grey-7'"
+              :label="formatCount(post.likeCount)"
               :loading="isLiking?.(post.id)"
               :disable="post.hasLiked"
               @click="emit('like', post)"
             />
-            <span>{{ formatCount(post.likeCount) }}</span>
 
-            <q-icon name="chat_bubble_outline" color="grey-7" size="20px" class="q-ml-md" />
+            <q-icon name="chat_bubble_outline" color="grey-7" size="20px" />
             <span>{{ formatCount(post.commentCount) }}</span>
 
             <template v-if="post.viewCount > 0">
-              <q-icon name="play_arrow" color="grey-7" size="20px" class="q-ml-md" />
+              <q-icon name="play_arrow" color="grey-7" size="20px" />
               <span>{{ formatCount(post.viewCount) }}</span>
             </template>
           </div>
@@ -186,7 +186,7 @@
   </ModalComponent>
 </template>
 
-<style>
+<style lang="scss">
   .modal-inner.post-detail-modal__inner {
     display: inline-flex;
     max-width: 70vw;
@@ -195,6 +195,7 @@
     padding: 0;
     flex-direction: column;
     overflow: hidden;
+    border-radius: $radius-xl;
   }
 </style>
 
@@ -219,28 +220,27 @@
       display: flex;
       align-items: center;
       justify-content: center;
-
     }
 
     .info {
       width: $info-panel-width;
-      padding: 20px;
+      padding: $spacing-card-padding;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      border-left: 1px solid #eee;
+      gap: $spacing-card-padding;
+      border-left: $border-width-default $border-style-default $border-default;
 
       @media (max-width: 600px) {
         width: 100%;
         border-left: none;
-        border-top: 1px solid #eee;
+        border-top: $border-width-default $border-style-default $neutral-200;
       }
 
       .user {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: $spacing-stack-gap;
         cursor: pointer;
 
         &:hover {
@@ -255,8 +255,8 @@
 
       p {
         margin: 0;
-        font-size: 14px;
-        line-height: 1.5;
+        font-size: $font-size-base;
+        line-height: $line-height-normal;
         white-space: pre-wrap;
         word-break: break-word;
       }
@@ -264,40 +264,58 @@
       .meta {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: $indent-xs;
       }
 
       .bottom-section {
         margin-top: auto;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: $indent-m;
       }
 
       .actions {
         display: flex;
         align-items: center;
-        padding-top: 16px;
-        border-top: 1px solid #eee;
+        gap: $indent-sm;
+        padding-top: $indent-m;
+        border-top: $border-width-default $border-style-default $border-default;
 
         span {
-          font-size: 14px;
-          color: #555;
-          margin-left: 4px;
+          font-size: $font-size-base;
+          color: $content-secondary;
+        }
+      }
+
+      .like-btn {
+        border-radius: $radius-lg !important;
+        padding: $indent-xs $indent-sm !important;
+        min-height: 32px !important;
+
+        .q-btn__icon {
+          font-size: $font-size-md !important;
+        }
+
+        .q-btn__content {
+          font-size: $font-size-sm;
+          gap: $indent-2xs;
         }
       }
 
       .comment-section {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding-top: 16px;
-        border-top: 1px solid #eee;
+        gap: $spacing-stack-gap;
+        padding-top: $indent-m;
+        border-top: $border-width-default $border-style-default $border-default;
 
         .comment-actions {
           display: flex;
-          justify-content: flex-end;
-          gap: 8px;
+          gap: $spacing-inline-gap;
+
+          .q-btn {
+            flex: 1;
+          }
         }
       }
     }

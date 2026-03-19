@@ -9,6 +9,7 @@
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { TableComponent } from '@/shared/ui/table-component'
   import { TableToolsWrapper } from '@/shared/ui/table-tools-wrapper'
+  import { BadgeComponent } from '@/shared/ui/badge-component'
   import { AddInstagramAccountModal } from '@/features/add-instagram-account'
   import { DeleteInstagramAccountModal } from '@/features/delete-instagram-account'
   import { ViewInstagramAccountModal } from '@/features/view-instagram-account'
@@ -51,7 +52,8 @@
 </script>
 
 <template>
-  <div class="row items-center q-mb-md">
+  <div class="row items-center q-mb-lg page-title">
+    <q-icon name="manage_accounts" size="28px" color="primary" class="q-mr-sm" />
     <span class="text-h6">{{ pageTitle }}</span>
   </div>
 
@@ -82,9 +84,10 @@
     >
       <template #body-cell-isActive="{ value }">
         <q-td class="text-center">
-          <q-badge
+          <BadgeComponent
             :color="(value as boolean) ? 'positive' : 'grey-5'"
             :label="(value as boolean) ? 'Активен' : 'Неактивен'"
+            size="md"
           />
         </q-td>
       </template>

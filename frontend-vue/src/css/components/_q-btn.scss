@@ -1,0 +1,38 @@
+// Modern dashboard buttons: rounded, airy, consistent padding
+.q-btn {
+  border-radius: $radius-md;
+  font-weight: $font-weight-medium;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: all $transition-fast;
+  min-height: 40px;
+  padding: $indent-s $indent-ml;
+
+  // Dense variant
+  &--dense {
+    min-height: 34px;
+    padding: $indent-xs $indent-sm;
+  }
+
+  // Large button variant
+  &--lg {
+    min-height: 48px;
+    font-size: $font-size-md;
+    padding: $spacing-inline-gap $indent-xl;
+  }
+
+  // Round/fab — только сброс min-height, padding оставляем Quasar-дефолтный
+  &--round,
+  &--fab {
+    min-height: unset;
+  }
+
+  // Icon inside button: smaller size, tighter gap
+  .q-btn__icon {
+    font-size: $font-size-lg;
+  }
+
+  .q-btn__content {
+    gap: $indent-xs;
+  }
+}

@@ -38,7 +38,10 @@
 
 <template>
   <q-page padding>
-    <div class="text-h5 q-mb-md">Пользователи</div>
+    <div class="row items-center q-mb-lg">
+      <q-icon name="people" size="28px" color="primary" class="q-mr-sm" />
+      <span class="text-h5">Пользователи</span>
+    </div>
 
     <TableToolsWrapper
       v-model:search="searchText"

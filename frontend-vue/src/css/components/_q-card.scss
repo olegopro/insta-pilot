@@ -1,0 +1,7 @@
+// Cards with 14px radius, white bg, border + soft shadow for depth on grey page bg
+.q-card {
+  border-radius: $radius-lg;
+  box-shadow: $elevation-card;
+  background: $surface-primary;
+  border: $border-width-default $border-style-default $border-default;
+}

@@ -2,6 +2,7 @@
   import { computed, ref } from 'vue'
   import type { Nullable } from '@/shared/lib'
   import type { ActivityLogRowModel } from '@/entities/activity-log'
+  import { BadgeComponent } from '@/shared/ui/badge-component'
 
   interface Props {
     row: ActivityLogRowModel
@@ -87,7 +88,7 @@
 </script>
 
 <template>
-  <div class="q-pa-md bg-grey-1">
+  <div class="expanded-row-content q-pa-md border-lg">
     <div class="text-caption text-grey q-mb-md">
       Детали запроса #{{ row.id }}
       <span v-if="row.durationFormatted" class="q-ml-sm">· {{ row.durationFormatted }}</span>
@@ -114,12 +115,7 @@
         <div>
           <div class="field-label">
             Response
-            <q-badge
-              v-if="row.httpCode"
-              :color="row.httpCodeColor"
-              :label="row.httpCode"
-              class="q-ml-xs"
-            />
+            <BadgeComponent v-if="row.httpCode" :color="row.httpCodeColor" :label="String(row.httpCode)" size="sm" class="q-ml-xs" />
             <q-icon v-if="previewTooltip(vueResp)" name="info" size="13px" color="grey-5" class="q-ml-xs cursor-pointer">
               <q-tooltip max-width="260px">{{ previewTooltip(vueResp) }}</q-tooltip>
             </q-icon>
@@ -144,10 +140,11 @@
         <div v-if="pythonResp">
           <div class="field-label">
             Response
-            <q-badge
+            <BadgeComponent
               v-if="pythonResp.http_code"
               :color="(pythonResp.http_code as number) < 400 ? 'positive' : 'negative'"
               :label="String(pythonResp.http_code)"
+              size="sm"
               class="q-ml-xs"
             />
           </div>
@@ -175,10 +172,11 @@
           <div v-if="instagramResp">
             <div class="field-label">
               Response
-              <q-badge
+              <BadgeComponent
                 v-if="instagramResp.status"
                 :color="instagramResp.status === 'ok' ? 'positive' : 'negative'"
                 :label="String(instagramResp.status)"
+                size="sm"
                 class="q-ml-xs"
               />
               <q-icon v-if="previewTooltip(instagramResp)" name="info" size="13px" color="grey-5" class="q-ml-xs cursor-pointer">
@@ -212,60 +210,67 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: $indent-s;
 }
 
 .section-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .tab-switcher {
   display: flex;
-  gap: 2px;
+  gap: $indent-2xs;
 }
 
 .tab-btn {
-  font-size: 10px;
-  padding: 2px 8px;
-  border: 1px solid #ccc;
-  background: #fff;
-  border-radius: 3px;
+  font-size: $font-size-2xs;
+  padding: $indent-2xs $indent-s;
+  border: $border-width-default $border-style-default $neutral-300;
+  background: $surface-primary;
+  border-radius: $radius-xs;
   cursor: pointer;
-  color: #666;
+  color: $content-secondary;
   line-height: 1.6;
 }
 
 .tab-btn:hover {
-  background: #f0f0f0;
+  background: $neutral-200;
+  border-color: $neutral-300;
 }
 
 .tab-btn--active {
-  background: #1976d2;
-  border-color: #1976d2;
-  color: #fff;
+  background: $primary;
+  border-color: $primary;
+  color: $surface-primary;
 }
 
 .field-label {
-  font-size: 11px;
-  color: #888;
-  margin-bottom: 4px;
+  font-size: $font-size-xs;
+  color: $content-secondary;
+  margin-bottom: $indent-xs;
+}
+
+.expanded-row-content {
+  background: rgba(0, 0, 0, 0.025);
+  margin: $indent-s $indent-sm $indent-sm;
 }
 
 .log-json {
-  font-size: 11px;
-  background: #f5f5f5;
-  padding: 8px;
-  border-radius: 4px;
+  font-size: $font-size-xs;
+  background: $surface-primary;
+  border: $border-width-default $border-style-default $border-table;
+  padding: $indent-s;
+  border-radius: $radius-md;
   overflow-x: auto;
-  margin: 0 0 12px;
+  margin: 0 0 $spacing-stack-gap;
   white-space: pre-wrap;
   word-break: break-word;
 }

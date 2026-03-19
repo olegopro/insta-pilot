@@ -37,18 +37,19 @@
   <div class="sidebar-resize-handle" @mousedown="mousedownHandler" />
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .sidebar-resize-handle {
   position: absolute;
   top: 0;
   right: 0;
-  width: 4px;
+  width: $indent-xs;
   height: 100%;
   cursor: col-resize;
   background: transparent;
   z-index: 10;
 }
+
 .sidebar-resize-handle:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: $border-default;
 }
 </style>

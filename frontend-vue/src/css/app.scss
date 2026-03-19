@@ -1,1 +1,28 @@
-// app global css in SCSS form
+// ============================================
+// app.scss — Global styles entry point
+// ============================================
+// All token variables are in quasar.variables.scss
+// (auto-injected by Quasar into every SCSS file).
+//
+// This file imports only CSS-generating partials.
+// Import order matters: base → components → layouts → utilities.
+
+// --- Base ---
+@import 'base/reset';
+@import 'base/typography';
+@import 'base/transitions';
+
+// --- Components (Quasar overrides) ---
+@import 'components/q-btn';
+@import 'components/q-input';
+@import 'components/q-table';
+@import 'components/q-card';
+@import 'components/q-dialog';
+@import 'components/q-tabs';
+@import 'components/q-toolbar';
+
+// --- Layouts ---
+@import 'layouts/main-layout';
+
+// --- Utilities (last, so they can override) ---
+@import 'utilities/helpers';

@@ -3,6 +3,7 @@
   import type { Nullable } from '@/shared/lib'
   import { TableComponent } from '@/shared/ui/table-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
+  import { BadgeComponent } from '@/shared/ui/badge-component'
   import { activityLogTableColumns } from '@/entities/activity-log'
   import type { ActivityLogRowModel } from '@/entities/activity-log'
   import ActivityLogExpandedRow from './ActivityLogExpandedRow.vue'
@@ -75,11 +76,7 @@
           </q-td>
 
           <q-td key="action">
-            <q-badge
-              :color="row.actionColor"
-              :label="row.actionLabel"
-              class="text-caption"
-            />
+            <BadgeComponent :color="row.actionColor" :label="row.actionLabel" size="sm" />
           </q-td>
 
           <q-td key="status">
@@ -90,11 +87,7 @@
           </q-td>
 
           <q-td key="httpCode" class="text-center">
-            <q-badge
-              v-if="row.httpCode"
-              :color="row.httpCodeColor"
-              :label="row.httpCode"
-            />
+            <BadgeComponent v-if="row.httpCode" :color="row.httpCodeColor" :label="String(row.httpCode)" size="sm" />
           </q-td>
 
           <q-td key="endpoint">

@@ -15,7 +15,10 @@
     <InputComponent
       v-model="search"
       :placeholder="searchPlaceholder ?? 'Поиск'"
+      outlined
+      dense
       clearable
+      style="min-width: 260px"
     >
       <template #append>
         <q-icon name="search" />
@@ -39,13 +42,13 @@
   .table-tools {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: $spacing-stack-gap;
+    margin-bottom: $spacing-stack-gap;
 
     &__controls {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: $spacing-inline-gap;
       margin-left: auto;
     }
   }

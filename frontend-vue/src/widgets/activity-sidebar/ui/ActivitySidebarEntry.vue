@@ -2,6 +2,7 @@
   import { STATUS_CONFIG, ACTION_LABELS, HTTP_CODE_COLOR } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
   import { formatTimeHMS } from '@/shared/lib'
+  import { BadgeComponent } from '@/shared/ui/badge-component'
 
   interface Props {
     entry: SidebarActivityEntry
@@ -16,34 +17,34 @@
 
 <template>
   <div
-    class="sidebar-entry q-pa-xs cursor-pointer"
+    class="sidebar-entry cursor-pointer"
     @click="emit('click', entry)"
   >
-    <div class="row items-center q-gutter-xs no-wrap">
+    <div class="entry-row row items-center no-wrap">
       <q-icon
         :name="STATUS_CONFIG[entry.status]?.icon ?? 'help'"
         :color="STATUS_CONFIG[entry.status]?.color ?? 'grey'"
-        size="xs"
+        size="20px"
       />
-      <span class="text-caption text-weight-medium ellipsis col">
+      <span class="entry-action ellipsis col">
         {{ ACTION_LABELS[entry.action] ?? entry.action }}
       </span>
-      <q-badge
+      <BadgeComponent
         v-if="entry.httpCode"
         :color="HTTP_CODE_COLOR(entry.httpCode)"
-        :label="entry.httpCode"
-        class="text-caption"
+        :label="String(entry.httpCode)"
+        size="sm"
       />
-      <span class="text-caption text-grey-6 q-ml-xs">{{ formatTimeHMS(entry.createdAt) }}</span>
+      <span class="entry-time">{{ formatTimeHMS(entry.createdAt) }}</span>
     </div>
 
-    <div v-if="entry.accountLogin" class="text-caption text-grey q-ml-md">
+    <div v-if="entry.accountLogin" class="entry-meta q-ml-lg">
       @{{ entry.accountLogin }}
     </div>
 
     <div
       v-if="entry.shortMessage"
-      class="text-caption ellipsis q-ml-md"
+      class="entry-meta ellipsis q-ml-lg"
       :class="entry.status !== 'success' ? 'text-negative' : 'text-grey-7'"
     >
       {{ entry.shortMessage }}
@@ -51,12 +52,35 @@
   </div>
 </template>
 
-<style scoped>
-.sidebar-entry {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  transition: background 0.1s;
+<style scoped lang="scss">
+.entry-row {
+  gap: $indent-s;
 }
+
+.sidebar-entry {
+  padding: $spacing-inline-gap $indent-sm;
+  border-bottom: $border-width-default $border-style-default $border-subtle;
+  transition: background $transition-fast;
+}
+
 .sidebar-entry:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: $surface-hover;
+}
+
+.entry-action {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+}
+
+.entry-time {
+  font-size: $font-size-sm;
+  color: $content-secondary;
+  white-space: nowrap;
+}
+
+.entry-meta {
+  font-size: $font-size-sm;
+  color: $content-secondary;
+  margin-top: $indent-2xs;
 }
 </style>

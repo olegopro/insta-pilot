@@ -1,0 +1,9 @@
+// Modern dashboard header: soft shadow, no border
+.q-toolbar {
+  min-height: 64px;
+}
+
+.q-header {
+  box-shadow: $elevation-header;
+  border-bottom: none;
+}

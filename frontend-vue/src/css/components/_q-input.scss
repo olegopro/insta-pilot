@@ -1,0 +1,58 @@
+// Modern dashboard inputs: all outlined, rounded, airy
+.q-field {
+  // Force outlined look for standard (underline) variant
+  &--standard .q-field__control {
+    border: $border-width-default $border-style-default $input-border;
+    border-radius: $radius-md;
+    padding: 0 $indent-sm;
+
+    &::before {
+      border-bottom: none;
+    }
+
+    &::after {
+      border-bottom: none;
+    }
+  }
+
+  &--standard.q-field--focused .q-field__control {
+    border-color: $primary;
+  }
+
+  // Outlined variant
+  &--outlined .q-field__control {
+    border-radius: $radius-md;
+  }
+
+  // Focus state
+  &--focused .q-field__control {
+    border-color: $primary;
+  }
+
+  // Dense variant
+  &--dense .q-field__control {
+    min-height: 40px;
+  }
+
+  // Filled variant
+  &--filled .q-field__control {
+    background: $input-bg;
+    border-radius: $radius-md;
+
+    &::before {
+      border-color: $input-border;
+    }
+  }
+}
+
+.q-field__label {
+  font-size: $font-size-sm;
+}
+
+// Select dropdown popup offset
+.q-select__dialog,
+.q-menu {
+  margin-top: $indent-xs;
+  border-radius: $radius-md !important;
+  box-shadow: $elevation-dropdown !important;
+}

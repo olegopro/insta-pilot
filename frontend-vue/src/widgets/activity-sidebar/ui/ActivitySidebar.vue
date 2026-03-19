@@ -2,14 +2,15 @@
   import { ref, watch, nextTick } from 'vue'
   import { useSidebarActivityStore } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
+  import { BadgeComponent } from '@/shared/ui/badge-component'
   import ActivitySidebarEntry from './ActivitySidebarEntry.vue'
   import SidebarResizeHandle from './SidebarResizeHandle.vue'
 
-  const FILTER_OPTIONS: { label: string; value: 'all' | 'errors' | 'likes' | 'comments' }[] = [
-    { label: 'Все', value: 'all' },
-    { label: 'Ошибки', value: 'errors' },
-    { label: 'Лайки', value: 'likes' },
-    { label: 'Коммент.', value: 'comments' }
+  const FILTER_OPTIONS: { label: string; value: 'all' | 'errors' | 'likes' | 'comments'; icon: string }[] = [
+    { label: 'Все', value: 'all', icon: 'apps' },
+    { label: 'Ошибки', value: 'errors', icon: 'error_outline' },
+    { label: 'Лайки', value: 'likes', icon: 'favorite_border' },
+    { label: 'Коммент.', value: 'comments', icon: 'chat_bubble_outline' }
   ]
 
   const emit = defineEmits<{
@@ -45,20 +46,18 @@
       </div>
     </div>
 
-    <div class="row q-px-sm q-py-xs q-gutter-xs">
-      <q-chip
+    <div class="filter-bar">
+      <BadgeComponent
         v-for="opt in FILTER_OPTIONS"
         :key="opt.value"
-        :selected="store.quickFilter === opt.value"
-        :color="store.quickFilter === opt.value ? 'primary' : undefined"
-        :text-color="store.quickFilter === opt.value ? 'white' : undefined"
-        dense
-        clickable
+        :label="opt.label"
+        :icon="opt.icon"
+        :color="store.quickFilter === opt.value ? 'primary' : 'grey'"
+        :outline="store.quickFilter !== opt.value"
         size="sm"
+        class="filter-chip"
         @click="store.quickFilter = opt.value"
-      >
-        {{ opt.label }}
-      </q-chip>
+      />
     </div>
 
     <q-separator />
@@ -83,15 +82,33 @@
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $indent-xs;
+  padding: $indent-xs $indent-sm;
+}
+
+.filter-chip {
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
 .activity-sidebar {
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: $border-width-default $border-style-default $border-default;
   overflow: hidden;
 }
+
 .sidebar-header {
-  background: rgba(0, 0, 0, 0.02);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: $surface-secondary;
+  border-bottom: $border-width-default $border-style-default $border-default;
 }
+
 .sidebar-scroll {
   overflow-y: auto;
   min-height: 0;

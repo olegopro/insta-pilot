@@ -1,0 +1,5 @@
+// Penpot design: dialogs with 24px radius
+.q-dialog__inner > .q-card {
+  border-radius: $radius-xl;
+  box-shadow: $elevation-modal;
+}
