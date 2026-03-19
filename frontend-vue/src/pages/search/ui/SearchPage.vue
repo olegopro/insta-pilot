@@ -227,6 +227,7 @@
           :options="searchStore.locations"
           option-label="name"
           label="Поиск места"
+          dense
           outlined
           use-input
           clearable

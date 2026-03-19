@@ -7,6 +7,7 @@
   import { notifyError } from '@/shared/lib'
   import { useGlobalActivityLive } from '@/features/activity-live'
   import { ActivitySidebar } from '@/widgets/activity-sidebar'
+  import AppNavTabs from './AppNavTabs.vue'
 
   const router = useRouter()
   const authStore = useAuthStore()
@@ -37,16 +38,13 @@
 
         <q-space />
 
-        <div class="row items-center q-gutter-xs">
-          <q-btn flat to="/" label="Аккаунты" class="nav-btn" />
-          <q-btn flat to="/feed" label="Лента" class="nav-btn" />
-          <q-btn flat to="/search" label="Поиск" class="nav-btn" />
-          <q-btn flat to="/logs" label="Логи" class="nav-btn" />
-          <q-btn v-if="authStore.isAdmin" flat to="/settings/llm" label="Настройки LLM" class="nav-btn" />
-          <q-btn v-if="authStore.isAdmin" flat to="/admin/users" label="Пользователи" class="nav-btn" />
-        </div>
+        <AppNavTabs />
 
-        <q-btn-dropdown flat no-icon-animation class="nav-btn q-ml-sm" :label="authStore.user?.name ?? ''">
+        <q-btn-dropdown
+          flat no-icon-animation class="q-ml-sm" 
+          :label="authStore.user?.name ?? ''" 
+          :menu-offset="[0, 18]"
+        >
           <q-list style="min-width: 200px">
             <q-item>
               <q-item-section>
