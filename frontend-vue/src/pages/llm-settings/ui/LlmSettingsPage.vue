@@ -121,7 +121,7 @@
         <div class="llm-item__info">
           <div class="text-weight-medium text-subtitle1 provider-name">
             {{ providerLabel(setting.provider) }}
-            <BadgeComponent v-if="setting.isDefault" color="primary" label="По умолчанию" size="md" />
+            <BadgeComponent v-if="setting.isDefault" color="primary" label="По умолчанию" size="lg" />
           </div>
           <div class="text-caption text-grey-6">
             Модель: {{ setting.modelName }} · Тон: {{ setting.tone }} · Описание: {{ setting.useCaption ? 'да' : 'нет' }}

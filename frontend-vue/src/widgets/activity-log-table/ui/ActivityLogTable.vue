@@ -76,7 +76,7 @@
           </q-td>
 
           <q-td key="action">
-            <BadgeComponent :color="row.actionColor" :label="row.actionLabel" size="sm" />
+            <BadgeComponent :color="row.actionColor" :label="row.actionLabel" size="md" />
           </q-td>
 
           <q-td key="status">

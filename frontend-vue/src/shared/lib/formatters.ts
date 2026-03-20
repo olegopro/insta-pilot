@@ -31,3 +31,8 @@ export const formatTimeHM = (iso: Nullable<string>): Nullable<string> => {
     return iso
   }
 }
+
+export const formatDateRu = (date: string): string => {
+  if (!date) return ''
+  return `${date.slice(8, 10)}.${date.slice(5, 7)}.${date.slice(0, 4)}`
+}

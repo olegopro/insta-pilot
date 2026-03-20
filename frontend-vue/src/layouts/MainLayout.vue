@@ -7,6 +7,7 @@
   import { notifyError } from '@/shared/lib'
   import { useGlobalActivityLive } from '@/features/activity-live'
   import { ActivitySidebar } from '@/widgets/activity-sidebar'
+  import { DropdownComponent } from '@/shared/ui/dropdown-component'
   import AppNavTabs from './AppNavTabs.vue'
 
   const router = useRouter()
@@ -40,9 +41,9 @@
 
         <AppNavTabs />
 
-        <q-btn-dropdown
-          flat no-icon-animation class="q-ml-sm" 
-          :label="authStore.user?.name ?? ''" 
+        <DropdownComponent
+          flat no-icon-animation class="q-ml-sm"
+          :label="authStore.user?.name ?? ''"
           :menu-offset="[0, 18]"
         >
           <q-list style="min-width: 200px">
@@ -66,7 +67,7 @@
               <q-item-section class="text-negative">Выйти</q-item-section>
             </q-item>
           </q-list>
-        </q-btn-dropdown>
+        </DropdownComponent>
       </q-toolbar>
     </q-header>
 

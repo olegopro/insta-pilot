@@ -52,6 +52,7 @@
     }
 
     &--lg {
+      line-height: 1.25;
       font-size: $font-size-sm;
       padding: $indent-xs $spacing-stack-gap;
       border-radius: $radius-md;

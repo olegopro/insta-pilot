@@ -29,7 +29,7 @@ export default [
     label: 'Роль',
     field: (row) => row.role,
     align: 'center',
-    style: 'min-width: 140px'
+    headerStyle: 'width: 200px'
   },
   {
     name: 'isActive',

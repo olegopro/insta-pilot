@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import { InputComponent } from '@/shared/ui/input-component'
   import { SelectComponent } from '@/shared/ui/select-component'
+  import { DatePickerComponent } from '@/shared/ui/date-picker-component'
   import { ACTION_LABELS, STATUS_CONFIG } from '@/entities/activity-log'
   import type { ActivityFilters, ActionType, ActionStatus } from '@/entities/activity-log'
 
@@ -44,16 +44,16 @@
     applyUpdate(updated)
   }
 
-  const updateDateFromHandler = (val: string | number | FileList | null | undefined) => {
+  const updateDateFromHandler = (val: string) => {
     const updated = { ...props.modelValue }
-    if (val && typeof val === 'string') updated.dateFrom = val
+    if (val) updated.dateFrom = val
     else delete updated.dateFrom
     applyUpdate(updated)
   }
 
-  const updateDateToHandler = (val: string | number | FileList | null | undefined) => {
+  const updateDateToHandler = (val: string) => {
     const updated = { ...props.modelValue }
-    if (val && typeof val === 'string') updated.dateTo = val
+    if (val) updated.dateTo = val
     else delete updated.dateTo
     applyUpdate(updated)
   }
@@ -91,23 +91,21 @@
       @update:model-value="updateStatusHandler"
     />
 
-    <InputComponent
-      :model-value="modelValue.dateFrom"
-      type="date"
+    <DatePickerComponent
+      :model-value="modelValue.dateFrom ?? ''"
       label="Дата от"
       dense
       outlined
-      style="min-width: 140px"
+      style="min-width: 150px"
       @update:model-value="updateDateFromHandler"
     />
 
-    <InputComponent
-      :model-value="modelValue.dateTo"
-      type="date"
+    <DatePickerComponent
+      :model-value="modelValue.dateTo ?? ''"
       label="Дата до"
       dense
       outlined
-      style="min-width: 140px"
+      style="min-width: 150px"
       @update:model-value="updateDateToHandler"
     />
   </div>

@@ -15,7 +15,6 @@
           v-for="col in columns"
           :key="col.name"
           tag="label"
-          dense
           clickable
         >
           <q-item-section side>
@@ -29,3 +28,10 @@
     </q-menu>
   </ButtonComponent>
 </template>
+
+<style lang="scss" scoped>
+  .q-item{
+    height: $indent-m + $indent-2xl;
+    // background-color: $accent;
+  }
+</style>
