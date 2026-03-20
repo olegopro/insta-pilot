@@ -1,3 +1,7 @@
+<script setup lang="ts">
+  import { ButtonComponent } from '@/shared/ui/button-component'
+</script>
+
 <template>
   <div class="fullscreen bg-blue text-white text-center q-pa-md flex flex-center">
     <div>
@@ -11,8 +15,8 @@
       >
         Oops. Nothing here...
       </div>
- 
-      <q-btn
+
+      <ButtonComponent
         color="white"
         text-color="blue"
         unelevated
@@ -24,7 +28,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-//
-</script>

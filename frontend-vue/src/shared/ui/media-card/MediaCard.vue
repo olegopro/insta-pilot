@@ -3,6 +3,7 @@
   import type { MediaPost } from '@/entities/media-post'
   import { formatCount } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
+  import { ButtonComponent } from '@/shared/ui/button-component'
 
   const props = defineProps<{
     post: MediaPost
@@ -50,7 +51,7 @@
             {{ formatCount(post.commentCount) }}
           </span>
         </div>
-        <q-btn
+        <ButtonComponent
           v-if="!isMock"
           round
           size="md"

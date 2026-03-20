@@ -127,7 +127,7 @@
 
         <div class="bottom-section">
           <div class="actions">
-            <q-btn
+            <ButtonComponent
               class="like-btn"
               :color="post.hasLiked ? 'red' : 'white'"
               :text-color="post.hasLiked ? 'white' : 'red'"

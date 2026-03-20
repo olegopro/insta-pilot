@@ -244,7 +244,7 @@
       </MasonryGrid>
 
       <div v-if="searchStore.canLoadMore" class="row justify-center q-pa-md">
-        <q-btn
+        <ButtonComponent
           label="Загрузить ещё"
           color="primary"
           outline

@@ -5,6 +5,7 @@
   import type { SidebarActivityEntry } from '@/entities/activity-log'
   import { useGlobalActivityLive } from '@/features/activity-live'
   import { ActivitySidebar } from '@/widgets/activity-sidebar'
+  import { ButtonComponent } from '@/shared/ui/button-component'
   import AppNavTabs from './AppNavTabs.vue'
   import UserMenuDropdown from './UserMenuDropdown.vue'
 
@@ -52,7 +53,7 @@
       <router-view />
     </q-page-container>
 
-    <q-btn
+    <ButtonComponent
       v-if="!sidebarStore.isOpen"
       round
       size="md"
@@ -68,6 +69,6 @@
         color="negative"
         :label="sidebarStore.unreadCount > 99 ? '99+' : sidebarStore.unreadCount"
       />
-    </q-btn>
+    </ButtonComponent>
   </q-layout>
 </template>

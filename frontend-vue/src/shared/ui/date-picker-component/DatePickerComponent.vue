@@ -2,6 +2,7 @@
   import type { QInputProps } from 'quasar'
   import { useForwardProps, formatDateRu } from '@/shared/lib'
   import { InputComponent } from '@/shared/ui/input-component'
+  import { ButtonComponent } from '@/shared/ui/button-component'
 
   export type DatePickerComponentProps = Omit<QInputProps, 'modelValue' | 'onUpdate:modelValue'>
 
@@ -18,6 +19,12 @@
     readonly
   >
     <template #append>
+      <q-icon
+        v-if="model"
+        name="cancel"
+        class="cursor-pointer"
+        @click.stop="model = ''"
+      />
       <q-icon name="event" class="cursor-pointer">
         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
           <q-date
@@ -26,7 +33,7 @@
             @update:model-value="(val) => (model = val ?? '')"
           >
             <div class="row items-center justify-end">
-              <q-btn v-close-popup label="Закрыть" color="primary" flat />
+              <ButtonComponent v-close-popup label="Закрыть" color="primary" flat />
             </div>
           </q-date>
         </q-popup-proxy>
