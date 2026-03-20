@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted } from 'vue'
+  import { ref, computed, watch, nextTick, onMounted } from 'vue'
   import { onBeforeRouteLeave } from 'vue-router'
   import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
   import { useSearchStore, useFeedStore } from '@/entities/media-post'
@@ -26,6 +26,8 @@
   const feedStore = useFeedStore()
 
   const selectedAccount = ref<Nullable<InstagramAccount>>(null)
+  const accountSelectRef = ref<InstanceType<typeof SelectComponent>>()
+  const accountStackLabel = computed(() => !!selectedAccount.value || !!localStorage.getItem(SELECTED_ACCOUNT_KEY))
   const selectedPost = ref<Nullable<MediaPost>>(null)
   const searchMode = ref<SearchMode>('hashtag')
   const hashtagInput = ref('')
@@ -48,6 +50,7 @@
       localStorage.setItem(SELECTED_ACCOUNT_KEY, String(account.id))
     } else {
       localStorage.removeItem(SELECTED_ACCOUNT_KEY)
+      void nextTick(() => accountSelectRef.value?.blur())
     }
   })
 
@@ -160,9 +163,11 @@
   <PageComponent title="Поиск" icon="travel_explore" class="search-page">
     <template #append>
       <SelectComponent
+        ref="accountSelectRef"
         v-model="selectedAccount"
         :options="accountStore.accounts"
         :loading="accountStore.fetchAccountsLoading || isInitializing"
+        :stack-label="accountStackLabel"
         option-label="instagram_login"
         label="Выберите аккаунт"
         clearable
@@ -255,22 +260,18 @@
       </div>
     </div>
 
-    <div v-if="!canSearch" class="row justify-center q-pa-xl text-grey">
-      <div class="column items-center">
-        <q-icon name="manage_search" size="64px" color="grey-3" />
-        <p class="q-mt-sm">Выберите аккаунт для поиска</p>
-      </div>
+    <div v-if="!canSearch" class="empty-state">
+      <q-icon name="manage_search" size="96px" color="grey-3" />
+      <p class="empty-state__text">Выберите аккаунт для поиска</p>
     </div>
 
-    <div v-else-if="searchStore.searchLoading" class="row justify-center q-pa-xl">
+    <div v-else-if="searchStore.searchLoading" class="empty-state">
       <q-spinner size="48px" color="primary" />
     </div>
 
-    <div v-else-if="searchStore.searchResults.length === 0" class="row justify-center q-pa-xl text-grey">
-      <div class="column items-center">
-        <q-icon name="photo_library" size="64px" color="grey-3" />
-        <p class="q-mt-sm">Введите запрос для поиска</p>
-      </div>
+    <div v-else-if="searchStore.searchResults.length === 0" class="empty-state">
+      <q-icon name="photo_library" size="96px" color="grey-3" />
+      <p class="empty-state__text">Введите запрос для поиска</p>
     </div>
 
     <div v-else>

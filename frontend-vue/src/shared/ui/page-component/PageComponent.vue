@@ -23,6 +23,11 @@
 </template>
 
 <style scoped lang="scss">
+.page-content {
+  display: flex;
+  flex-direction: column;
+}
+
 .page-header {
   height: 60px;
 }

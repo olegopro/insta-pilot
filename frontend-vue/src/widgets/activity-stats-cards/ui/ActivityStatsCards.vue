@@ -22,7 +22,7 @@
       <q-card-section class="stat-card__section">
         <div class="stat-card__title">Всего действий</div>
         <div class="row items-center stat-card__body">
-          <q-icon name="bar_chart" color="primary" size="28px" class="stat-card__icon" />
+          <q-icon name="bar_chart" color="primary" size="32px" class="stat-card__icon" />
           <div class="stat-card__value">
             <q-skeleton v-if="loading" type="text" width="60px" />
             <template v-else>{{ stats?.total ?? 0 }}</template>
@@ -35,7 +35,7 @@
       <q-card-section class="stat-card__section">
         <div class="stat-card__title">Сегодня</div>
         <div class="row items-center stat-card__body">
-          <q-icon name="today" color="info" size="28px" class="stat-card__icon" />
+          <q-icon name="today" color="info" size="32px" class="stat-card__icon" />
           <div class="stat-card__value">
             <q-skeleton v-if="loading" type="text" width="60px" />
             <template v-else>{{ stats?.today ?? 0 }}</template>
@@ -48,7 +48,7 @@
       <q-card-section class="stat-card__section">
         <div class="stat-card__title">Ошибок</div>
         <div class="row items-center stat-card__body">
-          <q-icon name="error_outline" color="negative" size="28px" class="stat-card__icon" />
+          <q-icon name="error_outline" color="negative" size="32px" class="stat-card__icon" />
           <div class="stat-card__value">
             <q-skeleton v-if="loading" type="text" width="60px" />
             <template v-else>{{ errorCount }}</template>
@@ -61,7 +61,7 @@
       <q-card-section class="stat-card__section">
         <div class="stat-card__title">Успех</div>
         <div class="row items-center stat-card__body">
-          <q-icon name="check_circle_outline" color="positive" size="28px" class="stat-card__icon" />
+          <q-icon name="check_circle_outline" color="positive" size="32px" class="stat-card__icon" />
           <div class="stat-card__value">
             <q-skeleton v-if="loading" type="text" width="60px" />
             <template v-else>{{ stats ? `${stats.successRate.toFixed(1)}%` : '—' }}</template>
@@ -79,7 +79,7 @@
     }
 
     &__title {
-      font-size: $font-size-sm;
+      font-size: $font-size-base;
       font-weight: $font-weight-medium;
       color: $content-secondary;
       margin-bottom: $spacing-stack-gap;
@@ -94,7 +94,7 @@
     }
 
     &__value {
-      font-size: $font-size-2xl;
+      font-size: $font-size-3xl;
       font-weight: $font-weight-bold;
       color: $content-primary;
       line-height: 1;

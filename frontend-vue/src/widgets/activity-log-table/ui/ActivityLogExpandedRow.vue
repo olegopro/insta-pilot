@@ -89,7 +89,7 @@
 
 <template>
   <div class="expanded-row-content q-pa-md border-lg">
-    <div class="text-caption text-grey q-mb-md">
+    <div class="detail-header text-grey q-mb-md">
       Детали запроса #{{ row.id }}
       <span v-if="row.durationFormatted" class="q-ml-sm">· {{ row.durationFormatted }}</span>
       <span v-if="row.errorCode" class="q-ml-sm text-negative">· {{ row.errorCode }}</span>
@@ -116,7 +116,7 @@
           <div class="field-label">
             Response
             <BadgeComponent v-if="row.httpCode" :color="row.httpCodeColor" :label="String(row.httpCode)" size="sm" class="q-ml-xs" />
-            <q-icon v-if="previewTooltip(vueResp)" name="info" size="13px" color="grey-5" class="q-ml-xs cursor-pointer">
+            <q-icon v-if="previewTooltip(vueResp)" name="info" size="16px" color="grey-5" class="q-ml-xs cursor-pointer">
               <q-tooltip max-width="260px">{{ previewTooltip(vueResp) }}</q-tooltip>
             </q-icon>
           </div>
@@ -179,7 +179,7 @@
                 size="sm"
                 class="q-ml-xs"
               />
-              <q-icon v-if="previewTooltip(instagramResp)" name="info" size="13px" color="grey-5" class="q-ml-xs cursor-pointer">
+              <q-icon v-if="previewTooltip(instagramResp)" name="info" size="16px" color="grey-5" class="q-ml-xs cursor-pointer">
                 <q-tooltip max-width="260px">{{ previewTooltip(instagramResp) }}</q-tooltip>
               </q-icon>
             </div>
@@ -204,7 +204,7 @@
       </div>
     </div>
 
-    <div class="row q-gutter-lg q-mt-sm text-caption text-grey">
+    <div class="row q-gutter-lg q-mt-sm detail-footer text-grey">
       <span>Создан: <strong>{{ row.createdAt }}</strong></span>
     </div>
   </div>
@@ -215,11 +215,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: $indent-s;
+  margin-bottom: $indent-sm;
 }
 
 .section-label {
-  font-size: $font-size-xs;
+  font-size: $font-size-sm;
   font-weight: $font-weight-semibold;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -227,22 +227,22 @@
 
 .tab-switcher {
   display: flex;
-  gap: $indent-2xs;
+  gap: $indent-xs;
 }
 
 .tab-btn {
-  font-size: $font-size-2xs;
-  padding: $indent-2xs $indent-s;
+  font-size: $font-size-sm;
+  padding: $indent-xs $indent-sm;
   border: $border-width-default $border-style-default $neutral-300;
   background: $surface-primary;
-  border-radius: $radius-xs;
+  border-radius: $radius-sm;
   cursor: pointer;
   color: $content-secondary;
   line-height: 1.6;
 }
 
-.tab-btn:hover {
-  background: $neutral-200;
+.tab-btn:hover:not(.tab-btn--active) {
+  background: $neutral-100;
   border-color: $neutral-300;
 }
 
@@ -253,9 +253,17 @@
 }
 
 .field-label {
-  font-size: $font-size-xs;
+  font-size: $font-size-sm;
   color: $content-secondary;
-  margin-bottom: $indent-xs;
+  margin-bottom: $indent-s;
+}
+
+.detail-header {
+  font-size: $font-size-base;
+}
+
+.detail-footer {
+  font-size: $font-size-sm;
 }
 
 .expanded-row-content {
@@ -264,10 +272,10 @@
 }
 
 .log-json {
-  font-size: $font-size-xs;
+  font-size: $font-size-sm;
   background: $surface-primary;
   border: $border-width-default $border-style-default $border-table;
-  padding: $indent-s;
+  padding: $indent-sm;
   border-radius: $radius-md;
   overflow-x: auto;
   margin: 0 0 $spacing-stack-gap;

@@ -3,7 +3,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { useActivityLogStore } from '@/entities/activity-log'
   import { activityLogListDTO } from '@/entities/activity-log'
-  import type { ActivityFilters } from '@/entities/activity-log'
+  import type { ActivityFilters, ActionType, ActionStatus } from '@/entities/activity-log'
   import { ActivityFilter } from '@/features/activity-filter'
   import { useActivityLive } from '@/features/activity-live'
   import { ActivityStatsCards } from '@/widgets/activity-stats-cards'
@@ -43,6 +43,22 @@
 
   const applyFiltersHandler = () => {
     accountId.value && void store.fetchLogs(accountId.value, filters.value)
+  }
+
+  const selectActionHandler = (action: ActionType | null) => {
+    const updated = { ...filters.value }
+    if (action) updated.action = action
+    else delete updated.action
+    filters.value = updated
+    applyFiltersHandler()
+  }
+
+  const selectStatusHandler = (status: ActionStatus | null) => {
+    const updated = { ...filters.value }
+    if (status) updated.status = status
+    else delete updated.status
+    filters.value = updated
+    applyFiltersHandler()
   }
 
   const rowClickHandler = (id: number) => {
@@ -112,7 +128,11 @@
 
     <ActivityGroupedStats
       :stats="store.stats"
+      :active-action="filters.action ?? null"
+      :active-status="filters.status ?? null"
       class="q-mb-md"
+      @select-action="selectActionHandler"
+      @select-status="selectStatusHandler"
     />
 
     <div class="q-mb-md">

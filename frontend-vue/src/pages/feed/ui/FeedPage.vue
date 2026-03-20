@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted } from 'vue'
+  import { ref, computed, watch, nextTick, onMounted } from 'vue'
   import { onBeforeRouteLeave } from 'vue-router'
   import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
   import { useFeedStore, MOCK_FEED } from '@/entities/media-post'
@@ -20,13 +20,15 @@
   const accountStore = useAccountStore()
   const feedStore = useFeedStore()
 
+  const SELECTED_ACCOUNT_KEY = 'feed_selected_account_id'
+
   const selectedAccount = ref<Nullable<InstagramAccount>>(null)
+  const accountSelectRef = ref<InstanceType<typeof SelectComponent>>()
+  const accountStackLabel = computed(() => !!selectedAccount.value || !!localStorage.getItem(SELECTED_ACCOUNT_KEY))
   const selectedPost = ref<Nullable<MediaPost>>(null)
   const loadingUserPk = ref<Nullable<string>>(null)
   const postModal = useModal()
   const userModal = useModal()
-
-  const SELECTED_ACCOUNT_KEY = 'feed_selected_account_id'
 
   const isInitializing = ref(true)
   const isMockMode = computed(() => !isInitializing.value && !selectedAccount.value)
@@ -39,6 +41,7 @@
         .catch((error: unknown) => isCancelledRequest(error) || notifyError(feedStore.feedError ?? 'Ошибка загрузки ленты'))
     } else {
       localStorage.removeItem(SELECTED_ACCOUNT_KEY)
+      void nextTick(() => accountSelectRef.value?.blur())
     }
   })
 
@@ -146,9 +149,11 @@
           @update:model-value="(value: number | null) => feedStore.setMinPostsPerLoad(value)"
         />
         <SelectComponent
+          ref="accountSelectRef"
           v-model="selectedAccount"
           :options="accountStore.accounts"
           :loading="accountStore.fetchAccountsLoading"
+          :stack-label="accountStackLabel"
           option-label="instagram_login"
           label="Выберите аккаунт"
           clearable
@@ -181,13 +186,13 @@
       Демо-режим — выберите аккаунт для загрузки реальной ленты
     </div>
 
-    <div v-if="isInitializing || feedStore.feedLoading" class="row justify-center q-pa-xl">
+    <div v-if="isInitializing || feedStore.feedLoading" class="empty-state">
       <q-spinner size="48px" color="primary" />
     </div>
 
-    <div v-else-if="!isMockMode && feedStore.feedError" class="column items-center q-pa-xl text-negative">
-      <q-icon name="error_outline" size="48px" />
-      <p class="q-mt-sm">{{ feedStore.feedError }}</p>
+    <div v-else-if="!isMockMode && feedStore.feedError" class="empty-state text-negative">
+      <q-icon name="error_outline" size="96px" />
+      <p class="empty-state__text text-negative">{{ feedStore.feedError }}</p>
     </div>
 
     <div v-else>
@@ -208,10 +213,10 @@
 
       <div
         v-if="!isMockMode && !feedStore.feedLoading && displayPosts.length === 0"
-        class="column items-center q-pa-xl text-grey"
+        class="empty-state"
       >
-        <q-icon name="photo_library" size="64px" color="grey-3" />
-        <p class="q-mt-sm">Лента пуста</p>
+        <q-icon name="photo_library" size="96px" color="grey-3" />
+        <p class="empty-state__text">Лента пуста</p>
       </div>
 
       <div v-if="!isMockMode && feedStore.moreAvailable" class="row justify-center q-pa-md">

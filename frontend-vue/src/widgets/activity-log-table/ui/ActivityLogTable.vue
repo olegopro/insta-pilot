@@ -62,6 +62,7 @@
       :loading="loading && !rows.length"
       row-key="id"
       no-data-label="Нет записей"
+      table-style="table-layout: fixed"
     >
       <template #body="{ row }: { row: ActivityLogRowModel }">
         <q-tr
@@ -72,7 +73,7 @@
           @click="toggleExpandHandler(row.id)"
         >
           <q-td key="time">
-            <span class="text-caption text-mono">{{ row.timeFormatted }}</span>
+            <span class="text-mono">{{ row.timeFormatted }}</span>
           </q-td>
 
           <q-td key="action">
@@ -81,21 +82,21 @@
 
           <q-td key="status">
             <div class="row items-center q-gutter-xs">
-              <q-icon :name="row.statusIcon" :color="row.statusColor" size="xs" />
-              <span class="text-caption">{{ row.statusLabel }}</span>
+              <q-icon :name="row.statusIcon" :color="row.statusColor" size="sm" />
+              <span>{{ row.statusLabel }}</span>
             </div>
           </q-td>
 
           <q-td key="httpCode" class="text-center">
-            <BadgeComponent v-if="row.httpCode" :color="row.httpCodeColor" :label="String(row.httpCode)" size="sm" />
+            <BadgeComponent v-if="row.httpCode" :color="row.httpCodeColor" :label="String(row.httpCode)" size="md" />
           </q-td>
 
           <q-td key="endpoint">
-            <span class="text-caption text-grey">{{ row.endpoint ?? '—' }}</span>
+            <span class="text-grey">{{ row.endpoint ?? '—' }}</span>
           </q-td>
 
           <q-td key="duration" class="text-right">
-            <span :class="row.durationColor ? `text-${row.durationColor}` : ''" class="text-caption">
+            <span :class="row.durationColor ? `text-${row.durationColor}` : ''">
               {{ row.durationFormatted }}
             </span>
           </q-td>

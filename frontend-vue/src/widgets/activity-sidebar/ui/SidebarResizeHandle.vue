@@ -9,10 +9,11 @@
 
   const mousedownHandler = (e: MouseEvent) => {
     e.preventDefault()
-    const startX = e.clientX
+    let previousX = e.clientX
 
     const mousemoveHandler = (ev: MouseEvent) => {
-      emit('resize', ev.clientX - startX)
+      emit('resize', ev.clientX - previousX)
+      previousX = ev.clientX
     }
 
     const mouseupHandler = () => {

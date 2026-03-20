@@ -32,28 +32,28 @@ export default [
     label: 'Время',
     field: (row) => row.timeFormatted,
     align: 'left',
-    style: 'width: 80px'
+    headerStyle: 'width: 115px'
   },
   {
     name: 'action',
     label: 'Действие',
     field: (row) => row.actionLabel,
     align: 'left',
-    style: 'width: 140px'
+    headerStyle: 'width: 195px'
   },
   {
     name: 'status',
     label: 'Статус',
     field: (row) => row.statusLabel,
     align: 'left',
-    style: 'width: 120px'
+    headerStyle: 'width: 160px'
   },
   {
     name: 'httpCode',
     label: 'Код',
     field: (row) => row.httpCode,
     align: 'center',
-    style: 'width: 60px'
+    headerStyle: 'width: 80px'
   },
   {
     name: 'endpoint',
@@ -66,6 +66,6 @@ export default [
     label: 'Длит.',
     field: (row) => row.durationFormatted,
     align: 'right',
-    style: 'width: 80px'
+    headerStyle: 'width: 90px'
   }
 ] satisfies QTableColumn<ActivityLogRowModel>[]

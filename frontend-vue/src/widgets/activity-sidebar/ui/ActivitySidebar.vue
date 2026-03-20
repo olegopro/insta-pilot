@@ -6,11 +6,11 @@
   import ActivitySidebarEntry from './ActivitySidebarEntry.vue'
   import SidebarResizeHandle from './SidebarResizeHandle.vue'
 
-  const FILTER_OPTIONS: { label: string; value: 'all' | 'errors' | 'likes' | 'comments'; icon: string }[] = [
-    { label: 'Все', value: 'all', icon: 'apps' },
-    { label: 'Ошибки', value: 'errors', icon: 'error_outline' },
-    { label: 'Лайки', value: 'likes', icon: 'favorite_border' },
-    { label: 'Комментарии', value: 'comments', icon: 'chat_bubble_outline' }
+  const FILTER_OPTIONS: { label: string; value: 'all' | 'errors' | 'likes' | 'comments'; icon: string; color: string }[] = [
+    { label: 'Все', value: 'all', icon: 'apps', color: 'primary' },
+    { label: 'Ошибки', value: 'errors', icon: 'error_outline', color: 'negative' },
+    { label: 'Лайки', value: 'likes', icon: 'favorite_border', color: 'pink' },
+    { label: 'Комментарии', value: 'comments', icon: 'chat_bubble_outline', color: 'orange' }
   ]
 
   const emit = defineEmits<{
@@ -39,10 +39,10 @@
     <SidebarResizeHandle @resize="resizeHandler" />
 
     <div class="sidebar-header row items-center justify-between q-pa-sm">
-      <span class="text-subtitle2">Активность</span>
+      <span class="sidebar-title">Активность</span>
       <div class="row items-center q-gutter-xs">
-        <ButtonComponent flat round dense size="xs" icon="delete_sweep" @click="store.clearEntries()" />
-        <ButtonComponent flat round dense size="xs" icon="close" @click="store.close()" />
+        <ButtonComponent flat round dense size="sm" icon="delete_sweep" color="grey-6" @click="store.clearEntries()" />
+        <ButtonComponent flat round dense size="sm" icon="close" color="grey-6" @click="store.close()" />
       </div>
     </div>
 
@@ -53,7 +53,7 @@
         :label="opt.label"
         :icon="opt.icon"
         size="sm"
-        :color="store.quickFilter === opt.value ? 'primary' : 'grey-6'"
+        :color="store.quickFilter === opt.value ? opt.color : 'grey-6'"
         :outline="store.quickFilter === opt.value"
         :flat="store.quickFilter !== opt.value"
         @click="store.quickFilter = opt.value"
@@ -83,14 +83,6 @@
 </template>
 
 <style scoped lang="scss">
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $indent-xs;
-  padding: $indent-xs $indent-sm;
-}
-
-
 .activity-sidebar {
   border-right: $border-width-default $border-style-default $border-default;
   overflow: hidden;
@@ -99,6 +91,24 @@
 .sidebar-header {
   background: $surface-secondary;
   border-bottom: $border-width-default $border-style-default $border-default;
+}
+
+.sidebar-title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $content-primary;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: $indent-xs;
+  padding: $indent-xs $indent-sm;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .sidebar-scroll {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { STATUS_CONFIG, ACTION_LABELS, HTTP_CODE_COLOR } from '@/entities/activity-log'
+  import { STATUS_CONFIG, ACTION_LABELS, ACTION_COLORS, HTTP_CODE_COLOR } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
   import { formatTimeHMS } from '@/shared/lib'
   import { BadgeComponent } from '@/shared/ui/badge-component'
@@ -26,7 +26,7 @@
         :color="STATUS_CONFIG[entry.status]?.color ?? 'grey'"
         size="20px"
       />
-      <span class="entry-action ellipsis col">
+      <span class="entry-action ellipsis col" :class="`text-${ACTION_COLORS[entry.action] ?? 'grey'}`">
         {{ ACTION_LABELS[entry.action] ?? entry.action }}
       </span>
       <BadgeComponent

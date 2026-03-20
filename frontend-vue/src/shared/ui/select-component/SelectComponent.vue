@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import type { QSelectProps, QSelectSlots } from 'quasar'
+  import { ref } from 'vue'
+  import type { QSelect, QSelectProps, QSelectSlots } from 'quasar'
   import { useForwardProps } from '@/shared/lib'
 
   export type SelectComponentProps = Omit<QSelectProps, 'modelValue'>
@@ -10,10 +11,14 @@
 
   const forwarded = useForwardProps(props)
   const model = defineModel<QSelectProps['modelValue']>()
+
+  const selectRef = ref<QSelect>()
+  defineExpose({ blur: () => selectRef.value?.blur() })
 </script>
 
 <template>
   <q-select
+    ref="selectRef"
     v-bind="{
       ...$attrs,
       ...forwarded,
