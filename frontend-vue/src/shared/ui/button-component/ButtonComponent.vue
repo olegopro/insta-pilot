@@ -12,7 +12,7 @@
 </script>
 
 <template>
-  <q-btn v-bind="{ ...$attrs, ...forwarded }">
+  <q-btn v-bind="{ ...$attrs, ...forwarded }" :data-icon="props.icon">
     <template v-for="(_, slotName) in $slots" #[slotName]="scope" :key="slotName">
       <slot :name="slotName as keyof QBtnSlots" v-bind="scope || {}" />
     </template>
@@ -22,5 +22,27 @@
 <style scoped lang="scss">
   .q-btn {
     border-radius: $radius-md;
+    padding: 4px 14px;
+
+    :deep(.q-btn__content) {
+      line-height: 1;
+    }
+
+    :deep(.q-icon) {
+      font-size: 1.25em;
+    }
+
+    :deep(.q-icon.on-left) {
+      margin-right: 6px;
+    }
+
+    :deep(.q-icon.on-right) {
+      margin-left: 6px;
+    }
+
+    &[data-icon="check"] :deep(.q-icon) {
+      position: relative;
+      top: -1px;
+    }
   }
 </style>
