@@ -1,27 +1,18 @@
 <script setup lang="ts">
   import { onMounted, onBeforeUnmount } from 'vue'
   import { useRouter } from 'vue-router'
-  import { useAuthStore } from '@/entities/user'
   import { useSidebarActivityStore } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
-  import { notifyError } from '@/shared/lib'
   import { useGlobalActivityLive } from '@/features/activity-live'
   import { ActivitySidebar } from '@/widgets/activity-sidebar'
-  import { DropdownComponent } from '@/shared/ui/dropdown-component'
   import AppNavTabs from './AppNavTabs.vue'
+  import UserMenuDropdown from './UserMenuDropdown.vue'
 
   const router = useRouter()
-  const authStore = useAuthStore()
 
   const sidebarStore = useSidebarActivityStore()
 
   const { subscribe, unsubscribe } = useGlobalActivityLive()
-
-  const logoutHandler = async () => {
-    await authStore.logout()
-      .then(() => router.push('/login'))
-      .catch(() => notifyError('Ошибка выхода'))
-  }
 
   const entryClickHandler = (entry: SidebarActivityEntry) => {
     void router.push({ path: `/logs/${String(entry.accountId)}`, query: { highlight: String(entry.id) } })
@@ -41,33 +32,7 @@
 
         <AppNavTabs />
 
-        <DropdownComponent
-          flat no-icon-animation class="q-ml-sm"
-          :label="authStore.user?.name ?? ''"
-          :menu-offset="[0, 18]"
-        >
-          <q-list style="min-width: 200px">
-            <q-item>
-              <q-item-section>
-                <q-item-label class="text-weight-medium">{{ authStore.user?.name }}</q-item-label>
-                <q-item-label caption>{{ authStore.user?.email }}</q-item-label>
-              </q-item-section>
-            </q-item>
-            <q-separator />
-            <q-item v-close-popup clickable disabled>
-              <q-item-section avatar>
-                <q-icon name="manage_accounts" />
-              </q-item-section>
-              <q-item-section>Настройки</q-item-section>
-            </q-item>
-            <q-item v-close-popup clickable @click="logoutHandler">
-              <q-item-section avatar>
-                <q-icon name="logout" color="negative" />
-              </q-item-section>
-              <q-item-section class="text-negative">Выйти</q-item-section>
-            </q-item>
-          </q-list>
-        </DropdownComponent>
+        <UserMenuDropdown />
       </q-toolbar>
     </q-header>
 

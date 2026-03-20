@@ -1,12 +1,11 @@
 <script setup lang="ts">
-  import { ref, computed, watch, nextTick, onMounted } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { onBeforeRouteLeave } from 'vue-router'
-  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import { useAccountSelect } from '@/entities/instagram-account/model/useAccountSelect'
   import { useFeedStore, MOCK_FEED } from '@/entities/media-post'
   import type { MediaPost } from '@/entities/media-post'
-  import type { InstagramAccount } from '@/entities/instagram-account/model/types'
   import type { Nullable } from '@/shared/lib'
-  import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
+  import { notifyError, notifySuccess, useModal } from '@/shared/lib'
   import { isCancelledRequest } from '@/shared/api'
   import { PageComponent } from '@/shared/ui/page-component'
   import { SelectComponent } from '@/shared/ui/select-component'
@@ -16,33 +15,22 @@
   import { MediaCard } from '@/shared/ui/media-card'
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'
+  import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
 
-  const accountStore = useAccountStore()
   const feedStore = useFeedStore()
+  const { selectedAccount, accountSelectRef, accountStackLabel, isInitializing, initAccounts } = useAccountSelect('feed_selected_account_id')
 
-  const SELECTED_ACCOUNT_KEY = 'feed_selected_account_id'
-
-  const selectedAccount = ref<Nullable<InstagramAccount>>(null)
-  const accountSelectRef = ref<InstanceType<typeof SelectComponent>>()
-  const accountStackLabel = computed(() => !!selectedAccount.value || !!localStorage.getItem(SELECTED_ACCOUNT_KEY))
   const selectedPost = ref<Nullable<MediaPost>>(null)
   const loadingUserPk = ref<Nullable<string>>(null)
   const postModal = useModal()
   const userModal = useModal()
 
-  const isInitializing = ref(true)
   const isMockMode = computed(() => !isInitializing.value && !selectedAccount.value)
   const displayPosts = computed(() => isMockMode.value ? MOCK_FEED : feedStore.posts)
 
   watch(selectedAccount, (account) => {
-    if (account) {
-      localStorage.setItem(SELECTED_ACCOUNT_KEY, String(account.id))
-      feedStore.loadFeed(account.id)
-        .catch((error: unknown) => isCancelledRequest(error) || notifyError(feedStore.feedError ?? 'Ошибка загрузки ленты'))
-    } else {
-      localStorage.removeItem(SELECTED_ACCOUNT_KEY)
-      void nextTick(() => accountSelectRef.value?.blur())
-    }
+    account && feedStore.loadFeed(account.id)
+      .catch((error: unknown) => isCancelledRequest(error) || notifyError(feedStore.feedError ?? 'Ошибка загрузки ленты'))
   })
 
   const refreshFeedHandler = () => {
@@ -98,14 +86,7 @@
   }
 
   onMounted(() => {
-    void accountStore.fetchAccounts().then(() => {
-      const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY)
-      if (savedId) {
-        const account = accountStore.accounts.find((account) => String(account.id) === savedId)
-        account && (selectedAccount.value = account)
-      }
-      isInitializing.value = false
-    })
+    void initAccounts()
   })
 
   onBeforeRouteLeave(() => {
@@ -148,36 +129,11 @@
           style="min-width: 150px"
           @update:model-value="(value: number | null) => feedStore.setMinPostsPerLoad(value)"
         />
-        <SelectComponent
+        <AccountSelectComponent
           ref="accountSelectRef"
           v-model="selectedAccount"
-          :options="accountStore.accounts"
-          :loading="accountStore.fetchAccountsLoading"
           :stack-label="accountStackLabel"
-          option-label="instagram_login"
-          label="Выберите аккаунт"
-          clearable
-          outlined
-          dense
-          style="min-width: 260px"
-          emit-value
-          map-options
-        >
-          <template #option="scope">
-            <q-item v-bind="scope.itemProps">
-              <q-item-section avatar>
-                <q-avatar size="32px">
-                  <img v-if="scope.opt.profile_pic_url" :src="proxyImageUrl(scope.opt.profile_pic_url) ?? undefined">
-                  <q-icon v-else name="person" />
-                </q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ scope.opt.instagram_login }}</q-item-label>
-                <q-item-label v-if="scope.opt.full_name" caption>{{ scope.opt.full_name }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
-        </SelectComponent>
+        />
       </div>
     </template>
 

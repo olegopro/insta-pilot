@@ -1,38 +1,32 @@
 <script setup lang="ts">
-  import { ref, computed, watch, nextTick, onMounted } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { onBeforeRouteLeave } from 'vue-router'
-  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import { useAccountSelect } from '@/entities/instagram-account/model/useAccountSelect'
   import { useSearchStore, useFeedStore } from '@/entities/media-post'
   import type { MediaPost, Location } from '@/entities/media-post'
-  import type { InstagramAccount } from '@/entities/instagram-account/model/types'
   import type { Nullable } from '@/shared/lib'
-  import { notifyError, notifySuccess, useModal, proxyImageUrl } from '@/shared/lib'
+  import { notifyError, notifySuccess, useModal } from '@/shared/lib'
   import { isCancelledRequest } from '@/shared/api'
   import { PageComponent } from '@/shared/ui/page-component'
-  import { SelectComponent } from '@/shared/ui/select-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { InputComponent } from '@/shared/ui/input-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { MediaCard } from '@/shared/ui/media-card'
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'
+  import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
 
   type SearchMode = 'hashtag' | 'location'
 
-  const SELECTED_ACCOUNT_KEY = 'search_selected_account_id'
+  const { selectedAccount, accountSelectRef, accountStackLabel, isInitializing, initAccounts } = useAccountSelect('search_selected_account_id')
 
-  const accountStore = useAccountStore()
   const searchStore = useSearchStore()
   const feedStore = useFeedStore()
 
-  const selectedAccount = ref<Nullable<InstagramAccount>>(null)
-  const accountSelectRef = ref<InstanceType<typeof SelectComponent>>()
-  const accountStackLabel = computed(() => !!selectedAccount.value || !!localStorage.getItem(SELECTED_ACCOUNT_KEY))
   const selectedPost = ref<Nullable<MediaPost>>(null)
   const searchMode = ref<SearchMode>('hashtag')
   const hashtagInput = ref('')
   const selectedLocation = ref<Nullable<Location>>(null)
-  const isInitializing = ref(true)
   const loadingUserPk = ref<Nullable<string>>(null)
 
   const postModal = useModal()
@@ -44,15 +38,6 @@
   ]
 
   const canSearch = computed(() => !!selectedAccount.value)
-
-  watch(selectedAccount, (account) => {
-    if (account) {
-      localStorage.setItem(SELECTED_ACCOUNT_KEY, String(account.id))
-    } else {
-      localStorage.removeItem(SELECTED_ACCOUNT_KEY)
-      void nextTick(() => accountSelectRef.value?.blur())
-    }
-  })
 
   const getPostHeight = (post: MediaPost, columnWidth: number): number | undefined => {
     if (post.thumbnailWidth && post.thumbnailHeight) {
@@ -131,14 +116,7 @@
   }
 
   onMounted(() => {
-    void accountStore.fetchAccounts().then(() => {
-      const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY)
-      if (savedId) {
-        const account = accountStore.accounts.find((account) => String(account.id) === savedId)
-        account && (selectedAccount.value = account)
-      }
-      isInitializing.value = false
-
+    void initAccounts().then(() => {
       if (searchStore.lastHashtag) {
         hashtagInput.value = searchStore.lastHashtag
         searchMode.value = 'hashtag'
@@ -162,36 +140,12 @@
 <template>
   <PageComponent title="Поиск" icon="travel_explore" class="search-page">
     <template #append>
-      <SelectComponent
+      <AccountSelectComponent
         ref="accountSelectRef"
         v-model="selectedAccount"
-        :options="accountStore.accounts"
-        :loading="accountStore.fetchAccountsLoading || isInitializing"
+        :loading="isInitializing"
         :stack-label="accountStackLabel"
-        option-label="instagram_login"
-        label="Выберите аккаунт"
-        clearable
-        outlined
-        dense
-        style="min-width: 260px"
-        emit-value
-        map-options
-      >
-        <template #option="scope">
-          <q-item v-bind="scope.itemProps">
-            <q-item-section avatar>
-              <q-avatar size="32px">
-                <img v-if="scope.opt.profile_pic_url" :src="proxyImageUrl(scope.opt.profile_pic_url) ?? undefined">
-                <q-icon v-else name="person" />
-              </q-avatar>
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>{{ scope.opt.instagram_login }}</q-item-label>
-              <q-item-label v-if="scope.opt.full_name" caption>{{ scope.opt.full_name }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-      </SelectComponent>
+      />
     </template>
 
     <div class="controls q-mb-md">
@@ -271,7 +225,7 @@
 
     <div v-else-if="searchStore.searchResults.length === 0" class="empty-state">
       <q-icon name="photo_library" size="96px" color="grey-3" />
-      <p class="empty-state__text">Введите запрос для поиска</p>
+      <p class="empty-state__text">Введите запрос для поиска2</p>
     </div>
 
     <div v-else>
