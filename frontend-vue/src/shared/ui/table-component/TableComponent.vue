@@ -24,7 +24,7 @@
 </template>
 
 <style scoped lang="scss">
-  :deep(.q-table__container) {
+  .q-table__container {
     border-radius: $radius-lg;
     overflow: hidden;
     box-shadow: $elevation-card;

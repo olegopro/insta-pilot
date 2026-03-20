@@ -144,12 +144,14 @@
           <ButtonComponent
             flat
             dense
+            icon-scale="lg"
             icon="edit"
             @click="editHandler(setting)"
           />
           <ButtonComponent
             flat
             dense
+            icon-scale="lg"
             color="negative"
             icon="delete"
             @click="deleteHandler(setting)"
@@ -167,6 +169,7 @@
       icon="add"
       label="Добавить провайдер"
       color="primary"
+      style="align-self: flex-start"
       @click="showForm = true"
     />
 

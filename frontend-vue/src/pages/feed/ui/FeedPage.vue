@@ -104,7 +104,7 @@
         <ButtonComponent
           icon="refresh"
           flat
-          round
+          icon-scale="xl"
           color="primary"
           :disable="!selectedAccount || feedStore.feedLoading"
           @click="refreshFeedHandler"
@@ -211,12 +211,5 @@
     padding: $spacing-inline-gap $spacing-stack-gap;
     background: $surface-tertiary;
     border-radius: $radius-md;
-  }
-
-  .loading-center {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 </style>

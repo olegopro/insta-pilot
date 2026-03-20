@@ -21,9 +21,13 @@
 </template>
 
 <style scoped lang="scss">
+  .q-btn-dropdown {
+    border-radius: $radius-md;
+  }
+
   :global(.q-menu) {
-  border: $border-width-default $border-style-default $border-default;
-  border-radius: $radius-lg;
-  box-shadow: $elevation-dropdown;
-}
+    border: $border-width-default $border-style-default $border-default;
+    border-radius: $radius-lg;
+    box-shadow: $elevation-dropdown;
+  }
 </style>

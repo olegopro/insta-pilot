@@ -30,3 +30,15 @@
     </template>
   </q-select>
 </template>
+
+<style scoped lang="scss">
+  :deep(.q-field__control) {
+    border-radius: $radius-md;
+  }
+
+  :global(.q-menu) {
+    border: $border-width-default $border-style-default $border-default;
+    border-radius: $radius-lg;
+    box-shadow: $elevation-dropdown;
+  }
+</style>

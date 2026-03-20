@@ -176,6 +176,7 @@
         <ButtonComponent
           icon="search"
           color="primary"
+          icon-scale="lg"
           :loading="searchStore.searchLoading"
           :disable="!canSearch || !hashtagInput.trim()"
           @click="searchHashtagHandler"
@@ -292,7 +293,7 @@
   .search-input-row {
     display: flex;
     gap: $spacing-inline-gap;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
   .mode-toggle {
