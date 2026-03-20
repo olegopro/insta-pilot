@@ -10,10 +10,13 @@
   import { notifySuccess, notifyError } from '@/shared/lib'
   import { PageComponent } from '@/shared/ui/page-component'
   import type { Nullable } from '@/shared/lib'
+  import { DeleteLlmSettingModal } from '@/features/delete-llm-setting'
 
   const store = useLlmSettingsStore()
 
   const showForm = ref(false)
+  const settingToDelete = ref<LlmSetting | null>(null)
+  const showDeleteModal = ref(false)
 
   const form = ref<{
     provider: LlmProvider
@@ -63,10 +66,9 @@
       .catch(() => notifyError('Ошибка'))
   }
 
-  const deleteHandler = (id: number) => {
-    store.deleteSetting(id)
-      .then(() => notifySuccess('Провайдер удалён'))
-      .catch(() => notifyError('Ошибка удаления'))
+  const deleteHandler = (setting: LlmSetting) => {
+    settingToDelete.value = setting
+    showDeleteModal.value = true
   }
 
   const editHandler = async (setting: LlmSetting) => {
@@ -149,7 +151,7 @@
             dense
             color="negative"
             icon="delete"
-            @click="deleteHandler(setting.id)"
+            @click="deleteHandler(setting)"
           />
         </div>
       </div>
@@ -255,6 +257,11 @@
         />
       </q-card-actions>
     </q-card>
+    <DeleteLlmSettingModal
+      v-if="settingToDelete"
+      v-model="showDeleteModal"
+      :setting="settingToDelete"
+    />
   </PageComponent>
 </template>
 

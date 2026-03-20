@@ -81,6 +81,8 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
     await deleteApi.execute({ id })
     await fetchAll()
   }
+  const deleteSettingLoading = computed(() => deleteApi.loading.value)
+  const deleteSettingError = computed(() => deleteApi.error.value)
 
   const testConnection = (provider: string, apiKey: string, modelName: string) =>
     testConnectionApi.execute({ provider, apiKey, modelName })
@@ -99,6 +101,8 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
     setDefault,
     setDefaultLoading,
     deleteSetting,
+    deleteSettingLoading,
+    deleteSettingError,
     testConnection,
     testConnectionLoading,
     testConnectionError
