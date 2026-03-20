@@ -18,7 +18,7 @@
 </template>
 
 <style scoped lang="scss">
-  .empty-state-component {
+    .empty-state-component {
     flex: 1;
     display: flex;
     flex-direction: column;

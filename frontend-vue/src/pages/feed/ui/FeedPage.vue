@@ -193,6 +193,7 @@
       :post="selectedPost"
       :is-liking="feedStore.isLiking"
       :loading-user-pk="loadingUserPk"
+      v-bind="selectedAccount ? { accountId: selectedAccount.id } : {}"
       @like="likePostHandler"
       @open-user="openUserHandler"
     />

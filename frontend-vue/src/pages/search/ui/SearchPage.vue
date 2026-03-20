@@ -10,6 +10,7 @@
   import { PageComponent } from '@/shared/ui/page-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { InputComponent } from '@/shared/ui/input-component'
+  import { SelectComponent } from '@/shared/ui/select-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { MediaCard } from '@/shared/ui/media-card'
   import { EmptyStateComponent } from '@/shared/ui/empty-state-component'
@@ -182,7 +183,7 @@
       </div>
 
       <div v-else class="search-input-row q-mt-md">
-        <q-select
+        <SelectComponent
           v-model="selectedLocation"
           :options="searchStore.locations"
           option-label="name"
@@ -211,7 +212,7 @@
               <q-item-section class="text-grey">Введите минимум 2 символа для поиска</q-item-section>
             </q-item>
           </template>
-        </q-select>
+        </SelectComponent>
       </div>
     </div>
 

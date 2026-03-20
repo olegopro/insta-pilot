@@ -200,7 +200,7 @@
 </style>
 
 <style lang="scss" scoped>
-  $info-panel-width: 350px;
+  $info-panel-width: 372px;
 
   .body {
     display: flex;
@@ -278,8 +278,6 @@
         display: flex;
         align-items: center;
         gap: $indent-sm;
-        padding-top: $indent-m;
-        border-top: $border-width-default $border-style-default $border-default;
 
         span {
           font-size: $font-size-base;
@@ -306,8 +304,6 @@
         display: flex;
         flex-direction: column;
         gap: $spacing-stack-gap;
-        padding-top: $indent-m;
-        border-top: $border-width-default $border-style-default $border-default;
 
         .comment-actions {
           display: flex;
