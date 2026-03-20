@@ -13,6 +13,7 @@
   import { ToggleComponent } from '@/shared/ui/toggle-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { MediaCard } from '@/shared/ui/media-card'
+  import { EmptyStateComponent } from '@/shared/ui/empty-state-component'
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'
   import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
@@ -146,10 +147,12 @@
       <q-spinner size="48px" color="primary" />
     </div>
 
-    <div v-else-if="!isMockMode && feedStore.feedError" class="empty-state text-negative">
-      <q-icon name="error_outline" size="96px" />
-      <p class="empty-state__text text-negative">{{ feedStore.feedError }}</p>
-    </div>
+    <EmptyStateComponent
+      v-else-if="!isMockMode && feedStore.feedError"
+      icon="error_outline"
+      :text="feedStore.feedError ?? ''"
+      class="text-negative"
+    />
 
     <div v-else>
       <MasonryGrid :items="displayPosts" :get-item-height="getPostHeight">
@@ -167,13 +170,11 @@
         </template>
       </MasonryGrid>
 
-      <div
+      <EmptyStateComponent
         v-if="!isMockMode && !feedStore.feedLoading && displayPosts.length === 0"
-        class="empty-state"
-      >
-        <q-icon name="photo_library" size="96px" color="grey-3" />
-        <p class="empty-state__text">Лента пуста</p>
-      </div>
+        icon="photo_library"
+        text="Лента пуста"
+      />
 
       <div v-if="!isMockMode && feedStore.moreAvailable" class="row justify-center q-pa-md">
         <q-btn

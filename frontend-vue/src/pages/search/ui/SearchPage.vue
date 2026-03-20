@@ -12,6 +12,7 @@
   import { InputComponent } from '@/shared/ui/input-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { MediaCard } from '@/shared/ui/media-card'
+  import { EmptyStateComponent } from '@/shared/ui/empty-state-component'
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'
   import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
@@ -214,19 +215,17 @@
       </div>
     </div>
 
-    <div v-if="!canSearch" class="empty-state">
-      <q-icon name="manage_search" size="96px" color="grey-3" />
-      <p class="empty-state__text">Выберите аккаунт для поиска</p>
-    </div>
+    <EmptyStateComponent v-if="!canSearch" icon="manage_search" text="Выберите аккаунт для поиска" />
 
     <div v-else-if="searchStore.searchLoading" class="empty-state">
       <q-spinner size="48px" color="primary" />
     </div>
 
-    <div v-else-if="searchStore.searchResults.length === 0" class="empty-state">
-      <q-icon name="photo_library" size="96px" color="grey-3" />
-      <p class="empty-state__text">Введите запрос для поиска2</p>
-    </div>
+    <EmptyStateComponent
+      v-else-if="searchStore.searchResults.length === 0"
+      icon="photo_library"
+      text="Введите запрос для поиска"
+    />
 
     <div v-else>
       <MasonryGrid :items="searchStore.searchResults" :get-item-height="getPostHeight">
