@@ -15,7 +15,11 @@
 </script>
 
 <template>
-  <q-btn v-bind="{ ...$attrs, ...forwarded }" :data-icon="props.icon" :data-icon-scale="props.iconScale">
+  <q-btn
+    v-bind="{ ...$attrs, ...forwarded }" 
+    :data-icon="props.icon" 
+    :data-icon-scale="props.iconScale"
+  >
     <template v-for="(_, slotName) in $slots" #[slotName]="scope" :key="slotName">
       <slot :name="slotName as keyof QBtnSlots" v-bind="scope || {}" />
     </template>
@@ -43,7 +47,7 @@
       font-size: 1.715em;
     }
 
-     &[data-icon-scale="xl"] :deep(.q-icon) {
+    &[data-icon-scale="xl"] :deep(.q-icon) {
       font-size: 1.9em;
     }
 

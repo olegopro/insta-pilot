@@ -52,6 +52,13 @@
 
       <footer v-if="(submitLabel && !readonly) || resetLabel" class="modal-footer">
         <ButtonComponent
+          v-if="resetLabel"
+          type="reset"
+          flat
+          :label="resetLabel"
+          icon="clear"
+        />
+        <ButtonComponent
           v-if="submitLabel && !readonly"
           type="submit"
           :color="submitColor ?? 'primary'"
@@ -59,13 +66,6 @@
           icon="check"
           :disable="submitDisable"
           :loading="submitLoading"
-        />
-        <ButtonComponent
-          v-if="resetLabel"
-          type="reset"
-          flat
-          :label="resetLabel"
-          icon="clear"
         />
       </footer>
     </q-form>
