@@ -72,3 +72,27 @@
     </ButtonComponent>
   </q-layout>
 </template>
+
+<style scoped lang="scss">
+  .app-header {
+    background: $surface-primary;
+    color: $content-primary;
+    border-bottom: 1px solid $border-default;
+    box-shadow: none;
+  }
+
+  .app-logo {
+    font-weight: $font-weight-bold;
+    color: $primary;
+  }
+
+  .sidebar-toggle {
+    width: 50px;
+    height: 44px;
+  }
+
+  :deep(.q-toolbar) {
+    min-height: 64px;
+  }
+
+</style>

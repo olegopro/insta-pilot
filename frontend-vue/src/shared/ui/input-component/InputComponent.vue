@@ -51,3 +51,9 @@
     </q-input>
   </label>
 </template>
+
+<style scoped lang="scss">
+  :deep(.q-field--outlined .q-field__control) {
+    border-radius: $radius-md;
+  }
+</style>

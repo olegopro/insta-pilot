@@ -4,6 +4,7 @@
   import type { ActivityStats, ActionType, ActionStatus } from '@/entities/activity-log'
   import type { Nullable } from '@/shared/lib'
   import { BadgeComponent } from '@/shared/ui/badge-component'
+  import { CardComponent, CardSectionComponent } from '@/shared/ui/card-component'
 
   interface Props {
     stats: ActivityStats | null
@@ -59,8 +60,8 @@
 
 <template>
   <div class="row q-gutter-md">
-    <q-card flat bordered class="col">
-      <q-card-section class="grouped-section">
+    <CardComponent flat bordered class="col">
+      <CardSectionComponent class="grouped-section">
         <div class="section-title">
           <q-icon name="bar_chart" size="20px" class="q-mr-xs" />
           По действиям
@@ -96,11 +97,11 @@
             size="6px"
           />
         </div>
-      </q-card-section>
-    </q-card>
+      </CardSectionComponent>
+    </CardComponent>
 
-    <q-card flat bordered class="col">
-      <q-card-section class="grouped-section">
+    <CardComponent flat bordered class="col">
+      <CardSectionComponent class="grouped-section">
         <div class="section-title">
           <q-icon name="donut_large" size="20px" class="q-mr-xs" />
           По статусам
@@ -123,8 +124,8 @@
           >{{ entry.label }}</span>
           <BadgeComponent :color="entry.color" :label="String(entry.count)" size="lg" />
         </div>
-      </q-card-section>
-    </q-card>
+      </CardSectionComponent>
+    </CardComponent>
   </div>
 </template>
 

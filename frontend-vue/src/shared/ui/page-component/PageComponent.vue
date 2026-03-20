@@ -24,6 +24,9 @@
 
 <style scoped lang="scss">
 .page-content {
+  max-width: $page-max-width;
+  margin-left: auto;
+  margin-right: auto;
   display: flex;
   flex-direction: column;
 }

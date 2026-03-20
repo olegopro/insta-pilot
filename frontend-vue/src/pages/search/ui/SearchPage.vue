@@ -218,7 +218,7 @@
 
     <EmptyStateComponent v-if="!canSearch" icon="manage_search" text="Выберите аккаунт для поиска" />
 
-    <div v-else-if="searchStore.searchLoading" class="empty-state">
+    <div v-else-if="searchStore.searchLoading" class="loading-center">
       <q-spinner size="48px" color="primary" />
     </div>
 
@@ -274,6 +274,13 @@
 </template>
 
 <style scoped lang="scss">
+  .loading-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .controls {
     background: $surface-primary;
     border-radius: $radius-lg;

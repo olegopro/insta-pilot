@@ -1,28 +1,36 @@
-// ============================================
-// app.scss — Global styles entry point
-// ============================================
-// All token variables are in quasar.variables.scss
+// ============================================================
+// app.scss — Global styles
+// All token variables live in quasar.variables.scss
 // (auto-injected by Quasar into every SCSS file).
-//
-// This file imports only CSS-generating partials.
-// Import order matters: base → components → layouts → utilities.
+// Component-specific overrides live in each .vue <style>.
+// ============================================================
 
-// --- Base ---
-@import 'base/reset';
-@import 'base/typography';
-@import 'base/transitions';
 
-// --- Components (Quasar overrides) ---
-@import 'components/q-btn';
-@import 'components/q-input';
-@import 'components/q-table';
-@import 'components/q-card';
-@import 'components/q-dialog';
-@import 'components/q-tabs';
-@import 'components/q-toolbar';
+// ============================================================
+// RESET
+// ============================================================
 
-// --- Layouts ---
-@import 'layouts/main-layout';
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-// --- Utilities (last, so they can override) ---
-@import 'utilities/helpers';
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: $content-primary;
+  background-color: $neutral-100;
+  font-weight: $font-weight-regular;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: $primary;
+  text-decoration: none;
+}
+

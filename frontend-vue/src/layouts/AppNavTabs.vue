@@ -23,6 +23,8 @@
 <style scoped lang="scss">
 :deep(.q-tab) {
   font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0;
   border-radius: $radius-md;
   text-transform: uppercase;
   margin-right: 5px;

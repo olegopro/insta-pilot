@@ -88,7 +88,7 @@
 </script>
 
 <template>
-  <div class="expanded-row-content q-pa-md border-lg">
+  <div class="expanded-row-content q-pa-md">
     <div class="detail-header text-grey q-mb-md">
       Детали запроса #{{ row.id }}
       <span v-if="row.durationFormatted" class="q-ml-sm">· {{ row.durationFormatted }}</span>
@@ -269,6 +269,8 @@
 .expanded-row-content {
   background: rgba(0, 0, 0, 0.025);
   margin: $indent-s $indent-sm $indent-sm;
+  border: 1px solid $border-default;
+  border-radius: $radius-lg;
 }
 
 .log-json {

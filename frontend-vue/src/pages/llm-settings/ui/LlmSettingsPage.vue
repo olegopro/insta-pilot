@@ -9,6 +9,7 @@
   import { BadgeComponent } from '@/shared/ui/badge-component'
   import { notifySuccess, notifyError } from '@/shared/lib'
   import { PageComponent } from '@/shared/ui/page-component'
+  import { CardComponent, CardSectionComponent, CardActionsComponent } from '@/shared/ui/card-component'
   import type { Nullable } from '@/shared/lib'
   import { DeleteLlmSettingModal } from '@/features/delete-llm-setting'
 
@@ -169,12 +170,12 @@
       @click="showForm = true"
     />
 
-    <q-card v-if="showForm" class="llm-form q-mt-lg" style="max-width: 640px">
-      <q-card-section class="q-pb-sm">
+    <CardComponent v-if="showForm" class="llm-form q-mt-lg" style="max-width: 640px">
+      <CardSectionComponent class="q-pb-sm">
         <div class="text-h6">{{ form.provider ? providerLabel(form.provider) : 'Новый провайдер' }}</div>
-      </q-card-section>
+      </CardSectionComponent>
 
-      <q-card-section class="llm-form__fields">
+      <CardSectionComponent class="llm-form__fields">
         <SelectComponent
           v-model="form.provider"
           label="Провайдер"
@@ -229,9 +230,9 @@
           outlined
           autogrow
         />
-      </q-card-section>
+      </CardSectionComponent>
 
-      <q-card-actions class="q-pa-md q-pt-none" style="gap: 8px; flex-wrap: wrap">
+      <CardActionsComponent class="q-pa-md q-pt-none" style="gap: 8px; flex-wrap: wrap">
         <ButtonComponent
           outline
           icon="bolt"
@@ -255,8 +256,8 @@
           :loading="store.saveSettingLoading"
           @click="saveHandler"
         />
-      </q-card-actions>
-    </q-card>
+      </CardActionsComponent>
+    </CardComponent>
     <DeleteLlmSettingModal
       v-if="settingToDelete"
       v-model="showDeleteModal"
@@ -300,8 +301,6 @@
 }
 
 .llm-form {
-  border: $border-width-default $border-style-default $border-default;
-
   &__fields {
     display: flex;
     flex-direction: column;

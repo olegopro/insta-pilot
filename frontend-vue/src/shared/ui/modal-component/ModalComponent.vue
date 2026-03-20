@@ -103,4 +103,5 @@
     gap: $spacing-inline-gap;
     padding-top: $spacing-section-gap;
   }
+
 </style>

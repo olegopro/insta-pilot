@@ -1,12 +1,13 @@
 <script setup lang="ts">
   import type { InstagramAccount } from '@/entities/instagram-account/model/types'
+  import { CardComponent, CardSectionComponent } from '@/shared/ui/card-component'
 
   defineProps<{ account: InstagramAccount }>()
 </script>
 
 <template>
-  <q-card style="min-width: 360px">
-    <q-card-section class="row items-center q-gutter-md">
+  <CardComponent style="min-width: 360px">
+    <CardSectionComponent class="row items-center q-gutter-md">
       <q-avatar size="64px">
         <img
           v-if="account.profile_pic_url"
@@ -27,6 +28,6 @@
           @{{ account.instagram_login }}
         </div>
       </div>
-    </q-card-section>
-  </q-card>
+    </CardSectionComponent>
+  </CardComponent>
 </template>

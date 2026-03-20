@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import type { ActivityStats } from '@/entities/activity-log'
+  import { CardComponent, CardSectionComponent } from '@/shared/ui/card-component'
 
   interface Props {
     stats: ActivityStats | null
@@ -18,8 +19,8 @@
 
 <template>
   <div class="row q-gutter-md">
-    <q-card flat bordered class="col stat-card">
-      <q-card-section class="stat-card__section">
+    <CardComponent flat bordered class="col stat-card">
+      <CardSectionComponent class="stat-card__section">
         <div class="stat-card__title">Всего действий</div>
         <div class="row items-center stat-card__body">
           <q-icon name="bar_chart" color="primary" size="32px" class="stat-card__icon" />
@@ -28,11 +29,11 @@
             <template v-else>{{ stats?.total ?? 0 }}</template>
           </div>
         </div>
-      </q-card-section>
-    </q-card>
+      </CardSectionComponent>
+    </CardComponent>
 
-    <q-card flat bordered class="col stat-card">
-      <q-card-section class="stat-card__section">
+    <CardComponent flat bordered class="col stat-card">
+      <CardSectionComponent class="stat-card__section">
         <div class="stat-card__title">Сегодня</div>
         <div class="row items-center stat-card__body">
           <q-icon name="today" color="info" size="32px" class="stat-card__icon" />
@@ -41,11 +42,11 @@
             <template v-else>{{ stats?.today ?? 0 }}</template>
           </div>
         </div>
-      </q-card-section>
-    </q-card>
+      </CardSectionComponent>
+    </CardComponent>
 
-    <q-card flat bordered class="col stat-card">
-      <q-card-section class="stat-card__section">
+    <CardComponent flat bordered class="col stat-card">
+      <CardSectionComponent class="stat-card__section">
         <div class="stat-card__title">Ошибок</div>
         <div class="row items-center stat-card__body">
           <q-icon name="error_outline" color="negative" size="32px" class="stat-card__icon" />
@@ -54,11 +55,11 @@
             <template v-else>{{ errorCount }}</template>
           </div>
         </div>
-      </q-card-section>
-    </q-card>
+      </CardSectionComponent>
+    </CardComponent>
 
-    <q-card flat bordered class="col stat-card">
-      <q-card-section class="stat-card__section">
+    <CardComponent flat bordered class="col stat-card">
+      <CardSectionComponent class="stat-card__section">
         <div class="stat-card__title">Успех</div>
         <div class="row items-center stat-card__body">
           <q-icon name="check_circle_outline" color="positive" size="32px" class="stat-card__icon" />
@@ -67,8 +68,8 @@
             <template v-else>{{ stats ? `${stats.successRate.toFixed(1)}%` : '—' }}</template>
           </div>
         </div>
-      </q-card-section>
-    </q-card>
+      </CardSectionComponent>
+    </CardComponent>
   </div>
 </template>
 

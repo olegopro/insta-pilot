@@ -1,14 +1,15 @@
 <script setup lang="ts">
   import { LoginForm } from '@/features/auth-login'
+  import { CardComponent, CardSectionComponent } from '@/shared/ui/card-component'
 </script>
 
 <template>
   <q-page class="login-page flex flex-center">
-    <q-card class="login-card">
-      <q-card-section class="q-pa-xl">
+    <CardComponent class="login-card">
+      <CardSectionComponent class="q-pa-xl">
         <LoginForm />
-      </q-card-section>
-    </q-card>
+      </CardSectionComponent>
+    </CardComponent>
   </q-page>
 </template>
 

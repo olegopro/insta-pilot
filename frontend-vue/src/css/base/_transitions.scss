@@ -1,7 +1,0 @@
-// ──────────────────────────────────────────
-// Transition utility classes
-// ──────────────────────────────────────────
-
-.transition-shadow    { transition: box-shadow $transition-normal; }
-.transition-transform { transition: transform $transition-fast; }
-.transition-opacity   { transition: opacity $transition-normal; }

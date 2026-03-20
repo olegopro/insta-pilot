@@ -18,3 +18,9 @@
     </template>
   </q-btn>
 </template>
+
+<style scoped lang="scss">
+  .q-btn {
+    border-radius: $radius-md;
+  }
+</style>

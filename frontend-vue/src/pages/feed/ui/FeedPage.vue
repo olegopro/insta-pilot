@@ -143,7 +143,7 @@
       Демо-режим — выберите аккаунт для загрузки реальной ленты
     </div>
 
-    <div v-if="isInitializing || feedStore.feedLoading" class="empty-state">
+    <div v-if="isInitializing || feedStore.feedLoading" class="loading-center">
       <q-spinner size="48px" color="primary" />
     </div>
 
@@ -211,5 +211,12 @@
     padding: $spacing-inline-gap $spacing-stack-gap;
     background: $surface-tertiary;
     border-radius: $radius-md;
+  }
+
+  .loading-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>
