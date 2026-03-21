@@ -1,10 +1,17 @@
 <script setup lang="ts">
-  import { ref, watch, nextTick } from 'vue'
+  import { ref, computed, watch, nextTick } from 'vue'
+  import { QScrollArea } from 'quasar'
   import { useSidebarActivityStore } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import ActivitySidebarEntry from './ActivitySidebarEntry.vue'
   import SidebarResizeHandle from './SidebarResizeHandle.vue'
+
+  interface ScrollInfo {
+    verticalPosition: number
+    verticalSize: number
+    verticalContainerSize: number
+  }
 
   const FILTER_OPTIONS: { label: string; value: 'all' | 'errors' | 'likes' | 'comments'; icon: string; color: string }[] = [
     { label: 'Все', value: 'all', icon: 'apps', color: 'primary' },
@@ -13,24 +20,39 @@
     { label: 'Комментарии', value: 'comments', icon: 'chat_bubble_outline', color: 'orange' }
   ]
 
+  const THUMB_STYLE = {
+    width: '10px',
+    borderRadius: '2px',
+    background: 'rgba(0, 0, 0, 0.2)',
+    opacity: '1'
+  }
+
   const emit = defineEmits<{
     'entry-click': [entry: SidebarActivityEntry]
   }>()
 
   const store = useSidebarActivityStore()
-  const scrollRef = ref<HTMLElement | null>(null)
+  const scrollRef = ref<InstanceType<typeof QScrollArea> | null>(null)
+  const lastScrollInfo = ref<ScrollInfo | null>(null)
+  const showFilterLabels = computed(() => store.width > 400)
 
   const resizeHandler = (delta: number) => {
     store.setWidth(store.width + delta)
   }
 
-  const isAtBottom = (el: HTMLElement) =>
-    el.scrollHeight - el.scrollTop - el.clientHeight < 40
+  const scrollHandler = (info: ScrollInfo) => {
+    lastScrollInfo.value = info
+  }
+
+  const isAtBottom = () => {
+    if (!lastScrollInfo.value) return true
+    const { verticalPosition, verticalSize, verticalContainerSize } = lastScrollInfo.value
+    return verticalSize - verticalPosition - verticalContainerSize < 40
+  }
 
   watch(() => store.filteredEntries.length, async () => {
     await nextTick()
-    const el = scrollRef.value
-    el && isAtBottom(el) && (el.scrollTop = el.scrollHeight)
+    isAtBottom() && scrollRef.value?.setScrollPosition('vertical', 99999)
   })
 </script>
 
@@ -50,19 +72,25 @@
       <ButtonComponent
         v-for="opt in FILTER_OPTIONS"
         :key="opt.value"
-        :label="opt.label"
+        :label="showFilterLabels ? opt.label : undefined"
         :icon="opt.icon"
         size="sm"
+        :round="!showFilterLabels"
         :color="store.quickFilter === opt.value ? opt.color : 'grey-6'"
-        :outline="store.quickFilter === opt.value"
         :flat="store.quickFilter !== opt.value"
+        unelevated
         @click="store.quickFilter = opt.value"
       />
     </div>
 
     <q-separator />
 
-    <div ref="scrollRef" class="sidebar-scroll col">
+    <q-scroll-area
+      ref="scrollRef"
+      class="col"
+      :thumb-style="THUMB_STYLE"
+      @scroll="scrollHandler"
+    >
       <div v-if="store.filteredEntries.length === 0" class="text-caption text-grey text-center q-pa-md">
         Нет записей
       </div>
@@ -72,7 +100,7 @@
         :entry="entry"
         @click="emit('entry-click', entry)"
       />
-    </div>
+    </q-scroll-area>
 
     <q-separator />
 
@@ -105,15 +133,11 @@
   gap: $indent-xs;
   padding: $indent-xs $indent-sm;
   overflow-x: auto;
+  max-width: 100%;
 
   &::-webkit-scrollbar {
     display: none;
   }
 }
 
-.sidebar-scroll {
-  overflow-y: auto;
-  min-height: 0;
-  overscroll-behavior: contain;
-}
 </style>

@@ -29,7 +29,7 @@
 <style scoped lang="scss">
   .q-btn {
     border-radius: $radius-md;
-    padding: 4px 14px;
+    padding: $indent-xs $indent-sm;
 
     :deep(.q-btn__content) {
       line-height: 1;

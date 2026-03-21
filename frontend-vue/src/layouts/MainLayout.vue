@@ -57,6 +57,7 @@
       v-if="!sidebarStore.isOpen"
       round
       size="md"
+      icon-scale="lg"
       color="primary"
       icon="terminal"
       class="sidebar-toggle"

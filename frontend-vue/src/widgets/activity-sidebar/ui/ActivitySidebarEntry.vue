@@ -61,6 +61,7 @@
   padding: $spacing-inline-gap $indent-sm;
   border-bottom: $border-width-default $border-style-default $border-subtle;
   transition: background $transition-fast;
+  overflow: hidden;
 }
 
 .sidebar-entry:hover {
