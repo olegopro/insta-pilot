@@ -27,6 +27,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'search',
+        name: 'search',
         component: () => import('@/pages/search/ui/SearchPage.vue')
       },
       {

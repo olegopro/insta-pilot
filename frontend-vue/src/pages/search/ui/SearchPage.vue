@@ -1,7 +1,8 @@
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
-  import { onBeforeRouteLeave } from 'vue-router'
+  import { ref, computed, watch, onMounted } from 'vue'
+  import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
   import { useAccountSelect } from '@/entities/instagram-account/model/useAccountSelect'
+  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
   import { useSearchStore, useFeedStore } from '@/entities/media-post'
   import type { MediaPost, Location } from '@/entities/media-post'
   import type { Nullable } from '@/shared/lib'
@@ -19,7 +20,11 @@
   import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
   import type { SearchMode } from '../model/types'
 
+  const route = useRoute()
+  const router = useRouter()
+
   const { selectedAccount, accountSelectRef, accountStackLabel, isInitializing, initAccounts } = useAccountSelect('search_selected_account_id')
+  const accountStore = useAccountStore()
 
   const searchStore = useSearchStore()
   const feedStore = useFeedStore()
@@ -47,11 +52,27 @@
     return undefined
   }
 
+  const syncQueryParams = () => {
+    const query: Record<string, string> = {}
+    selectedAccount.value && (query.account = String(selectedAccount.value.id))
+    const tag = hashtagInput.value.trim()
+    if (searchMode.value === 'hashtag' && tag) {
+      query.mode = 'hashtag'
+      query.tag = tag.replace(/^#/, '')
+    } else if (searchMode.value === 'location' && selectedLocation.value) {
+      query.mode = 'location'
+      query.location_pk = String(selectedLocation.value.pk)
+      query.location_name = selectedLocation.value.name
+    }
+    void router.replace({ query })
+  }
+
   const resetSearch = () => {
     selectedLocation.value = null
     hashtagInput.value = ''
     searchStore.clearResults()
     searchStore.clearLocations()
+    void router.replace({ query: selectedAccount.value ? { account: String(selectedAccount.value.id) } : {} })
   }
 
   const switchModeHandler = (mode: SearchMode) => {
@@ -63,6 +84,7 @@
     if (!selectedAccount.value || !hashtagInput.value.trim()) return
     const tag = hashtagInput.value.trim().replace(/^#/, '')
     searchStore.searchHashtag(selectedAccount.value.id, tag)
+      .then(() => syncQueryParams())
       .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка поиска по хэштегу'))
   }
 
@@ -92,6 +114,7 @@
     if (!selectedAccount.value) return
     selectedLocation.value = location
     searchStore.fetchLocationMedias(selectedAccount.value.id, location)
+      .then(() => syncQueryParams())
       .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка загрузки медиа локации'))
   }
 
@@ -116,14 +139,55 @@
     postModal.open()
   }
 
+  let isUrlInitializing = false
+
+  watch(selectedAccount, (account, oldAccount) => {
+    if (isUrlInitializing || !oldAccount || !account || account.id === oldAccount.id) return
+    selectedLocation.value = null
+    hashtagInput.value = ''
+    searchStore.clearResults()
+    searchStore.clearLocations()
+    void router.replace({ query: { account: String(account.id) } })
+  })
+
   onMounted(() => {
     void initAccounts().then(() => {
-      if (searchStore.lastHashtag) {
-        hashtagInput.value = searchStore.lastHashtag
-        searchMode.value = 'hashtag'
-      } else if (searchStore.lastLocation) {
-        selectedLocation.value = searchStore.lastLocation
+      const { mode, tag, account, location_pk, location_name } = route.query
+
+      if (account) {
+        isUrlInitializing = true
+        const found = accountStore.accounts.find((a) => String(a.id) === String(account))
+        found && (selectedAccount.value = found)
+        isUrlInitializing = false
+      }
+
+      const tagStr = tag ? String(tag) : ''
+      const locationPkNum = location_pk ? Number(location_pk) : 0
+      const locationNameStr = location_name ? String(location_name) : ''
+
+      if (mode === 'location' && locationPkNum && locationNameStr) {
         searchMode.value = 'location'
+        const locationObj: Location = { pk: locationPkNum, name: locationNameStr, address: '', lat: 0, lng: 0 }
+        selectedLocation.value = locationObj
+        if (searchStore.searchResults.length > 0 && searchStore.lastLocation?.pk === locationPkNum) return
+        selectedAccount.value &&
+          searchStore.fetchLocationMedias(selectedAccount.value.id, locationObj)
+            .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка загрузки медиа локации'))
+      } else if (tagStr) {
+        searchMode.value = 'hashtag'
+        hashtagInput.value = tagStr
+        if (searchStore.searchResults.length > 0 && searchStore.lastHashtag === tagStr) return
+        selectedAccount.value &&
+          searchStore.searchHashtag(selectedAccount.value.id, tagStr)
+            .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка поиска по хэштегу'))
+      } else {
+        if (searchStore.lastHashtag) {
+          hashtagInput.value = searchStore.lastHashtag
+          searchMode.value = 'hashtag'
+        } else if (searchStore.lastLocation) {
+          selectedLocation.value = searchStore.lastLocation
+          searchMode.value = 'location'
+        }
       }
     })
   })
