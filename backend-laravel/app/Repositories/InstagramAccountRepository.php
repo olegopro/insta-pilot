@@ -39,4 +39,8 @@ class InstagramAccountRepository implements InstagramAccountRepositoryInterface 
     public function deleteAccount(int $id): bool {
         return InstagramAccount::destroy($id) > 0;
     }
+
+    public function deactivateAccount(int $id): void {
+        InstagramAccount::where('id', $id)->update(['is_active' => false]);
+    }
 }

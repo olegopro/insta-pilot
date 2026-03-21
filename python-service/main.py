@@ -138,8 +138,7 @@ async def account_info(data: SessionRequest):
 
         return AccountInfoResponse(
             success=True,
-            followers_count=info.follower_count,
-            following_count=info.following_count,
+            user_pk=info.pk,
         )
     except Exception as e:
         code = error_to_code(e)

@@ -1,11 +1,12 @@
 <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
   import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import { useFeedStore } from '@/entities/media-post'
   import instagramAccountTableColumns from '@/entities/instagram-account/model/instagramAccountTableColumns'
   import instagramAccountListDTO from '@/entities/instagram-account/model/instagramAccountListDTO'
   import type { InstagramAccount } from '@/entities/instagram-account/model/types'
   import type { Nullable } from '@/shared/lib'
-  import { useFilterColumns, useSearchQuery, useModal } from '@/shared/lib'
+  import { useFilterColumns, useSearchQuery, useModal, notifyError } from '@/shared/lib'
   import { PageComponent } from '@/shared/ui/page-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { TableComponent } from '@/shared/ui/table-component'
@@ -13,9 +14,10 @@
   import { BadgeComponent } from '@/shared/ui/badge-component'
   import { AddInstagramAccountModal } from '@/features/add-instagram-account'
   import { DeleteInstagramAccountModal } from '@/features/delete-instagram-account'
-  import { ViewInstagramAccountModal } from '@/features/view-instagram-account'
+  import { InstagramUserModal } from '@/features/instagram-user'
 
   const store = useAccountStore()
+  const feedStore = useFeedStore()
 
   const addModal = useModal()
   const deleteModal = useModal()
@@ -39,9 +41,16 @@
   const findAccount = (id: number): Nullable<InstagramAccount> =>
     store.accounts.find((account) => account.id === id) ?? null
 
-  const openViewHandler = (id: number) => {
+  const openViewHandler = async (id: number) => {
     selectedAccount.value = findAccount(id)
     viewModal.open()
+    try {
+      await store.fetchAccountDetails(id)
+      const userPk = store.accountDetail?.user_pk
+      userPk && await feedStore.fetchUserInfo(id, String(userPk))
+    } catch {
+      notifyError('Не удалось загрузить профиль')
+    }
   }
 
   const openDeleteHandler = (id: number) => {
@@ -89,7 +98,7 @@
           </q-td>
         </template>
 
-        <template #body-cell-actions="{ value }">
+        <template #body-cell-actions="{ value, row }">
           <q-td class="text-center">
             <ButtonComponent
               flat
@@ -97,6 +106,7 @@
               dense
               icon-scale="lg"
               icon="visibility"
+              :disable="!row.isActive"
               @click="openViewHandler(value as number)"
             />
             <ButtonComponent
@@ -125,10 +135,10 @@
       @deleted="() => store.fetchAccounts()"
     />
 
-    <ViewInstagramAccountModal
-      v-if="selectedAccount"
+    <InstagramUserModal
       v-model="viewModal.isVisible"
-      :account-id="selectedAccount.id"
+      :user="feedStore.userDetail"
+      :loading="store.fetchAccountDetailsLoading || feedStore.userInfoLoading"
     />
   </PageComponent>
 </template>

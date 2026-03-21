@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Repositories\InstagramAccountRepositoryInterface;
 use Illuminate\Support\Facades\Http;
 
 class InstagramClientService implements InstagramClientServiceInterface {
     public function __construct(
         private readonly string $pythonUrl,
         private readonly ActivityLoggerServiceInterface $activityLogger,
+        private readonly InstagramAccountRepositoryInterface $accountRepository,
     ) {}
 
     public function login(
@@ -97,6 +99,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
             );
         }
 
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
         return $result;
     }
 
@@ -133,6 +137,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
             errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
             durationMs:      $durationMs,
         );
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
 
         return $result;
     }
@@ -230,6 +236,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
             durationMs:      $durationMs,
         );
 
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
         return $result;
     }
 
@@ -268,6 +276,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
             errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
             durationMs:      $durationMs,
         );
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
 
         return $result;
     }
@@ -333,6 +343,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
             durationMs:      $durationMs,
         );
 
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
         return $result;
     }
 
@@ -383,6 +395,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
             errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
             durationMs:      $durationMs,
         );
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
 
         return $result;
     }
@@ -448,6 +462,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
             durationMs:      $durationMs,
         );
 
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
         return $result;
     }
 
@@ -496,6 +512,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
             durationMs:      $durationMs,
         );
 
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
         return $result;
     }
 
@@ -509,5 +527,17 @@ class InstagramClientService implements InstagramClientServiceInterface {
             'timeout'            => 'timeout',
             default              => 'error',
         };
+    }
+
+    private function maybeDeactivateAccount(array $result, ?int $accountId): void {
+        if ($accountId === null) {
+            return;
+        }
+
+        $code = $result['error_code'] ?? null;
+
+        if ($code === 'login_required' || $code === 'challenge_required') {
+            $this->accountRepository->deactivateAccount($accountId);
+        }
     }
 }

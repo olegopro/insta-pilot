@@ -86,6 +86,9 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
 
     // LLM Settings (admin only)
     Route::prefix('llm-settings')->middleware('role:admin')->group(function () {
+        Route::get('/base-prompt', [LlmSettingsController::class, 'basePrompt']);
+        Route::put('/base-prompt', [LlmSettingsController::class, 'updateBasePrompt']);
+        Route::post('/base-prompt/reset', [LlmSettingsController::class, 'resetBasePrompt']);
         Route::get('/', [LlmSettingsController::class, 'index']);
         Route::post('/', [LlmSettingsController::class, 'store']);
         Route::post('/test', [LlmSettingsController::class, 'testConnection']);

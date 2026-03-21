@@ -5,26 +5,110 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\LlmSettingsRepositoryInterface;
+use App\Repositories\LlmSystemPromptRepositoryInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
+/**
+ * Сервис генерации комментариев через OpenAI Chat Completions API (и совместимый GLM).
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * КАК УСТРОЕН ЗАПРОС К OPENAI CHAT COMPLETIONS API (POST /v1/chat/completions)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Тело запроса:
+ * {
+ *   "model":      "gpt-4o",
+ *   "max_tokens": 512,
+ *   "messages": [
+ *     {
+ *       "role":    "system",
+ *       "content": "<системный промпт — одна строка или многострочный текст>"
+ *     },
+ *     {
+ *       "role": "user",
+ *       "content": [
+ *         {
+ *           "type":      "image_url",
+ *           "image_url": { "url": "data:image/jpeg;base64,<BASE64>" }
+ *         },
+ *         {
+ *           "type": "text",
+ *           "text": "Caption: <текст поста>\n\nWrite a natural comment for this post."
+ *         }
+ *       ]
+ *     }
+ *   ]
+ * }
+ *
+ * ─────────────────────────────────────────
+ * КАК СОБИРАЕТСЯ SYSTEM PROMPT (три слоя):
+ * ─────────────────────────────────────────
+ *
+ * 1. Базовый промпт (llm_system_prompts, key = 'default_instagram_comment')
+ *    — хранится в БД, read-only для пользователя.
+ *    ~ 100–150 токенов.
+ *
+ * 2. Дополнительный промпт (llm_settings.system_prompt, опционально)
+ *    — добавляется через "\n\n" после базового.
+ *    Жёсткого лимита на поле нет — OpenAI не ограничивает длину отдельных полей content.
+ *    Единственное ограничение — суммарный context window (см. таблицу ниже).
+ *    Практический ориентир: ~2000 символов (≈500 токенов) достаточно для любых инструкций;
+ *    больше — просто разбавляет системную инструкцию и снижает качество следования ей.
+ *
+ * 3. Тон (llm_settings.tone, опционально)
+ *    — добавляется строкой "\n\nТон комментария: friendly" в конце.
+ *    ~ 5 токенов.
+ *
+ * ─────────────────────────────────────
+ * КАК ПЕРЕДАЁТСЯ ОПИСАНИЕ ПОСТА (user message):
+ * ─────────────────────────────────────
+ *
+ * User message — массив из двух элементов:
+ *   [0] image_url — изображение в формате base64 (data URI)
+ *   [1] text      — "Caption: <описание>\n\nWrite a natural comment for this post."
+ *                   Если use_caption = false или caption пустой — только вторая часть.
+ *
+ * Порядок элементов в user content не важен для модели.
+ * Отдельного лимита на поле text нет — только суммарный context window.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ЛИМИТЫ ТОКЕНОВ (OpenAI, актуально на 2026-03)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Модель           | Контекст    | Max output
+ * ─────────────────|─────────────|───────────
+ * gpt-4o           | 128 000     | 4 096
+ * gpt-4o-mini      | 128 000     | 4 096
+ * gpt-4.1          | 1 000 000   | 32 768
+ * gpt-4.1-mini     | 1 000 000   | 32 000
+ *
+ * Расход токенов на один запрос generateComment():
+ *   — system prompt (базовый + доп. + тон)  ~150–650 токенов
+ *   — изображение JPEG 1080px (high detail) ~850 токенов (765 плитки + 85 base)
+ *   — caption Instagram (до 2200 символов)   ~800 токенов  (≈ 2.7 символа/токен)
+ *   — user text ("Caption: ... Write a...")  ~10 токенов
+ *   — ответ модели (1–3 предложения)         ~50–100 токенов
+ *   ─────────────────────────────────────────────────────────
+ *   ИТОГО                                   ~1860–2410 токенов  <<  128K
+ *
+ * Вывод: даже при максимально длинном caption и дополнительном system prompt
+ * переполнения контекста не возникает ни на одной из поддерживаемых моделей.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * GLM (api.z.ai) — совместимый с OpenAI формат
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Используется тот же JSON-формат messages.
+ * Дополнительно передаётся { "thinking": { "type": "disabled" } } — отключает
+ * режим цепочки рассуждений (CoT), который сильно увеличивает latency и расход токенов.
+ */
 class LlmService implements LlmServiceInterface {
-    private const DEFAULT_SYSTEM_PROMPT = <<<'PROMPT'
-        Ты — помощник для Instagram. Твоя задача — написать короткий, живой,
-        естественный комментарий к посту на основе изображения и описания.
-
-        Правила:
-        - Комментарий должен быть на языке описания поста (или на английском, если описания нет)
-        - Длина: 1-3 предложения
-        - Без хэштегов, без эмодзи-спама
-        - Выглядеть как реальный комментарий от живого человека
-        - Не повторять описание поста дословно
-        PROMPT;
-
     public function __construct(
-        private readonly LlmSettingsRepositoryInterface $repository
+        private readonly LlmSettingsRepositoryInterface $repository,
+        private readonly LlmSystemPromptRepositoryInterface $systemPromptRepository
     ) {}
 
     public function generateComment(string $imageUrl, ?string $captionText = null): array {
@@ -42,7 +126,14 @@ class LlmService implements LlmServiceInterface {
             ? "Caption: {$captionText}\n\nWrite a natural comment for this post."
             : 'Write a natural comment for this post.';
 
-        $systemPrompt = $setting->system_prompt ?? self::DEFAULT_SYSTEM_PROMPT;
+        $basePrompt = $this->systemPromptRepository->findByKey('default_instagram_comment')?->content
+            ?? throw new RuntimeException('Base system prompt not configured');
+
+        $systemPrompt = $basePrompt;
+
+        if ($setting->system_prompt) {
+            $systemPrompt .= "\n\n" . $setting->system_prompt;
+        }
 
         if ($setting->tone) {
             $systemPrompt .= "\n\nТон комментария: {$setting->tone}";

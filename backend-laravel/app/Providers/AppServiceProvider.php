@@ -10,6 +10,8 @@ use App\Repositories\InstagramAccountRepository;
 use App\Repositories\InstagramAccountRepositoryInterface;
 use App\Repositories\LlmSettingsRepository;
 use App\Repositories\LlmSettingsRepositoryInterface;
+use App\Repositories\LlmSystemPromptRepository;
+use App\Repositories\LlmSystemPromptRepositoryInterface;
 use App\Repositories\UserRepository;
 use App\Repositories\UserRepositoryInterface;
 use App\Services\ActivityLoggerService;
@@ -39,7 +41,8 @@ class AppServiceProvider extends ServiceProvider {
             InstagramClientServiceInterface::class,
             fn (mixed $app) => new InstagramClientService(
                 config('services.instagram.python_url'),
-                $app->make(ActivityLoggerServiceInterface::class)
+                $app->make(ActivityLoggerServiceInterface::class),
+                $app->make(InstagramAccountRepositoryInterface::class)
             )
         );
 
@@ -49,8 +52,16 @@ class AppServiceProvider extends ServiceProvider {
         );
 
         $this->app->bind(
+            LlmSystemPromptRepositoryInterface::class,
+            LlmSystemPromptRepository::class
+        );
+
+        $this->app->bind(
             LlmServiceInterface::class,
-            LlmService::class
+            fn (mixed $app) => new LlmService(
+                $app->make(LlmSettingsRepositoryInterface::class),
+                $app->make(LlmSystemPromptRepositoryInterface::class)
+            )
         );
 
         $this->app->singleton(

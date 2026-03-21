@@ -16,4 +16,5 @@ interface InstagramAccountRepositoryInterface {
     public function findByIdAndUser(int $id, int $userId): InstagramAccount | null;
     public function findByLogin(string $login): InstagramAccount | null;
     public function deleteAccount(int $id): bool;
+    public function deactivateAccount(int $id): void;
 }

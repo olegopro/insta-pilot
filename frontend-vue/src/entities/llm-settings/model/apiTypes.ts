@@ -15,3 +15,8 @@ export interface LlmSettingApi {
 export interface LlmSettingDetailApi extends LlmSettingApi {
   api_key: string
 }
+
+export interface LlmBasePromptApi {
+  content: string
+  is_modified: boolean
+}

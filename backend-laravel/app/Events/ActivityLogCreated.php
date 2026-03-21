@@ -34,7 +34,6 @@ class ActivityLogCreated implements ShouldBroadcastNow {
             'status'               => $this->log->status,
             'http_code'            => $this->log->http_code,
             'endpoint'             => $this->log->endpoint,
-            'request_payload'      => $this->log->request_payload,
             'response_summary'     => $this->log->response_summary,
             'error_message'        => $this->log->error_message,
             'error_code'           => $this->log->error_code,

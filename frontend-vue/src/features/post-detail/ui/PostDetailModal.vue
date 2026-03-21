@@ -158,7 +158,7 @@
             <div class="comment-actions">
               <ButtonComponent
                 v-if="post.mediaType !== MEDIA_TYPE.VIDEO"
-                label="Сгенерировать"
+                label="Придумать"
                 icon="auto_awesome"
                 flat
                 color="grey-7"
@@ -196,7 +196,7 @@
 </style>
 
 <style lang="scss" scoped>
-  $info-panel-width: 372px;
+  $info-panel-width: 350px;
 
   .body {
     display: flex;

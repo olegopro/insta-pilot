@@ -70,7 +70,7 @@
         :label="showFilterLabels ? opt.label : undefined"
         :icon="opt.icon"
         size="sm"
-        :round="!showFilterLabels"
+        :class="{ 'filter-btn--icon-only': !showFilterLabels }"
         :color="store.quickFilter === opt.value ? opt.color : 'grey-6'"
         :flat="store.quickFilter !== opt.value"
         unelevated
@@ -132,6 +132,14 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  .filter-btn--icon-only {
+    padding: 4px 8px;
+
+    :deep(.q-icon.on-left) {
+      margin-right: 0;
+    }
   }
 }
 

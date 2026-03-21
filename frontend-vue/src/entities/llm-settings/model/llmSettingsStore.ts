@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import { api } from '@/boot/axios'
 import type { LlmSetting, LlmSettingFormData } from './types'
-import type { LlmSettingApi, LlmSettingDetailApi } from './apiTypes'
+import type { LlmSettingApi, LlmSettingDetailApi, LlmBasePromptApi } from './apiTypes'
 import llmSettingsDTO from './llmSettingsDTO'
 
 export const useLlmSettingsStore = defineStore('llmSettings', () => {
@@ -42,7 +42,21 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
     }).then((response) => response.data)
   )
 
+  const fetchBasePromptApi = useApi<ApiResponseWrapper<LlmBasePromptApi>>(
+    () => api.get('/llm-settings/base-prompt').then((response) => response.data)
+  )
+
+  const updateBasePromptApi = useApi<ApiResponseWrapper<LlmBasePromptApi>, { content: string }>(
+    ({ content }) => api.put('/llm-settings/base-prompt', { content }).then((response) => response.data)
+  )
+
+  const resetBasePromptApi = useApi<ApiResponseWrapper<LlmBasePromptApi>>(
+    () => api.post('/llm-settings/base-prompt/reset').then((response) => response.data)
+  )
+
   const settings = ref<LlmSetting[]>([])
+  const basePrompt = ref<string | null>(null)
+  const basePromptIsModified = ref(false)
 
   const fetchAll = async () => {
     const { data } = await fetchAllApi.execute()
@@ -78,8 +92,31 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
   const testConnectionLoading = computed(() => testConnectionApi.loading.value)
   const testConnectionError = computed(() => testConnectionApi.error.value)
 
+  const fetchBasePrompt = async () => {
+    const { data } = await fetchBasePromptApi.execute()
+    basePrompt.value = data.content
+    basePromptIsModified.value = data.is_modified
+  }
+  const fetchBasePromptLoading = computed(() => fetchBasePromptApi.loading.value)
+
+  const updateBasePrompt = async (content: string) => {
+    const { data } = await updateBasePromptApi.execute({ content })
+    basePrompt.value = data.content
+    basePromptIsModified.value = data.is_modified
+  }
+  const updateBasePromptLoading = computed(() => updateBasePromptApi.loading.value)
+
+  const resetBasePrompt = async () => {
+    const { data } = await resetBasePromptApi.execute()
+    basePrompt.value = data.content
+    basePromptIsModified.value = false
+  }
+  const resetBasePromptLoading = computed(() => resetBasePromptApi.loading.value)
+
   return {
     settings,
+    basePrompt,
+    basePromptIsModified,
     fetchAll,
     fetchAllLoading,
     fetchOne,
@@ -94,6 +131,12 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
     deleteSettingError,
     testConnection,
     testConnectionLoading,
-    testConnectionError
+    testConnectionError,
+    fetchBasePrompt,
+    fetchBasePromptLoading,
+    updateBasePrompt,
+    updateBasePromptLoading,
+    resetBasePrompt,
+    resetBasePromptLoading
   }
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, computed, watch, onMounted } from 'vue'
   import { useLlmSettingsStore, PROVIDERS, MODELS_BY_PROVIDER, TONES } from '@/entities/llm-settings'
   import type { LlmSetting, LlmProvider, LlmTone, LlmSettingFormData } from '@/entities/llm-settings'
   import { InputComponent } from '@/shared/ui/input-component'
@@ -14,6 +14,26 @@
   import { DeleteLlmSettingModal } from '@/features/delete-llm-setting'
 
   const store = useLlmSettingsStore()
+
+  const basePromptEdit = ref<string>('')
+  const basePromptDirty = computed(() => basePromptEdit.value !== (store.basePrompt ?? ''))
+
+  watch(() => store.basePrompt, (value) => { basePromptEdit.value = value ?? '' })
+
+  const saveBasePromptHandler = () => {
+    store.updateBasePrompt(basePromptEdit.value)
+      .then(() => notifySuccess('Базовый промпт сохранён'))
+      .catch(() => notifyError('Ошибка сохранения'))
+  }
+
+  const resetBasePromptHandler = () => {
+    store.resetBasePrompt()
+      .then(() => {
+        basePromptEdit.value = store.basePrompt ?? ''
+        notifySuccess('Базовый промпт сброшен до дефолтного')
+      })
+      .catch(() => notifyError('Ошибка сброса'))
+  }
 
   const showForm = ref(false)
   const settingToDelete = ref<LlmSetting | null>(null)
@@ -110,7 +130,10 @@
   const providerLabel = (provider: LlmProvider) =>
     PROVIDERS.find((option) => option.value === provider)?.label ?? provider
 
-  onMounted(() => store.fetchAll())
+  onMounted(() => {
+    void store.fetchAll()
+    void store.fetchBasePrompt()
+  })
 </script>
 
 <template>
@@ -226,9 +249,45 @@
           label="Передавать описание поста в LLM"
         />
 
+        <div class="base-prompt-field">
+          <div class="base-prompt-field__header">
+            <span class="text-caption text-grey-6">Базовый системный промпт</span>
+            <div class="row items-center q-gutter-xs">
+              <BadgeComponent v-if="store.basePromptIsModified" color="warning" label="Изменён" size="sm" />
+              <ButtonComponent
+                flat
+                dense
+                size="sm"
+                icon="restart_alt"
+                color="grey-6"
+                :loading="store.resetBasePromptLoading"
+                :disable="!store.basePromptIsModified"
+                @click="resetBasePromptHandler"
+              />
+              <ButtonComponent
+                v-if="basePromptDirty"
+                flat
+                dense
+                size="sm"
+                icon="check"
+                color="positive"
+                :loading="store.updateBasePromptLoading"
+                @click="saveBasePromptHandler"
+              />
+            </div>
+          </div>
+          <InputComponent
+            v-model="basePromptEdit"
+            type="textarea"
+            outlined
+            autogrow
+            :loading="store.fetchBasePromptLoading"
+          />
+        </div>
+
         <InputComponent
           v-model="form.systemPrompt"
-          label-text="Системный промпт (опционально)"
+          label-text="Дополнительный системный промпт (опционально)"
           type="textarea"
           outlined
           autogrow
@@ -308,6 +367,18 @@
     display: flex;
     flex-direction: column;
     gap: $indent-m;
+  }
+}
+
+.base-prompt-field {
+  display: flex;
+  flex-direction: column;
+  gap: $indent-xs;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 </style>
