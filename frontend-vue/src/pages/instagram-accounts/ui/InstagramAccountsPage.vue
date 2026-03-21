@@ -95,6 +95,7 @@
               flat
               round
               dense
+              icon-scale="lg"
               icon="visibility"
               @click="openViewHandler(value as number)"
             />
@@ -102,6 +103,7 @@
               flat
               round
               dense
+              icon-scale="lg"
               icon="delete"
               color="negative"
               @click="openDeleteHandler(value as number)"

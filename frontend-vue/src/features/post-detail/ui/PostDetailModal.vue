@@ -163,7 +163,6 @@
                 label="Сгенерировать"
                 icon="auto_awesome"
                 flat
-                dense
                 color="grey-7"
                 :loading="loading"
                 :disable="!post.thumbnailUrl && post.resources.length === 0"
@@ -173,7 +172,6 @@
                 label="Отправить"
                 icon="send"
                 color="primary"
-                dense
                 :loading="searchStore.sendCommentLoading"
                 :disable="!commentText.trim()"
                 @click="sendCommentHandler"
@@ -286,18 +284,8 @@
       }
 
       .like-btn {
-        border-radius: $radius-lg !important;
-        padding: $indent-xs $indent-sm !important;
-        min-height: 32px !important;
-
-        .q-btn__icon {
-          font-size: $font-size-md !important;
-        }
-
-        .q-btn__content {
-          font-size: $font-size-sm;
-          gap: $indent-2xs;
-        }
+        padding: $indent-xs $indent-sm;
+        min-height: $indent-2xl ;
       }
 
       .comment-section {

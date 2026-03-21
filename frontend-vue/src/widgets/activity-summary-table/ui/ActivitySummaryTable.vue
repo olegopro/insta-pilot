@@ -2,6 +2,7 @@
   import { computed } from 'vue'
   import { TableComponent } from '@/shared/ui/table-component'
   import { useSearchQuery, useFilterColumns } from '@/shared/lib'
+  import { InputComponent } from '@/shared/ui/input-component'
   import { activitySummaryTableColumns, activitySummaryListDTO } from '@/entities/activity-log'
   import type { AccountActivitySummary } from '@/entities/activity-log'
 
@@ -29,7 +30,7 @@
 <template>
   <div>
     <div class="row items-center q-mb-sm q-gutter-sm">
-      <q-input
+      <InputComponent
         v-model="searchText"
         dense
         outlined
@@ -40,7 +41,7 @@
         <template #prepend>
           <q-icon name="search" />
         </template>
-      </q-input>
+      </InputComponent>
     </div>
 
     <TableComponent

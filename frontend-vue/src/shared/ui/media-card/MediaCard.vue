@@ -54,7 +54,7 @@
         <ButtonComponent
           v-if="!isMock"
           round
-          size="md"
+          icon-scale="md"
           :color="post.hasLiked ? 'red' : 'white'"
           :text-color="post.hasLiked ? 'white' : 'red'"
           :icon="post.hasLiked ? 'favorite' : 'favorite_border'"

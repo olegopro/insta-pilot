@@ -56,4 +56,8 @@
   :deep(.q-field--outlined .q-field__control) {
     border-radius: $radius-md;
   }
+
+  :deep(.q-field--outlined.q-field--focused .q-field__control) {
+    background-color: #fff;
+  }
 </style>

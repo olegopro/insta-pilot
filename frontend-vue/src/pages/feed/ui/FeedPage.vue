@@ -212,4 +212,11 @@
     background: $surface-tertiary;
     border-radius: $radius-md;
   }
+
+  .loading-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 270px);
+  }
 </style>
