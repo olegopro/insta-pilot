@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { computed } from 'vue'
   import { getActionLabel, getActionColor, getStatusConfig, HTTP_CODE_COLOR } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
   import { formatTimeHMS } from '@/shared/lib'
@@ -8,7 +9,8 @@
     entry: SidebarActivityEntry
   }
 
-  defineProps<Props>()
+  const props = defineProps<Props>()
+  const statusConfig = computed(() => getStatusConfig(props.entry.status))
 
   const emit = defineEmits<{
     click: [entry: SidebarActivityEntry]
@@ -22,8 +24,8 @@
   >
     <div class="entry-row row items-center no-wrap">
       <q-icon
-        :name="getStatusConfig(entry.status).icon"
-        :color="getStatusConfig(entry.status).color"
+        :name="statusConfig.icon"
+        :color="statusConfig.color"
         size="20px"
       />
       <span class="entry-action ellipsis col" :class="`text-${getActionColor(entry.action)}`">

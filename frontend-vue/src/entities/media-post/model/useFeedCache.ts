@@ -54,17 +54,17 @@ export function useFeedCache() {
     if (cacheEnabled.value) {
       const cached = loadSeenPosts(accountId)
       seenPosts.value = [...new Set([...cached, ...newIds])].slice(-MAX_SEEN_POSTS)
+      saveSeenPosts(accountId)
     } else {
       seenPosts.value = newIds
     }
-    saveSeenPosts(accountId)
   }
 
   /** Добавляет новые ID к текущему списку seen */
   const appendSeenPosts = (accountId: number, newIds: string[]) => {
     const updatedSeen = [...new Set([...seenPosts.value, ...newIds])]
     seenPosts.value = updatedSeen.length > MAX_SEEN_POSTS ? updatedSeen.slice(-MAX_SEEN_POSTS) : updatedSeen
-    saveSeenPosts(accountId)
+    cacheEnabled.value && saveSeenPosts(accountId)
   }
 
   /** Возвращает эффективный список seen — seenPosts.value уже синхронизирован с localStorage */
