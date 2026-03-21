@@ -1,6 +1,6 @@
 export type { Nullable } from './types'
 export { notifySuccess, notifyError } from './notify'
-export { formatCount, formatDate, formatTimeHMS, formatTimeHM, formatDateRu } from './formatters'
+export { formatCount, formatDate, formatTimeHMS, formatTimeHM, formatDuration, formatDateRu } from './formatters'
 export { useFilterColumns } from './useFilterColumns'
 export { useSearchQuery } from './useSearchQuery'
 export { useModal } from './useModal'

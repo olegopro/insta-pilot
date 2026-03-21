@@ -2,23 +2,17 @@ import type { ActivityLog } from './types'
 import type { ActivityLogRowModel } from './activityLogTableColumns'
 import type { Nullable } from '@/shared/lib'
 import { ACTION_LABELS, ACTION_COLORS, STATUS_CONFIG, HTTP_CODE_COLOR } from './constants'
-import { formatTimeHMS } from '@/shared/lib'
-
-function formatDuration(durationMs: Nullable<number>): { text: string; color: string } {
-  if (durationMs === null) return { text: '—', color: '' }
-  if (durationMs >= 3000) return { text: `${(durationMs / 1000).toFixed(1)}s`, color: 'negative' }
-  if (durationMs >= 1000) return { text: `${(durationMs / 1000).toFixed(1)}s`, color: 'warning' }
-  return { text: `${String(durationMs)}ms`, color: '' }
-}
+import { formatTimeHMS, formatDuration } from '@/shared/lib'
 
 export function summarizeResponse(summary: Nullable<Record<string, unknown>>): string {
   if (!summary) return ''
-  const getValue = (key: string) => summary[key]
-  if (getValue('items_count') !== undefined) return `${String(getValue('items_count') as string | number)} записей`
-  if (getValue('results_count') !== undefined) return `${String(getValue('results_count') as string | number)} результатов`
-  if (getValue('comment_length') !== undefined) return `${String(getValue('comment_length') as string | number)} символов`
-  if (getValue('media_pk') !== undefined) return `media: ${String(getValue('media_pk') as string | number)}`
-  if (getValue('user_pk') !== undefined) return `@${String((getValue('username') ?? getValue('user_pk')) as string | number)}`
+
+  if (summary.items_count !== undefined) return `${String(summary.items_count as string | number)} записей`
+  if (summary.results_count !== undefined) return `${String(summary.results_count as string | number)} результатов`
+  if (summary.comment_length !== undefined) return `${String(summary.comment_length as string | number)} символов`
+  if (summary.media_pk !== undefined) return `media: ${String(summary.media_pk as string | number)}`
+  if (summary.user_pk !== undefined) return `@${String((summary.username ?? summary.user_pk) as string | number)}`
+
   return ''
 }
 

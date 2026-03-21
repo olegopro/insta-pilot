@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { STATUS_CONFIG, ACTION_LABELS, ACTION_COLORS, HTTP_CODE_COLOR } from '@/entities/activity-log'
+  import { getActionLabel, getActionColor, getStatusConfig, HTTP_CODE_COLOR } from '@/entities/activity-log'
   import type { SidebarActivityEntry } from '@/entities/activity-log'
   import { formatTimeHMS } from '@/shared/lib'
   import { BadgeComponent } from '@/shared/ui/badge-component'
@@ -22,12 +22,12 @@
   >
     <div class="entry-row row items-center no-wrap">
       <q-icon
-        :name="STATUS_CONFIG[entry.status]?.icon ?? 'help'"
-        :color="STATUS_CONFIG[entry.status]?.color ?? 'grey'"
+        :name="getStatusConfig(entry.status).icon"
+        :color="getStatusConfig(entry.status).color"
         size="20px"
       />
-      <span class="entry-action ellipsis col" :class="`text-${ACTION_COLORS[entry.action] ?? 'grey'}`">
-        {{ ACTION_LABELS[entry.action] ?? entry.action }}
+      <span class="entry-action ellipsis col" :class="`text-${getActionColor(entry.action)}`">
+        {{ getActionLabel(entry.action) }}
       </span>
       <BadgeComponent
         v-if="entry.httpCode"

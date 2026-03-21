@@ -9,7 +9,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = shallowRef<Nullable<User>>(null)
 
   const loginApi = useApi<ApiResponseWrapper<AuthResponse>, LoginRequest>(
-    (args) => api.post('/auth/login', args).then((response) => response.data)
+    (credentials) => api.post('/auth/login', credentials).then((response) => response.data)
   )
 
   const logoutApi = useApi<ApiResponseWrapper<null>>(

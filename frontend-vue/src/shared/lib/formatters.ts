@@ -32,6 +32,13 @@ export const formatTimeHM = (iso: Nullable<string>): Nullable<string> => {
   }
 }
 
+export const formatDuration = (durationMs: Nullable<number>): { text: string; color: string } => {
+  if (durationMs === null) return { text: '—', color: '' }
+  if (durationMs >= 3000) return { text: `${(durationMs / 1000).toFixed(1)}s`, color: 'negative' }
+  if (durationMs >= 1000) return { text: `${(durationMs / 1000).toFixed(1)}s`, color: 'warning' }
+  return { text: `${String(durationMs)}ms`, color: '' }
+}
+
 export const formatDateRu = (date: string): string => {
   if (!date) return ''
   return `${date.slice(8, 10)}.${date.slice(5, 7)}.${date.slice(0, 4)}`

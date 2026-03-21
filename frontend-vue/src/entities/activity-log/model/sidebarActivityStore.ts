@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { SidebarActivityEntry, ActionType } from './types'
+import type { SidebarActivityEntry, ActionType, QuickFilter } from './types'
 import type { ActivityLogApi } from './apiTypes'
 import { summarizeResponse } from './activityLogListDTO'
 
@@ -13,8 +13,6 @@ const loadEntries = (): SidebarActivityEntry[] => {
   try { return JSON.parse(localStorage.getItem(SIDEBAR_ENTRIES_KEY) ?? '[]') }
   catch { return [] }
 }
-
-type QuickFilter = 'all' | 'errors' | 'likes' | 'comments'
 
 function mapToSidebarEntry(event: ActivityLogApi): SidebarActivityEntry {
   const summary = summarizeResponse(event.response_summary ?? null)

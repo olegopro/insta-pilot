@@ -30,7 +30,7 @@
           <q-date
             :model-value="model"
             mask="YYYY-MM-DD"
-            @update:model-value="(val) => (model = val ?? '')"
+            @update:model-value="(value) => (model = value ?? '')"
           >
             <div class="row items-center justify-end">
               <ButtonComponent v-close-popup label="Закрыть" color="primary" flat />

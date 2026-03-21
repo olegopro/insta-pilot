@@ -2,20 +2,9 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import { api } from '@/boot/axios'
-import type { LlmSetting, LlmSettingFormData, LlmProvider } from './types'
+import type { LlmSetting, LlmSettingFormData } from './types'
 import type { LlmSettingApi, LlmSettingDetailApi } from './apiTypes'
-
-const toLocal = (item: LlmSettingApi): LlmSetting => ({
-  id: item.id,
-  provider: item.provider as LlmProvider,
-  modelName: item.model_name,
-  systemPrompt: item.system_prompt,
-  tone: item.tone as LlmSetting['tone'],
-  useCaption: item.use_caption,
-  isDefault: item.is_default,
-  createdAt: item.created_at,
-  updatedAt: item.updated_at
-})
+import llmSettingsDTO from './llmSettingsDTO'
 
 export const useLlmSettingsStore = defineStore('llmSettings', () => {
   const fetchAllApi = useApi<ApiResponseWrapper<LlmSettingApi[]>>(
@@ -57,7 +46,7 @@ export const useLlmSettingsStore = defineStore('llmSettings', () => {
 
   const fetchAll = async () => {
     const { data } = await fetchAllApi.execute()
-    settings.value = data.map(toLocal)
+    settings.value = llmSettingsDTO.toLocalList(data)
   }
   const fetchAllLoading = computed(() => fetchAllApi.loading.value)
 

@@ -1,7 +1,16 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue'
-  import type { Nullable } from '@/shared/lib'
   import type { ActivityLogRowModel } from '@/entities/activity-log'
+  import type { TabMode } from '../model/types'
+  import {
+    NESTED_REQUEST_KEYS,
+    NESTED_RESPONSE_KEYS,
+    extractKey,
+    withoutKeys,
+    hasNestedData,
+    previewTooltip,
+    display
+  } from '../lib/responseFormatters'
   import { BadgeComponent } from '@/shared/ui/badge-component'
 
   interface Props {
@@ -9,53 +18,6 @@
   }
 
   const { row } = defineProps<Props>()
-
-  type JsonObj = Record<string, unknown>
-  type TabMode = 'compact' | 'full'
-
-  const NESTED_REQUEST_KEYS = ['python_request', 'instagram_request', 'llm_request']
-  const NESTED_RESPONSE_KEYS = ['python_response', 'instagram_response', 'llm_response']
-
-  function extractKey(obj: Nullable<JsonObj>, key: string): Nullable<JsonObj> {
-    if (!obj) return null
-    const val = obj[key]
-    return val && typeof val === 'object' && !Array.isArray(val) ? (val as JsonObj) : null
-  }
-
-  function withoutKeys(obj: Nullable<JsonObj>, keys: string[]): Nullable<JsonObj> {
-    if (!obj) return null
-    const result = Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key)))
-    return Object.keys(result).length > 0 ? result : null
-  }
-
-  function compactify(obj: Nullable<JsonObj>): Nullable<JsonObj> {
-    if (!obj) return null
-    const result = Object.fromEntries(
-      Object.entries(obj).filter(([, value]) => value === null || (typeof value !== 'object' && !Array.isArray(value)))
-    )
-    return Object.keys(result).length > 0 ? result : null
-  }
-
-  function hasNestedData(obj: Nullable<JsonObj>): boolean {
-    if (!obj) return false
-    return Object.values(obj).some((value) => value !== null && typeof value === 'object')
-  }
-
-  function previewTooltip(obj: Nullable<JsonObj>): Nullable<string> {
-    if (!obj) return null
-    const previewKeys = Object.keys(obj).filter((key) => key.endsWith('_preview'))
-    if (previewKeys.length === 0) return null
-    const parts = previewKeys.map((key) => {
-      const arr = obj[key]
-      const count = Array.isArray(arr) ? String(arr.length) : '0'
-      return `${key}: первые ${count} эл.`
-    })
-    return `Сокращённый preview. ${parts.join(', ')}. Полные данные не хранятся в логе.`
-  }
-
-  function display(obj: Nullable<JsonObj>, tab: TabMode): Nullable<JsonObj> {
-    return tab === 'compact' ? compactify(obj) : obj
-  }
 
   // Vue ↔ Laravel
   const vueReq = computed(() => withoutKeys(row.requestPayload, NESTED_REQUEST_KEYS))

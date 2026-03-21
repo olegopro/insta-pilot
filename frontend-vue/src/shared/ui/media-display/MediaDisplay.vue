@@ -67,7 +67,7 @@
 
   const slideChangeHandler = (swiper: SwiperClass) => carouselSlide.value = swiper.activeIndex
 
-  watch(carouselSlide, (idx) => swiperRef.value?.activeIndex !== idx && swiperRef.value?.slideTo(idx))
+  watch(carouselSlide, (index) => swiperRef.value?.activeIndex !== index && swiperRef.value?.slideTo(index))
   watch(() => props.post, () => swiperRef.value?.slideTo(0, 0))
 </script>
 

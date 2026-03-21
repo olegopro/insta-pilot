@@ -9,9 +9,7 @@
   import { InputComponent } from '@/shared/ui/input-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { useCommentGeneration, GenerationStatus } from '@/features/generate-comment'
-  import type { GenerationStep } from '@/features/generate-comment'
-
-  interface PostState { commentText: string; step: GenerationStep; comment: Nullable<string>; error: Nullable<string> }
+  import type { PostState } from '../model/types'
 
   const props = defineProps<{
     post: MediaPost

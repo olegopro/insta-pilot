@@ -2,18 +2,13 @@
   import { ref, computed, watch, nextTick } from 'vue'
   import { QScrollArea } from 'quasar'
   import { useSidebarActivityStore } from '@/entities/activity-log'
-  import type { SidebarActivityEntry } from '@/entities/activity-log'
+  import type { SidebarActivityEntry, QuickFilter } from '@/entities/activity-log'
   import { ButtonComponent } from '@/shared/ui/button-component'
+  import type { ScrollInfo } from '../model/types'
   import ActivitySidebarEntry from './ActivitySidebarEntry.vue'
   import SidebarResizeHandle from './SidebarResizeHandle.vue'
 
-  interface ScrollInfo {
-    verticalPosition: number
-    verticalSize: number
-    verticalContainerSize: number
-  }
-
-  const FILTER_OPTIONS: { label: string; value: 'all' | 'errors' | 'likes' | 'comments'; icon: string; color: string }[] = [
+  const FILTER_OPTIONS: { label: string; value: QuickFilter; icon: string; color: string }[] = [
     { label: 'Все', value: 'all', icon: 'apps', color: 'primary' },
     { label: 'Ошибки', value: 'errors', icon: 'error_outline', color: 'negative' },
     { label: 'Лайки', value: 'likes', icon: 'favorite_border', color: 'pink' },

@@ -17,8 +17,7 @@
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'
   import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
-
-  type SearchMode = 'hashtag' | 'location'
+  import type { SearchMode } from '../model/types'
 
   const { selectedAccount, accountSelectRef, accountStackLabel, isInitializing, initAccounts } = useAccountSelect('search_selected_account_id')
 

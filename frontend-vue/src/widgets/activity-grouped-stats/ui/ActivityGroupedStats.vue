@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { ACTION_LABELS, ACTION_ICONS, ACTION_COLORS, STATUS_CONFIG } from '@/entities/activity-log'
+  import { getActionLabel, getActionIcon, getActionColor, getStatusConfig } from '@/entities/activity-log'
   import type { ActivityStats, ActionType, ActionStatus } from '@/entities/activity-log'
   import type { Nullable } from '@/shared/lib'
   import { BadgeComponent } from '@/shared/ui/badge-component'
@@ -23,9 +23,9 @@
     if (!props.stats) return []
     return Object.entries(props.stats.byAction).map(([action, breakdown]) => ({
       action: action as ActionType,
-      label: (ACTION_LABELS as Partial<typeof ACTION_LABELS>)[action as keyof typeof ACTION_LABELS] ?? action,
-      icon: (ACTION_ICONS as Partial<typeof ACTION_ICONS>)[action as keyof typeof ACTION_ICONS] ?? 'circle',
-      color: (ACTION_COLORS as Partial<typeof ACTION_COLORS>)[action as keyof typeof ACTION_COLORS] ?? 'grey',
+      label: getActionLabel(action),
+      icon: getActionIcon(action),
+      color: getActionColor(action),
       total: breakdown.total,
       success: breakdown.success,
       error: breakdown.error,
@@ -38,12 +38,12 @@
     return Object.entries(props.stats.byStatus)
       .filter(([, count]) => count > 0)
       .map(([status, count]) => {
-        const config = (STATUS_CONFIG as Partial<typeof STATUS_CONFIG>)[status as keyof typeof STATUS_CONFIG]
+        const config = getStatusConfig(status)
         return {
           status: status as ActionStatus,
-          label: config?.label ?? status,
-          icon: config?.icon ?? 'help',
-          color: config?.color ?? 'grey',
+          label: config.label,
+          icon: config.icon,
+          color: config.color,
           count
         }
       })

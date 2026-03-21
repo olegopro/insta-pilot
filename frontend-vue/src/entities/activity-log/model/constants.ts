@@ -51,6 +51,17 @@ export const STATUS_CONFIG: Record<ActionStatus, StatusConfig> = {
   timeout:            { label: 'Таймаут', icon: 'timer_off', color: 'grey' }
 }
 
+/** Безопасный доступ к метаданным действия (action может прийти как string из API) */
+const actionLabels: Partial<Record<string, string>> = ACTION_LABELS
+const actionIcons: Partial<Record<string, string>> = ACTION_ICONS
+const actionColors: Partial<Record<string, string>> = ACTION_COLORS
+const statusConfigs: Partial<Record<string, StatusConfig>> = STATUS_CONFIG
+
+export const getActionLabel = (action: string): string => actionLabels[action] ?? action
+export const getActionIcon = (action: string): string => actionIcons[action] ?? 'circle'
+export const getActionColor = (action: string): string => actionColors[action] ?? 'grey'
+export const getStatusConfig = (status: string): StatusConfig => statusConfigs[status] ?? { label: status, icon: 'help', color: 'grey' }
+
 export const HTTP_CODE_COLOR = (code: number | null): string => {
   if (code === null) return ''
   if (code >= 200 && code < 300) return 'positive'

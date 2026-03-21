@@ -77,6 +77,8 @@ export interface ActivityFilters {
   dateTo?: string
 }
 
+export type QuickFilter = 'all' | 'errors' | 'likes' | 'comments'
+
 export interface SidebarActivityEntry {
   id: number
   accountId: number

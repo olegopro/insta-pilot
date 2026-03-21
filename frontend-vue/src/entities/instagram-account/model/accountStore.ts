@@ -17,11 +17,11 @@ export const useAccountStore = defineStore('accounts', () => {
   )
 
   const addAccountApi = useApi<ApiResponseWrapper<AddAccountResponse>, AddAccountRequest>(
-    (args) => api.post('/accounts/login', args).then((response) => response.data)
+    (payload) => api.post('/accounts/login', payload).then((response) => response.data)
   )
 
   const fetchAccountDetailsApi = useApi<ApiResponseWrapper<InstagramAccountDetailed>, number>(
-    (id) => api.get(`/accounts/${String(id)}`).then((response) => response.data)
+    (accountId) => api.get(`/accounts/${String(accountId)}`).then((response) => response.data)
   )
 
   const fetchDeviceProfilesApi = useApi<ApiResponseWrapper<DeviceProfile[]>>(
@@ -29,7 +29,7 @@ export const useAccountStore = defineStore('accounts', () => {
   )
 
   const deleteAccountApi = useApi<ApiResponseWrapper<null>, number>(
-    (id) => api.delete(`/accounts/${String(id)}`).then((response) => response.data)
+    (accountId) => api.delete(`/accounts/${String(accountId)}`).then((response) => response.data)
   )
 
   const accounts = ref<InstagramAccount[]>([])
