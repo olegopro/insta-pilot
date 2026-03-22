@@ -110,8 +110,8 @@
       .catch(() => update(() => undefined))
   }
 
-  const selectLocationHandler = (location: Location) => {
-    if (!selectedAccount.value) return
+  const selectLocationHandler = (location: Nullable<Location>) => {
+    if (!selectedAccount.value || !location) return
     selectedLocation.value = location
     searchStore.fetchLocationMedias(selectedAccount.value.id, location)
       .then(() => syncQueryParams())

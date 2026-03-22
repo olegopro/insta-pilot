@@ -12,13 +12,14 @@ export function useApi<TData, TArgs = void>(
 
   const execute = async (payload: TArgs): Promise<TData> => {
     abortController?.abort()
-    abortController = new AbortController()
+    const currentController = new AbortController()
+    abortController = currentController
     loading.value = true
     response.value = null
     error.value = null
 
     try {
-      response.value = await requestFunction(payload, abortController.signal)
+      response.value = await requestFunction(payload, currentController.signal)
       return response.value
     } catch (exception: unknown) {
       if (isCancel(exception)) {
@@ -33,7 +34,9 @@ export function useApi<TData, TArgs = void>(
       }
       throw exception
     } finally {
-      loading.value = false
+      if (abortController === currentController) {
+        loading.value = false
+      }
     }
   }
 
