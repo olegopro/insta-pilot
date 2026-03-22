@@ -19,11 +19,13 @@
     let lastIndex = 0
 
     for (const match of props.text.matchAll(HASHTAG_REGEX)) {
-      const offset = match.index!
+      const tag = match[1]
+      if (tag === undefined) continue
+      const offset = match.index
       if (offset > lastIndex) {
         result.push({ type: 'text', value: props.text.slice(lastIndex, offset) })
       }
-      result.push({ type: 'hashtag', value: match[0], tag: match[1]! })
+      result.push({ type: 'hashtag', value: match[0], tag })
       lastIndex = offset + match[0].length
     }
 
