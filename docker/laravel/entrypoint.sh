@@ -13,7 +13,7 @@ if [ ! -d vendor ]; then
 fi
 
 if [ "$#" -eq 0 ]; then
-    exec php artisan serve --host=0.0.0.0 --port=8000
+    exec php-fpm --nodaemonize
 else
     exec "$@"
 fi

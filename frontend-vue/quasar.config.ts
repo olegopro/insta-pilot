@@ -95,7 +95,7 @@ export default defineConfig((/* ctx */) => {
       open: true, // opens browser window automatically
       proxy: {
         '/api': {
-          target: 'http://laravel:8000',
+          target: 'http://nginx:8000',
           changeOrigin: true
         }
       }

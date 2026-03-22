@@ -9,6 +9,19 @@ services:
       - ./frontend-vue:/app
       - /app/node_modules
     depends_on:
+      - nginx
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./backend-laravel:/var/www/html
+      - ./docker/nginx/cache:/var/cache/nginx
+    depends_on:
       - laravel
     restart: unless-stopped
 
@@ -16,8 +29,6 @@ services:
     build:
       context: .
       dockerfile: docker/laravel/Dockerfile
-    ports:
-      - 8000:8000
     volumes:
       - ./backend-laravel:/var/www/html
     environment:
@@ -43,7 +54,9 @@ services:
       - '8001:8001'
     volumes:
       - ./python-service:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    # --workers 1: asyncio.Lock живёт в памяти одного процесса; несколько воркеров
+    # не делят Lock между собой — один аккаунт мог бы работать параллельно в разных воркерах
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --workers 1
 
   postgres:
     image: postgres:16-alpine
@@ -102,3 +115,4 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+

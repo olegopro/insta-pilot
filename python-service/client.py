@@ -12,8 +12,13 @@ _client_cache: dict[str, tuple[Client, float]] = {}
 # Время жизни записи в кеше (секунды)
 _CLIENT_CACHE_TTL = 300
 
-# Максимальное число одновременно хранимых клиентов
-_CLIENT_CACHE_MAX = 5
+# Максимальное число одновременно хранимых клиентов (= кол-во аккаунтов в сервисе)
+_CLIENT_CACHE_MAX = 20
+
+
+def session_key(session_data: str) -> str:
+    """MD5-хэш session_data — стабильный ключ для кеша и локов."""
+    return hashlib.md5(session_data.encode()).hexdigest()
 
 
 def _make_client(session_data: str, proxy: Optional[str] = None) -> Client:
@@ -23,7 +28,7 @@ def _make_client(session_data: str, proxy: Optional[str] = None) -> Client:
     Кеш ограничен по размеру (_CLIENT_CACHE_MAX) и времени жизни (_CLIENT_CACHE_TTL).
     При переполнении вытесняется самая старая запись.
     """
-    cache_key = hashlib.md5(session_data.encode()).hexdigest()
+    cache_key = session_key(session_data)
     now = time.time()
 
     # Возвращаем из кеша, если запись ещё не устарела

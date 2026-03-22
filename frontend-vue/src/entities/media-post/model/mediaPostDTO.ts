@@ -7,7 +7,7 @@ import type {
   CommentApi
 } from './apiTypes'
 import type { MediaPost, MediaUser, MediaResource, InstagramUserDetail, CommentUser, PostComment } from './types'
-import { proxyImageUrl } from '@/shared/lib'
+import { proxyMediaUrl, proxyAvatarUrl } from '@/shared/lib'
 
 class MediaPostDTO {
   toLocalUser(data: MediaUserApi): MediaUser {
@@ -15,37 +15,39 @@ class MediaPostDTO {
       pk: data.pk,
       username: data.username,
       fullName: data.full_name,
-      profilePicUrl: proxyImageUrl(data.profile_pic_url)
+      profilePicUrl: proxyAvatarUrl(data.profile_pic_url)
     }
   }
 
-  toLocalResource(data: MediaResourceApi): MediaResource {
+  toLocalResource(data: MediaResourceApi, accountId: number): MediaResource {
     return {
       pk: data.pk,
       mediaType: data.media_type,
-      thumbnailUrl: data.thumbnail_url,
-      videoUrl: data.video_url,
+      thumbnailUrl: proxyMediaUrl(data.thumbnail_url, accountId),
+      videoUrl: proxyMediaUrl(data.video_url, accountId),
+      originalThumbnailUrl: data.thumbnail_url,
       width: data.width,
       height: data.height
     }
   }
 
-  toLocalPost(data: MediaPostApi): MediaPost {
+  toLocalPost(data: MediaPostApi, accountId: number): MediaPost {
     return {
       pk: data.pk,
       id: data.id,
       code: data.code,
       takenAt: data.taken_at,
       mediaType: data.media_type,
-      thumbnailUrl: data.thumbnail_url,
-      videoUrl: data.video_url,
+      thumbnailUrl: proxyMediaUrl(data.thumbnail_url, accountId),
+      videoUrl: proxyMediaUrl(data.video_url, accountId),
+      originalThumbnailUrl: data.thumbnail_url,
       captionText: data.caption_text,
       likeCount: data.like_count,
       commentCount: data.comment_count,
       viewCount: data.view_count,
       hasLiked: data.has_liked,
       user: this.toLocalUser(data.user),
-      resources: data.resources.map((resource) => this.toLocalResource(resource)),
+      resources: data.resources.map((resource) => this.toLocalResource(resource, accountId)),
       locationName: data.location_name,
       locationPk: data.location_pk,
       thumbnailWidth: data.thumbnail_width,
@@ -60,7 +62,7 @@ class MediaPostDTO {
       pk: data.pk,
       username: data.username,
       fullName: data.full_name,
-      profilePicUrl: proxyImageUrl(data.profile_pic_url),
+      profilePicUrl: proxyAvatarUrl(data.profile_pic_url),
       biography: data.biography,
       externalUrl: data.external_url,
       isPrivate: data.is_private,
@@ -71,8 +73,8 @@ class MediaPostDTO {
     }
   }
 
-  toLocal(data: MediaPostApi[]): MediaPost[] {
-    return data.map((post) => this.toLocalPost(post))
+  toLocal(data: MediaPostApi[], accountId: number): MediaPost[] {
+    return data.map((post) => this.toLocalPost(post, accountId))
   }
 
   toLocalCommentUser(data: CommentUserApi): CommentUser {
@@ -80,7 +82,7 @@ class MediaPostDTO {
       pk: data.pk,
       username: data.username,
       fullName: data.full_name,
-      profilePicUrl: proxyImageUrl(data.profile_pic_url)
+      profilePicUrl: proxyAvatarUrl(data.profile_pic_url)
     }
   }
 

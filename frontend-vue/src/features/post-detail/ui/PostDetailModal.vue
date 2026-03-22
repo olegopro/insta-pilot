@@ -38,9 +38,9 @@
   const generateHandler = async () => {
     let url: string | null | undefined
     if (props.post.mediaType === MEDIA_TYPE.CAROUSEL && props.post.resources.length > 0) {
-      url = props.post.resources[carouselSlide.value]?.thumbnailUrl
+      url = props.post.resources[carouselSlide.value]?.originalThumbnailUrl
     } else {
-      url = props.post.thumbnailUrl
+      url = props.post.originalThumbnailUrl
     }
 
     if (!url) return

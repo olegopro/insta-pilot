@@ -74,14 +74,14 @@ export const useSearchStore = defineStore('search', () => {
     searchResults.value = []
     searchCursor.value = null
     const { data } = await searchHashtagApi.execute({ accountId, tag, ...(amount ? { amount } : {}) })
-    searchResults.value = mediaPostDTO.toLocal(data.items)
+    searchResults.value = mediaPostDTO.toLocal(data.items, accountId)
     searchCursor.value = data.next_max_id ?? null
   }
 
   const loadMoreHashtag = async (accountId: number, tag: string) => {
     if (!searchCursor.value) return
     const { data } = await loadMoreHashtagApi.execute({ accountId, tag, nextMaxId: searchCursor.value })
-    searchResults.value = [...searchResults.value, ...mediaPostDTO.toLocal(data.items)]
+    searchResults.value = [...searchResults.value, ...mediaPostDTO.toLocal(data.items, accountId)]
     searchCursor.value = data.next_max_id ?? null
   }
 
@@ -97,14 +97,14 @@ export const useSearchStore = defineStore('search', () => {
     searchResults.value = []
     searchCursor.value = null
     const { data } = await fetchLocationMediasApi.execute({ accountId, locationPk: location.pk, ...(amount ? { amount } : {}) })
-    searchResults.value = mediaPostDTO.toLocal(data.items)
+    searchResults.value = mediaPostDTO.toLocal(data.items, accountId)
     searchCursor.value = data.next_max_id ?? null
   }
 
   const loadMoreLocationMedias = async (accountId: number, locationPk: number) => {
     if (!searchCursor.value) return
     const { data } = await loadMoreLocationMediasApi.execute({ accountId, locationPk, nextMaxId: searchCursor.value })
-    searchResults.value = [...searchResults.value, ...mediaPostDTO.toLocal(data.items)]
+    searchResults.value = [...searchResults.value, ...mediaPostDTO.toLocal(data.items, accountId)]
     searchCursor.value = data.next_max_id ?? null
   }
 

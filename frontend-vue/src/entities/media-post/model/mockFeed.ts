@@ -9,6 +9,7 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 1,
     thumbnailUrl: 'https://picsum.photos/seed/insta1/600/750',
     videoUrl: null,
+    originalThumbnailUrl: 'https://picsum.photos/seed/insta1/600/750',
     thumbnailWidth: 600,
     thumbnailHeight: 750,
     videoWidth: null,
@@ -36,6 +37,7 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 8,
     thumbnailUrl: 'https://picsum.photos/seed/insta2/600/600',
     videoUrl: null,
+    originalThumbnailUrl: 'https://picsum.photos/seed/insta2/600/600',
     thumbnailWidth: 600,
     thumbnailHeight: 600,
     videoWidth: null,
@@ -52,9 +54,9 @@ export const MOCK_FEED: MediaPost[] = [
       profilePicUrl: 'https://picsum.photos/seed/avatar2/100/100'
     },
     resources: [
-      { pk: 'r1', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2a/600/600', videoUrl: null, width: 600, height: 600 },
-      { pk: 'r2', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2b/600/600', videoUrl: null, width: 600, height: 600 },
-      { pk: 'r3', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2c/600/600', videoUrl: null, width: 600, height: 600 }
+      { pk: 'r1', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2a/600/600', videoUrl: null, originalThumbnailUrl: 'https://picsum.photos/seed/insta2a/600/600', width: 600, height: 600 },
+      { pk: 'r2', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2b/600/600', videoUrl: null, originalThumbnailUrl: 'https://picsum.photos/seed/insta2b/600/600', width: 600, height: 600 },
+      { pk: 'r3', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2c/600/600', videoUrl: null, originalThumbnailUrl: 'https://picsum.photos/seed/insta2c/600/600', width: 600, height: 600 }
     ],
     locationName: 'Barcelona, Spain',
     locationPk: 225951957
@@ -67,6 +69,7 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 1,
     thumbnailUrl: 'https://picsum.photos/seed/insta3/600/800',
     videoUrl: null,
+    originalThumbnailUrl: 'https://picsum.photos/seed/insta3/600/800',
     thumbnailWidth: 600,
     thumbnailHeight: 800,
     videoWidth: null,
@@ -94,6 +97,7 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 2,
     thumbnailUrl: 'https://picsum.photos/seed/insta4/600/600',
     videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    originalThumbnailUrl: 'https://picsum.photos/seed/insta4/600/600',
     thumbnailWidth: 720,
     thumbnailHeight: 1280,
     videoWidth: 720,
@@ -121,6 +125,7 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 1,
     thumbnailUrl: 'https://picsum.photos/seed/insta5/600/900',
     videoUrl: null,
+    originalThumbnailUrl: 'https://picsum.photos/seed/insta5/600/900',
     thumbnailWidth: 600,
     thumbnailHeight: 900,
     videoWidth: null,
@@ -148,6 +153,7 @@ export const MOCK_FEED: MediaPost[] = [
     mediaType: 8,
     thumbnailUrl: 'https://picsum.photos/seed/insta6/600/600',
     videoUrl: null,
+    originalThumbnailUrl: 'https://picsum.photos/seed/insta6/600/600',
     thumbnailWidth: 600,
     thumbnailHeight: 600,
     videoWidth: null,
@@ -164,8 +170,8 @@ export const MOCK_FEED: MediaPost[] = [
       profilePicUrl: 'https://picsum.photos/seed/avatar6/100/100'
     },
     resources: [
-      { pk: 'r4', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6a/600/600', videoUrl: null, width: 600, height: 600 },
-      { pk: 'r5', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6b/600/600', videoUrl: null, width: 600, height: 600 }
+      { pk: 'r4', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6a/600/600', videoUrl: null, originalThumbnailUrl: 'https://picsum.photos/seed/insta6a/600/600', width: 600, height: 600 },
+      { pk: 'r5', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6b/600/600', videoUrl: null, originalThumbnailUrl: 'https://picsum.photos/seed/insta6b/600/600', width: 600, height: 600 }
     ],
     locationName: null,
     locationPk: null

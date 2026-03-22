@@ -12,6 +12,7 @@ export interface MediaResource {
   mediaType: number
   thumbnailUrl: Nullable<string>
   videoUrl: Nullable<string>
+  originalThumbnailUrl: Nullable<string>
   width: Nullable<number>
   height: Nullable<number>
 }
@@ -24,6 +25,7 @@ export interface MediaPost {
   mediaType: number
   thumbnailUrl: Nullable<string>
   videoUrl: Nullable<string>
+  originalThumbnailUrl: Nullable<string>
   captionText: string
   likeCount: number
   commentCount: number
