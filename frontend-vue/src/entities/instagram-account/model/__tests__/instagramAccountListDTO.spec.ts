@@ -4,19 +4,19 @@ import type { InstagramAccount } from '@/entities/instagram-account/model/types'
 
 const makeAccount = (overrides: Partial<InstagramAccount> = {}): InstagramAccount => ({
   id: 1,
-  instagram_login: 'testuser',
-  full_name: 'Test Account',
-  profile_pic_url: null,
+  instagramLogin: 'testuser',
+  fullName: 'Test Account',
+  profilePicUrl: null,
   proxy: null,
-  device_profile_id: null,
-  device_model_name: 'Samsung Galaxy S24 Ultra',
-  is_active: true,
-  created_at: '2026-01-01T00:00:00Z',
+  deviceProfileId: null,
+  deviceModelName: 'Samsung Galaxy S24 Ultra',
+  isActive: true,
+  createdAt: '2026-01-01T00:00:00Z',
   ...overrides
 })
 
 describe('instagramAccountListDTO.toLocal', () => {
-  it('маппит snake_case поля в camelCase', () => {
+  it('маппит поля в InstagramAccountRowModel', () => {
     const result = instagramAccountListDTO.toLocal([makeAccount()])
 
     expect(result[0]).toMatchObject({
@@ -34,7 +34,7 @@ describe('instagramAccountListDTO.toLocal', () => {
   })
 
   it('маппит несколько аккаунтов', () => {
-    const accounts = [makeAccount({ id: 1 }), makeAccount({ id: 2, instagram_login: 'second' })]
+    const accounts = [makeAccount({ id: 1 }), makeAccount({ id: 2, instagramLogin: 'second' })]
 
     const result = instagramAccountListDTO.toLocal(accounts)
 

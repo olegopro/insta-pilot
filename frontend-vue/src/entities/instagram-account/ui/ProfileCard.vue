@@ -10,8 +10,8 @@
     <CardSectionComponent class="row items-center q-gutter-md">
       <q-avatar size="64px">
         <img
-          v-if="account.profile_pic_url"
-          :src="account.profile_pic_url"
+          v-if="account.profilePicUrl"
+          :src="account.profilePicUrl"
           alt="avatar"
         >
         <q-icon
@@ -22,10 +22,10 @@
       </q-avatar>
       <div>
         <div class="text-h6">
-          {{ account.full_name ?? account.instagram_login }}
+          {{ account.fullName ?? account.instagramLogin }}
         </div>
         <div class="text-caption text-grey">
-          @{{ account.instagram_login }}
+          @{{ account.instagramLogin }}
         </div>
       </div>
     </CardSectionComponent>

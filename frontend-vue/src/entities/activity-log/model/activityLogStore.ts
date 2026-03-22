@@ -4,56 +4,7 @@ import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { ActivityLog, ActivityStats, AccountActivitySummary, ActivityFilters } from './types'
 import type { ActivityLogsResponseApi, ActivityStatsApi, AccountActivitySummaryApi, ActivityLogApi } from './apiTypes'
-
-function mapLog(item: ActivityLogApi): ActivityLog {
-  return {
-    id:                 item.id,
-    instagramAccountId: item.instagram_account_id,
-    instagramLogin:     item.instagram_login,
-    userId:             item.user_id,
-    action:             item.action,
-    status:             item.status,
-    httpCode:           item.http_code,
-    endpoint:           item.endpoint,
-    requestPayload:     item.request_payload,
-    responseSummary:    item.response_summary,
-    errorMessage:       item.error_message,
-    errorCode:          item.error_code,
-    durationMs:         item.duration_ms,
-    createdAt:          item.created_at
-  }
-}
-
-function mapStats(data: ActivityStatsApi): ActivityStats {
-  return {
-    total:         data.total,
-    today:         data.today,
-    successRate:   data.success_rate,
-    byAction:      data.by_action,
-    byStatus:      data.by_status,
-    avgDurationMs: data.avg_duration_ms,
-    lastError:     data.last_error ? {
-      action:       data.last_error.action,
-      errorMessage: data.last_error.error_message,
-      errorCode:    data.last_error.error_code,
-      createdAt:    data.last_error.created_at
-    } : null
-  }
-}
-
-function mapSummary(item: AccountActivitySummaryApi): AccountActivitySummary {
-  return {
-    accountId:       item.account_id,
-    instagramLogin:  item.instagram_login,
-    totalActions:    item.total_actions,
-    todayActions:    item.today_actions,
-    errorCountToday: item.error_count_today,
-    successRate:     item.success_rate,
-    lastActivityAt:  item.last_activity_at,
-    lastError:       item.last_error,
-    lastErrorAt:     item.last_error_at
-  }
-}
+import activityLogDTO from './activityLogDTO'
 
 export const useActivityLogStore = defineStore('activityLog', () => {
   const logs = ref<ActivityLog[]>([])
@@ -98,11 +49,12 @@ export const useActivityLogStore = defineStore('activityLog', () => {
 
   const fetchLogs = async (accountId: number, filters?: ActivityFilters) => {
     const { data } = await fetchLogsApi.execute({ accountId, ...(filters ? { filters } : {}) })
-    logs.value = data.items.map(mapLog)
-    hasMoreBefore.value = data.has_more_before
-    hasMoreAfter.value = data.has_more_after
-    totalCount.value = data.total
-    focusedId.value = data.focused_id
+    const result = activityLogDTO.toLocalLogsResponse(data)
+    logs.value = result.items
+    hasMoreBefore.value = result.hasMoreBefore
+    hasMoreAfter.value = result.hasMoreAfter
+    totalCount.value = result.total
+    focusedId.value = result.focusedId
   }
 
   const loadOlderLogs = async (accountId: number, filters?: ActivityFilters) => {
@@ -110,23 +62,24 @@ export const useActivityLogStore = defineStore('activityLog', () => {
     if (!lastId || !hasMoreBefore.value || fetchLogsApi.loading.value) return
 
     const { data } = await fetchLogsApi.execute({ accountId, ...(filters ? { filters } : {}), beforeId: lastId })
-    const older = data.items.map(mapLog)
-    logs.value = [...logs.value, ...older]
-    hasMoreBefore.value = data.has_more_before
-    totalCount.value = data.total
+    const result = activityLogDTO.toLocalLogsResponse(data)
+    logs.value = [...logs.value, ...result.items]
+    hasMoreBefore.value = result.hasMoreBefore
+    totalCount.value = result.total
   }
 
   const loadAroundId = async (accountId: number, aroundId: number) => {
     const { data } = await fetchLogsApi.execute({ accountId, aroundId })
-    logs.value = data.items.reverse().map(mapLog)
-    hasMoreBefore.value = data.has_more_before
-    hasMoreAfter.value = data.has_more_after
-    totalCount.value = data.total
-    focusedId.value = data.focused_id
+    const result = activityLogDTO.toLocalLogsResponse(data)
+    logs.value = result.items.reverse()
+    hasMoreBefore.value = result.hasMoreBefore
+    hasMoreAfter.value = result.hasMoreAfter
+    totalCount.value = result.total
+    focusedId.value = result.focusedId
   }
 
   const appendNewLog = (item: ActivityLogApi) => {
-    logs.value.unshift(mapLog(item))
+    logs.value.unshift(activityLogDTO.toLocal(item))
     totalCount.value += 1
   }
 
@@ -140,12 +93,12 @@ export const useActivityLogStore = defineStore('activityLog', () => {
 
   const fetchStats = async (accountId: number) => {
     const { data } = await fetchStatsApi.execute(accountId)
-    stats.value = mapStats(data)
+    stats.value = activityLogDTO.toLocalStats(data)
   }
 
   const fetchSummary = async () => {
     const { data } = await fetchSummaryApi.execute()
-    summary.value = data.map(mapSummary)
+    summary.value = activityLogDTO.toLocalSummaryList(data)
   }
 
   const fetchLogsLoading = computed(() => fetchLogsApi.loading.value)

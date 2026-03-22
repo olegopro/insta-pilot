@@ -9,9 +9,13 @@ vi.mock('vue-router', () => ({
   useRouter: vi.fn()
 }))
 
-vi.mock('@/shared/lib', () => ({
-  notifyError: vi.fn()
-}))
+vi.mock('@/shared/lib', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...(actual as Record<string, unknown>),
+    notifyError: vi.fn()
+  }
+})
 
 import LoginForm from '../LoginForm.vue'
 import { useAuthStore } from '@/entities/user'
@@ -34,9 +38,9 @@ const globalStubs = {
     emits: ['submit']
   },
   InputComponent: {
-    props: ['modelValue', 'type', 'labelText'],
+    props: ['modelValue', 'type', 'labelText', 'autocomplete', 'outlined', 'lazyRules', 'rules'],
     emits: ['update:modelValue'],
-    template: '<input :type="type" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />'
+    template: '<input :type="type || \'text\'" :data-label="labelText" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />'
   },
   ButtonComponent: {
     props: ['loading', 'type'],
@@ -56,7 +60,8 @@ describe('LoginForm', () => {
     const wrapper = mount(LoginForm, { global: { stubs: globalStubs } })
 
     const inputs = wrapper.findAll('input')
-    expect(inputs.some((input) => input.attributes('type') === 'email')).toBe(true)
+    expect(inputs).toHaveLength(2)
+    expect(inputs.some((input) => input.attributes('data-label') === 'Email')).toBe(true)
     expect(inputs.some((input) => input.attributes('type') === 'password')).toBe(true)
   })
 
@@ -66,8 +71,9 @@ describe('LoginForm', () => {
 
     const wrapper = mount(LoginForm, { global: { stubs: globalStubs } })
 
-    await wrapper.find('input[type="email"]').setValue('test@example.com')
-    await wrapper.find('input[type="password"]').setValue('secret123')
+    const inputs = wrapper.findAll('input')
+    await inputs[0]?.setValue('test@example.com')
+    await inputs[1]?.setValue('secret123')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 

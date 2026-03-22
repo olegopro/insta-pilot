@@ -2,18 +2,20 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import { api } from '@/boot/axios'
+import type { UserApi } from './apiTypes'
 import type { User } from './types'
+import userDTO from './userDTO'
 
 export const useAdminUsersStore = defineStore('adminUsers', () => {
-  const listApi = useApi<ApiResponseWrapper<User[]>>(
+  const listApi = useApi<ApiResponseWrapper<UserApi[]>>(
     () => api.get('/admin/users').then((response) => response.data)
   )
 
-  const toggleActiveApi = useApi<ApiResponseWrapper<User>, { id: number }>(
+  const toggleActiveApi = useApi<ApiResponseWrapper<UserApi>, { id: number }>(
     ({ id }) => api.patch(`/admin/users/${String(id)}/toggle-active`).then((response) => response.data)
   )
 
-  const updateRoleApi = useApi<ApiResponseWrapper<User>, { id: number; role: string }>(
+  const updateRoleApi = useApi<ApiResponseWrapper<UserApi>, { id: number; role: string }>(
     ({ id, role }) => api.patch(`/admin/users/${String(id)}/role`, { role }).then((response) => response.data)
   )
 
@@ -21,7 +23,7 @@ export const useAdminUsersStore = defineStore('adminUsers', () => {
 
   const fetchUsers = async () => {
     const { data } = await listApi.execute()
-    users.value = data
+    users.value = userDTO.toLocalList(data)
   }
   const fetchUsersLoading = computed(() => listApi.loading.value)
 

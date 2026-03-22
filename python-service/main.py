@@ -31,6 +31,7 @@ from helpers import (
     _fetch_sections,
     _instagram_response_debug,
     _paginate_feed,
+    _serialize_comment,
 )
 from schemas import (
     AccountInfoResponse,
@@ -38,6 +39,10 @@ from schemas import (
     CommentResponse,
     FeedRequest,
     FeedResponse,
+    FetchCommentsRequest,
+    FetchCommentsResponse,
+    FetchCommentRepliesRequest,
+    FetchCommentRepliesResponse,
     LoginRequest,
     LoginResponse,
     MediaLikeRequest,
@@ -456,6 +461,85 @@ def search_locations(data: SearchLocationsRequest):
         return JSONResponse(
             status_code=error_to_http_status(code),
             content=SearchLocationsResponse(success=False, error=str(e), error_code=code).model_dump(),
+        )
+
+
+@app.post("/media/comments")
+def fetch_media_comments(data: FetchCommentsRequest):
+    """
+    Загружает корневые комментарии к посту с поддержкой пагинации.
+
+    Использует приватный эндпоинт Instagram с threading-режимом:
+    каждый комментарий содержит child_comment_count и preview_child_comments.
+    Курсор пагинации — next_min_id (не max_id!), движение от новых к старым.
+    """
+    try:
+        cl = _make_client(data.session_data)
+
+        params = {"can_support_threading": "true"}
+        if data.min_id:
+            params["min_id"] = data.min_id
+
+        result = cl.private_request(
+            f"media/{data.media_pk}/comments/",
+            params=params,
+        )
+
+        comments = [_serialize_comment(raw) for raw in (result.get("comments") or [])]
+
+        next_min_id = None
+        if result.get("has_more_headload_comments"):
+            next_min_id = result.get("next_min_id")
+
+        return FetchCommentsResponse(
+            success=True,
+            comments=comments,
+            next_min_id=next_min_id,
+            comment_count=result.get("comment_count", 0),
+        )
+    except Exception as e:
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content={"success": False, "error": str(e), "error_code": code},
+        )
+
+
+@app.post("/media/comments/replies")
+def fetch_comment_replies(data: FetchCommentRepliesRequest):
+    """
+    Загружает дочерние комментарии (replies) конкретного комментария.
+    Курсор пагинации — next_max_child_cursor.
+    """
+    try:
+        cl = _make_client(data.session_data)
+
+        params = {}
+        if data.min_id:
+            params["min_id"] = data.min_id
+
+        result = cl.private_request(
+            f"media/{data.media_pk}/comments/{data.comment_pk}/child_comments/",
+            params=params,
+        )
+
+        child_comments = [_serialize_comment(raw) for raw in (result.get("child_comments") or [])]
+
+        next_min_id = None
+        if result.get("has_more_tail_child_comments"):
+            next_min_id = result.get("next_max_child_cursor")
+
+        return FetchCommentRepliesResponse(
+            success=True,
+            child_comments=child_comments,
+            next_min_id=next_min_id,
+            child_comment_count=result.get("child_comment_count", 0),
+        )
+    except Exception as e:
+        code = error_to_code(e)
+        return JSONResponse(
+            status_code=error_to_http_status(code),
+            content={"success": False, "error": str(e), "error_code": code},
         )
 
 

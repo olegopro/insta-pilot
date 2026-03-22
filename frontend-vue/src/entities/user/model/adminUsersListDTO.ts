@@ -1,5 +1,5 @@
-import type { User } from '@/entities/user/model/types'
-import type { UserRowModel } from '@/entities/user/model/adminUsersTableColumns'
+import type { User } from './types'
+import type { UserRowModel } from './adminUsersTableColumns'
 
 class AdminUsersListDTO {
   toLocal(data: User[]): UserRowModel[] {
@@ -8,8 +8,8 @@ class AdminUsersListDTO {
       name: item.name,
       email: item.email,
       role: item.roles[0]?.name ?? 'user',
-      isActive: item.is_active,
-      createdAt: item.created_at
+      isActive: item.isActive,
+      createdAt: item.createdAt
     }))
   }
 }

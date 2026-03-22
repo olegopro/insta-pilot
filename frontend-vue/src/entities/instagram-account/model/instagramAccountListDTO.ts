@@ -1,15 +1,15 @@
-import type { InstagramAccount } from '@/entities/instagram-account/model/types'
-import type { InstagramAccountRowModel } from '@/entities/instagram-account/model/instagramAccountTableColumns'
+import type { InstagramAccount } from './types'
+import type { InstagramAccountRowModel } from './instagramAccountTableColumns'
 
 class InstagramAccountListDTO {
   toLocal(data: InstagramAccount[]): InstagramAccountRowModel[] {
     return data.map((item) => ({
       id: item.id,
-      instagramLogin: item.instagram_login,
-      fullName: item.full_name,
-      deviceModelName: item.device_model_name,
-      isActive: item.is_active,
-      createdAt: item.created_at
+      instagramLogin: item.instagramLogin,
+      fullName: item.fullName,
+      deviceModelName: item.deviceModelName,
+      isActive: item.isActive,
+      createdAt: item.createdAt
     }))
   }
 }

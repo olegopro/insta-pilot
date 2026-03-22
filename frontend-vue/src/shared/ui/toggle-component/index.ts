@@ -1,1 +1,1 @@
-export { default as ToggleComponent } from '@/shared/ui/toggle-component/ToggleComponent.vue'
+export { default as ToggleComponent, type ToggleComponentProps } from '@/shared/ui/toggle-component/ToggleComponent.vue'

@@ -1,1 +1,1 @@
-export { default as SelectComponent } from '@/shared/ui/select-component/SelectComponent.vue'
+export { default as SelectComponent, type SelectComponentProps } from '@/shared/ui/select-component/SelectComponent.vue'

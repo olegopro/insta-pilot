@@ -4,27 +4,28 @@ import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { Nullable } from '@/shared/lib'
 import type {
-  InstagramAccount,
-  InstagramAccountDetailed,
-  AddAccountRequest,
-  AddAccountResponse,
-  DeviceProfile
-} from '@/entities/instagram-account/model/types'
+  InstagramAccountApi,
+  InstagramAccountDetailedApi,
+  AddAccountResponseApi,
+  DeviceProfileApi
+} from './apiTypes'
+import type { InstagramAccount, InstagramAccountDetailed, AddAccountRequest, DeviceProfile } from './types'
+import instagramAccountDTO from './instagramAccountDTO'
 
 export const useAccountStore = defineStore('accounts', () => {
-  const fetchAccountsApi = useApi<ApiResponseWrapper<InstagramAccount[]>>(
+  const fetchAccountsApi = useApi<ApiResponseWrapper<InstagramAccountApi[]>>(
     () => api.get('/accounts/').then((response) => response.data)
   )
 
-  const addAccountApi = useApi<ApiResponseWrapper<AddAccountResponse>, AddAccountRequest>(
-    (payload) => api.post('/accounts/login', payload).then((response) => response.data)
+  const addAccountApi = useApi<ApiResponseWrapper<AddAccountResponseApi>, AddAccountRequest>(
+    (payload) => api.post('/accounts/login', instagramAccountDTO.toApiRequest(payload)).then((response) => response.data)
   )
 
-  const fetchAccountDetailsApi = useApi<ApiResponseWrapper<InstagramAccountDetailed>, number>(
+  const fetchAccountDetailsApi = useApi<ApiResponseWrapper<InstagramAccountDetailedApi>, number>(
     (accountId) => api.get(`/accounts/${String(accountId)}`).then((response) => response.data)
   )
 
-  const fetchDeviceProfilesApi = useApi<ApiResponseWrapper<DeviceProfile[]>>(
+  const fetchDeviceProfilesApi = useApi<ApiResponseWrapper<DeviceProfileApi[]>>(
     () => api.get('/accounts/device-profiles').then((response) => response.data)
   )
 
@@ -38,7 +39,7 @@ export const useAccountStore = defineStore('accounts', () => {
 
   const fetchAccounts = async () => {
     const { data } = await fetchAccountsApi.execute()
-    accounts.value = data
+    accounts.value = instagramAccountDTO.toLocalList(data)
   }
   const fetchAccountsLoading = computed(() => fetchAccountsApi.loading.value)
 
@@ -48,13 +49,13 @@ export const useAccountStore = defineStore('accounts', () => {
 
   const fetchAccountDetails = async (id: number) => {
     const { data } = await fetchAccountDetailsApi.execute(id)
-    accountDetail.value = data
+    accountDetail.value = instagramAccountDTO.toLocalDetailed(data)
   }
   const fetchAccountDetailsLoading = computed(() => fetchAccountDetailsApi.loading.value)
 
   const fetchDeviceProfiles = async () => {
     const { data } = await fetchDeviceProfilesApi.execute()
-    deviceProfiles.value = data
+    deviceProfiles.value = instagramAccountDTO.toLocalDeviceProfiles(data)
   }
   const fetchDeviceProfilesLoading = computed(() => fetchDeviceProfilesApi.loading.value)
 

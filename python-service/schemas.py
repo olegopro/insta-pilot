@@ -137,3 +137,34 @@ class SearchLocationsResponse(BaseModel):
     error: Optional[str] = None
     error_code: Optional[str] = None
     debug_info: Optional[dict] = None
+
+
+# ─── Comments ─────────────────────────────────────────────────────────────────
+
+class FetchCommentsRequest(SessionRequest):
+    media_pk: str
+    min_id: Optional[str] = None
+
+
+class FetchCommentsResponse(BaseModel):
+    success: bool
+    comments: List[dict] = []
+    next_min_id: Optional[str] = None
+    comment_count: int = 0
+    error: Optional[str] = None
+    error_code: Optional[str] = None
+
+
+class FetchCommentRepliesRequest(SessionRequest):
+    media_pk: str
+    comment_pk: str
+    min_id: Optional[str] = None
+
+
+class FetchCommentRepliesResponse(BaseModel):
+    success: bool
+    child_comments: List[dict] = []
+    next_min_id: Optional[str] = None
+    child_comment_count: int = 0
+    error: Optional[str] = None
+    error_code: Optional[str] = None

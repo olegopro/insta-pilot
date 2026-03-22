@@ -6,15 +6,15 @@ const makeUser = (overrides: Partial<User> = {}): User => ({
   id: 1,
   name: 'Test User',
   email: 'test@example.com',
-  is_active: true,
-  roles: [{ id: 1, name: 'user', guard_name: 'web' }],
-  created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-01T00:00:00Z',
+  isActive: true,
+  roles: [{ id: 1, name: 'user', guardName: 'web' }],
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
   ...overrides
 })
 
 describe('adminUsersListDTO.toLocal', () => {
-  it('маппит snake_case поля в camelCase', () => {
+  it('маппит поля в UserRowModel', () => {
     const result = adminUsersListDTO.toLocal([makeUser()])
 
     expect(result[0]).toMatchObject({
@@ -27,7 +27,7 @@ describe('adminUsersListDTO.toLocal', () => {
   })
 
   it('берёт первую роль из массива roles', () => {
-    const user = makeUser({ roles: [{ id: 2, name: 'admin', guard_name: 'web' }] })
+    const user = makeUser({ roles: [{ id: 2, name: 'admin', guardName: 'web' }] })
 
     const result = adminUsersListDTO.toLocal([user])
 

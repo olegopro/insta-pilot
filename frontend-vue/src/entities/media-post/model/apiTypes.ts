@@ -62,6 +62,37 @@ export interface SearchLocationsResponseApi {
   locations: LocationApi[]
 }
 
+export interface CommentUserApi {
+  pk: string
+  username: string
+  full_name: string
+  profile_pic_url: Nullable<string>
+}
+
+export interface CommentApi {
+  pk: string
+  text: string
+  created_at_utc: string
+  like_count: number
+  has_liked: boolean
+  replied_to_comment_id: Nullable<string>
+  child_comment_count: number
+  user: CommentUserApi
+  preview_child_comments: CommentApi[]
+}
+
+export interface FetchCommentsResponseApi {
+  comments: CommentApi[]
+  next_min_id: Nullable<string>
+  comment_count: number
+}
+
+export interface FetchCommentRepliesResponseApi {
+  child_comments: CommentApi[]
+  next_min_id: Nullable<string>
+  child_comment_count: number
+}
+
 export interface SendCommentResponseApi {
   comment_pk: Nullable<string>
 }

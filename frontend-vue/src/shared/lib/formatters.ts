@@ -39,6 +39,20 @@ export const formatDuration = (durationMs: Nullable<number>): { text: string; co
   return { text: `${String(durationMs)}ms`, color: '' }
 }
 
+export const formatRelativeTime = (iso: string): string => {
+  const diffMs = Date.now() - new Date(iso).getTime()
+  const diffMin = Math.floor(diffMs / 60_000)
+  if (diffMin < 1) return 'только что'
+  if (diffMin < 60) return `${String(diffMin)} мин.`
+  const diffH = Math.floor(diffMin / 60)
+  if (diffH < 24) return `${String(diffH)} ч.`
+  const diffD = Math.floor(diffH / 24)
+  if (diffD < 7) return `${String(diffD)} д.`
+  const diffW = Math.floor(diffD / 7)
+  if (diffW < 5) return `${String(diffW)} нед.`
+  return formatDate(iso)
+}
+
 export const formatDateRu = (date: string): string => {
   if (!date) return ''
   return `${date.slice(8, 10)}.${date.slice(5, 7)}.${date.slice(0, 4)}`

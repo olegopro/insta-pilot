@@ -83,7 +83,7 @@
     feedStore.fetchUserInfo(selectedAccount.value.id, post.user.pk)
       .then(() => userModal.open())
       .catch(() => notifyError('Не удалось загрузить профиль'))
-      .finally(() => { loadingUserPk.value = null })
+      .finally(() => loadingUserPk.value = null)
   }
 
   onMounted(() => {

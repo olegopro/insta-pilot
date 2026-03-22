@@ -2,13 +2,15 @@ import { computed, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
-import type { User, LoginRequest, AuthResponse } from '@/entities/user/model/types'
+import type { UserApi, LoginRequestApi, AuthResponseApi } from './apiTypes'
+import type { User, LoginRequest } from './types'
 import type { Nullable } from '@/shared/lib'
+import userDTO from './userDTO'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = shallowRef<Nullable<User>>(null)
 
-  const loginApi = useApi<ApiResponseWrapper<AuthResponse>, LoginRequest>(
+  const loginApi = useApi<ApiResponseWrapper<AuthResponseApi>, LoginRequestApi>(
     (credentials) => api.post('/auth/login', credentials).then((response) => response.data)
   )
 
@@ -16,7 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
     () => api.post('/auth/logout').then((response) => response.data)
   )
 
-  const meApi = useApi<ApiResponseWrapper<User>>(
+  const meApi = useApi<ApiResponseWrapper<UserApi>>(
     () => api.get('/auth/me').then((response) => response.data)
   )
 
@@ -25,8 +27,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = async (payload: LoginRequest) => {
     const { data } = await loginApi.execute(payload)
-    user.value = data.user
-    localStorage.setItem('token', data.token)
+    const auth = userDTO.toLocalAuth(data)
+    user.value = auth.user
+    localStorage.setItem('token', auth.token)
   }
   const loginLoading = computed(() => loginApi.loading.value)
   const loginError = computed(() => loginApi.error.value)
@@ -39,7 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const fetchMe = async () => {
     const { data } = await meApi.execute()
-    user.value = data
+    user.value = userDTO.toLocal(data)
   }
 
   const clearAuth = () => {

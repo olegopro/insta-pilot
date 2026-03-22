@@ -15,6 +15,70 @@ final class CommentController extends Controller {
         private readonly InstagramAccountRepositoryInterface $accountRepository
     ) {}
 
+    public function index(Request $request): JsonResponse {
+        $validated = $request->validate([
+            'account_id' => 'required|integer',
+            'media_pk'   => 'required|string',
+            'min_id'     => 'nullable|string'
+        ]);
+
+        $account = $this->accountRepository->findByIdAndUser((int) $validated['account_id'], $request->user()->id);
+
+        if (!$account) {
+            return response()->json(['success' => false, 'error' => 'Аккаунт не найден'], 404);
+        }
+
+        if (!$account->session_data) {
+            return response()->json(['success' => false, 'error' => 'Сессия не найдена'], 422);
+        }
+
+        $result = $this->instagramClient->fetchMediaComments(
+            $account->session_data,
+            $account->id,
+            $validated['media_pk'],
+            $validated['min_id'] ?? null,
+        );
+
+        if (empty($result['success'])) {
+            return response()->json(['success' => false, 'error' => $result['error'] ?? 'Ошибка загрузки комментариев'], 422);
+        }
+
+        return response()->json(['success' => true, 'data' => $result]);
+    }
+
+    public function replies(Request $request): JsonResponse {
+        $validated = $request->validate([
+            'account_id'  => 'required|integer',
+            'media_pk'    => 'required|string',
+            'comment_pk'  => 'required|string',
+            'min_id'      => 'nullable|string'
+        ]);
+
+        $account = $this->accountRepository->findByIdAndUser((int) $validated['account_id'], $request->user()->id);
+
+        if (!$account) {
+            return response()->json(['success' => false, 'error' => 'Аккаунт не найден'], 404);
+        }
+
+        if (!$account->session_data) {
+            return response()->json(['success' => false, 'error' => 'Сессия не найдена'], 422);
+        }
+
+        $result = $this->instagramClient->fetchCommentReplies(
+            $account->session_data,
+            $account->id,
+            $validated['media_pk'],
+            $validated['comment_pk'],
+            $validated['min_id'] ?? null,
+        );
+
+        if (empty($result['success'])) {
+            return response()->json(['success' => false, 'error' => $result['error'] ?? 'Ошибка загрузки ответов'], 422);
+        }
+
+        return response()->json(['success' => true, 'data' => $result]);
+    }
+
     public function store(string $mediaId, Request $request): JsonResponse {
         $validated = $request->validate([
             'account_id' => 'required|integer',

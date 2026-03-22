@@ -21,4 +21,6 @@ interface InstagramClientServiceInterface {
     public function searchLocations(string $sessionData, int $accountId, string $query): array;
     public function searchLocationMedias(string $sessionData, int $accountId, int $locationPk, int $amount = 30, ?string $nextMaxId = null): array;
     public function commentMedia(string $sessionData, int $accountId, string $mediaId, string $text): array;
+    public function fetchMediaComments(string $sessionData, int $accountId, string $mediaPk, ?string $minId = null): array;
+    public function fetchCommentReplies(string $sessionData, int $accountId, string $mediaPk, string $commentPk, ?string $minId = null): array;
 }

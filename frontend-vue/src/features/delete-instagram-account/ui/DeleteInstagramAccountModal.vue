@@ -39,7 +39,7 @@
   >
     <p>
       Вы уверены, что хотите удалить аккаунт
-      <strong>@{{ account.instagram_login }}</strong>?
+      <strong>@{{ account.instagramLogin }}</strong>?
     </p>
   </ModalComponent>
 </template>

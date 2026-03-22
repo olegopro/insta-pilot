@@ -2,7 +2,7 @@ import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type { SidebarActivityEntry, ActionType, QuickFilter } from './types'
 import type { ActivityLogApi } from './apiTypes'
-import { summarizeResponse } from './activityLogListDTO'
+import sidebarActivityDTO from './sidebarActivityDTO'
 
 const MAX_ENTRIES = 200
 const SIDEBAR_WIDTH_KEY = 'sidebar_width'
@@ -12,23 +12,6 @@ const SIDEBAR_UNREAD_KEY = 'sidebar_unread'
 const loadEntries = (): SidebarActivityEntry[] => {
   try { return JSON.parse(localStorage.getItem(SIDEBAR_ENTRIES_KEY) ?? '[]') }
   catch { return [] }
-}
-
-function mapToSidebarEntry(event: ActivityLogApi): SidebarActivityEntry {
-  const summary = summarizeResponse(event.response_summary ?? null)
-  const shortMessage = event.error_message ?? (summary || null)
-
-  return {
-    id:           event.id,
-    accountId:    event.instagram_account_id,
-    accountLogin: event.instagram_login ?? '',
-    action:       event.action,
-    status:       event.status,
-    httpCode:     event.http_code,
-    shortMessage,
-    durationMs:   event.duration_ms,
-    createdAt:    event.created_at
-  }
 }
 
 export const useSidebarActivityStore = defineStore('sidebarActivity', () => {
@@ -54,7 +37,7 @@ export const useSidebarActivityStore = defineStore('sidebarActivity', () => {
   })
 
   const addEntry = (event: ActivityLogApi) => {
-    const entry = mapToSidebarEntry(event)
+    const entry = sidebarActivityDTO.toLocal(event)
     entries.value = [...entries.value, entry].slice(-MAX_ENTRIES)
     !isOpen.value && unreadCount.value++
   }

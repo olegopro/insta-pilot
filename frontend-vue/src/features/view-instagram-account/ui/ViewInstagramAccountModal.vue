@@ -26,27 +26,27 @@
     <div v-else-if="store.accountDetail" class="column items-center q-gutter-sm">
       <q-avatar size="80px">
         <img
-          v-if="store.accountDetail.profile_pic_url"
-          :src="store.accountDetail.profile_pic_url"
+          v-if="store.accountDetail.profilePicUrl"
+          :src="store.accountDetail.profilePicUrl"
           alt="avatar"
         >
         <q-icon v-else name="account_circle" size="80px" />
       </q-avatar>
 
       <div class="text-h6">
-        {{ store.accountDetail.full_name ?? store.accountDetail.instagram_login }}
+        {{ store.accountDetail.fullName ?? store.accountDetail.instagramLogin }}
       </div>
       <div class="text-caption text-grey">
-        @{{ store.accountDetail.instagram_login }}
+        @{{ store.accountDetail.instagramLogin }}
       </div>
 
       <div class="row q-gutter-lg q-mt-md">
         <div class="column items-center">
-          <div class="text-h6">{{ store.accountDetail.followers_count ?? '—' }}</div>
+          <div class="text-h6">{{ store.accountDetail.followersCount ?? '—' }}</div>
           <div class="text-caption">Подписчики</div>
         </div>
         <div class="column items-center">
-          <div class="text-h6">{{ store.accountDetail.following_count ?? '—' }}</div>
+          <div class="text-h6">{{ store.accountDetail.followingCount ?? '—' }}</div>
           <div class="text-caption">Подписки</div>
         </div>
       </div>

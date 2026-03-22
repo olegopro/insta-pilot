@@ -517,6 +517,79 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
+    public function fetchMediaComments(string $sessionData, int $accountId, string $mediaPk, ?string $minId = null): array {
+        $start    = microtime(true);
+        $endpoint = '/media/comments';
+        $payload  = ['session_data' => $sessionData, 'media_pk' => $mediaPk];
+        $minId !== null && $payload['min_id'] = $minId;
+
+        $response   = Http::timeout(20)->post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'fetch_comments',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'media_pk'       => $mediaPk,
+                'min_id'         => $minId,
+                'python_request' => ['endpoint' => $endpoint, 'media_pk' => $mediaPk],
+            ],
+            responseSummary: $isSuccess ? [
+                'comment_count'     => $result['comment_count'] ?? 0,
+                'returned'          => count($result['comments'] ?? []),
+                'has_more'          => $result['next_min_id'] !== null,
+                'python_response'   => ['http_code' => $response->status(), 'returned' => count($result['comments'] ?? [])],
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        return $result;
+    }
+
+    public function fetchCommentReplies(string $sessionData, int $accountId, string $mediaPk, string $commentPk, ?string $minId = null): array {
+        $start    = microtime(true);
+        $endpoint = '/media/comments/replies';
+        $payload  = ['session_data' => $sessionData, 'media_pk' => $mediaPk, 'comment_pk' => $commentPk];
+        $minId !== null && $payload['min_id'] = $minId;
+
+        $response   = Http::timeout(20)->post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          (int) auth()->id(),
+            action:          'fetch_comment_replies',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'media_pk'       => $mediaPk,
+                'comment_pk'     => $commentPk,
+                'python_request' => ['endpoint' => $endpoint, 'media_pk' => $mediaPk, 'comment_pk' => $commentPk],
+            ],
+            responseSummary: $isSuccess ? [
+                'child_comment_count' => $result['child_comment_count'] ?? 0,
+                'returned'            => count($result['child_comments'] ?? []),
+                'python_response'     => ['http_code' => $response->status(), 'returned' => count($result['child_comments'] ?? [])],
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        return $result;
+    }
+
     private function detectStatus(array $result): string {
         $code = $result['error_code'] ?? null;
 

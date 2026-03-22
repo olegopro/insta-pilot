@@ -1,7 +1,8 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
-  import { useSearchStore, MEDIA_TYPE } from '@/entities/media-post'
+  import { useSearchStore, useCommentStore, MEDIA_TYPE } from '@/entities/media-post'
+  import CommentList from './CommentList.vue'
   import { formatCount, formatDate, notifyError, notifySuccess } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
@@ -26,6 +27,7 @@
   const isOpen = defineModel<boolean>({ default: false })
 
   const searchStore = useSearchStore()
+  const commentStore = useCommentStore()
   const commentText = ref('')
   const carouselSlide = ref(0)
   const postStateCache = new Map<string, PostState>()
@@ -92,11 +94,15 @@
   })
 
   watch(isOpen, (opened) => {
-    if (!opened) {
+    if (opened) {
+      props.accountId && void commentStore.fetchComments(props.accountId, props.post.pk)
+    } else {
       cleanup()
+      commentStore.cancelFetch()
+      commentStore.clearComments()
       carouselSlide.value = 0
     }
-  })
+  }, { immediate: true })
 
   onBeforeUnmount(cleanup)
 </script>
@@ -143,6 +149,15 @@
           </span>
           <span>{{ formatDate(post.takenAt) }}</span>
         </div>
+
+        <CommentList
+          :comments="commentStore.comments"
+          :loading="commentStore.commentsLoading"
+          :can-load-more="commentStore.canLoadMore"
+          :load-more-loading="commentStore.loadMoreLoading"
+          @load-more="() => accountId && commentStore.loadMoreComments(accountId, post.pk)"
+          @load-replies="(commentPk) => accountId && commentStore.fetchReplies(accountId, post.pk, commentPk)"
+        />
 
         <div class="bottom-section">
           <div class="actions">
@@ -286,12 +301,14 @@
         .location-link {
           color: $content-secondary;
           text-decoration: none;
-          display: inline-flex;
-          align-items: center;
+
+          .q-icon {
+            position: relative;
+            top: -1px;
+          }
 
           &:hover {
             color: $primary;
-            text-decoration: underline;
           }
         }
       }

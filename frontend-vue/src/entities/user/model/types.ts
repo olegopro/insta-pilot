@@ -1,17 +1,17 @@
 export interface Role {
   id: number
   name: string
-  guard_name: string
+  guardName: string
 }
 
 export interface User {
   id: number
   name: string
   email: string
-  is_active: boolean
+  isActive: boolean
   roles: Role[]
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface LoginRequest {

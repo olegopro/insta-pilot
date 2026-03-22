@@ -14,39 +14,39 @@
   const store = useAccountStore()
   const isOpen = defineModel<boolean>({ default: false })
 
-  interface AddAccountForm extends Omit<AddAccountRequest, 'device_profile_id'> {
-    device_profile_id: Nullable<number>
+  interface AddAccountForm extends Omit<AddAccountRequest, 'deviceProfileId'> {
+    deviceProfileId: Nullable<number>
   }
 
   const form = reactive<AddAccountForm>({
-    instagram_login: '',
-    instagram_password: '',
+    instagramLogin: '',
+    instagramPassword: '',
     proxy: '',
-    device_profile_id: null
+    deviceProfileId: null
   })
 
   const requiredTextRule = [(value: string) => !!value.trim()]
   const requiredDeviceRule = [(value: Nullable<number>) => value !== null]
 
   const resetHandler = () => {
-    form.instagram_login = ''
-    form.instagram_password = ''
+    form.instagramLogin = ''
+    form.instagramPassword = ''
     form.proxy = ''
-    form.device_profile_id = store.deviceProfiles[0]?.id ?? null
+    form.deviceProfileId = store.deviceProfiles[0]?.id ?? null
     isOpen.value = false
   }
 
   const submitHandler = () => {
-    if (form.device_profile_id === null) {
+    if (form.deviceProfileId === null) {
       notifyError('Выберите модель устройства')
       return
     }
 
     store.addAccount({
-      instagram_login: form.instagram_login,
-      instagram_password: form.instagram_password,
+      instagramLogin: form.instagramLogin,
+      instagramPassword: form.instagramPassword,
       ...(form.proxy ? { proxy: form.proxy } : {}),
-      device_profile_id: form.device_profile_id
+      deviceProfileId: form.deviceProfileId
     })
       .then(() => {
         notifySuccess('Аккаунт добавлен')
@@ -58,13 +58,13 @@
 
   onMounted(() => {
     if (store.deviceProfiles.length > 0) {
-      form.device_profile_id = store.deviceProfiles[0]?.id ?? null
+      form.deviceProfileId = store.deviceProfiles[0]?.id ?? null
       return
     }
 
     store.fetchDeviceProfiles()
       .then(() => {
-        form.device_profile_id = store.deviceProfiles[0]?.id ?? null
+        form.deviceProfileId = store.deviceProfiles[0]?.id ?? null
       })
       .catch(() => notifyError('Не удалось загрузить устройства'))
   })
@@ -82,20 +82,20 @@
     @reset="resetHandler"
   >
     <InputComponent
-      v-model="form.instagram_login"
+      v-model="form.instagramLogin"
       label-text="Логин Instagram"
       :rules="requiredTextRule"
       outlined
     />
     <InputComponent
-      v-model="form.instagram_password"
+      v-model="form.instagramPassword"
       label-text="Пароль Instagram"
       type="password"
       :rules="requiredTextRule"
       outlined
     />
     <SelectComponent
-      v-model="form.device_profile_id"
+      v-model="form.deviceProfileId"
       :options="store.deviceProfiles"
       :loading="store.fetchDeviceProfilesLoading"
       option-label="title"

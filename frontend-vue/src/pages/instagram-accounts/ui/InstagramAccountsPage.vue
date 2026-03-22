@@ -46,7 +46,7 @@
     viewModal.open()
     try {
       await store.fetchAccountDetails(id)
-      const userPk = store.accountDetail?.user_pk
+      const userPk = store.accountDetail?.userPk
       userPk && await feedStore.fetchUserInfo(id, String(userPk))
     } catch {
       notifyError('Не удалось загрузить профиль')

@@ -65,6 +65,8 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
     });
 
     // Comments
+    Route::get('/media/comments', [CommentController::class, 'index']);
+    Route::get('/media/comments/replies', [CommentController::class, 'replies']);
     Route::post('/media/{mediaId}/comment', [CommentController::class, 'store']);
 
     // Comment generation (LLM + WebSocket)

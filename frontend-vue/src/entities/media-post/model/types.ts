@@ -39,6 +39,28 @@ export interface MediaPost {
   videoHeight: Nullable<number>
 }
 
+export interface CommentUser {
+  pk: string
+  username: string
+  fullName: string
+  profilePicUrl: Nullable<string>
+}
+
+export interface PostComment {
+  pk: string
+  text: string
+  createdAtUtc: string
+  likeCount: number
+  hasLiked: boolean
+  repliedToCommentId: Nullable<string>
+  childCommentCount: number
+  user: CommentUser
+  previewChildComments: PostComment[]
+  childComments: PostComment[]
+  childCommentsCursor: Nullable<string>
+  childCommentsLoading: boolean
+}
+
 export interface Location {
   pk: number
   name: string

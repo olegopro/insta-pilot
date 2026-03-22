@@ -153,6 +153,44 @@ def _serialize_media(media_dict: dict) -> Optional[dict]:
     }
 
 
+# ─── Comment serialization ────────────────────────────────────────────────────
+
+def _serialize_comment(raw: dict) -> dict:
+    """
+    Нормализует raw-комментарий Instagram API в единый формат.
+    Рекурсивно сериализует preview_child_comments.
+    """
+    user = raw.get("user") or {}
+    created_at_raw = raw.get("created_at_utc") or raw.get("created_at", 0)
+    created_at = (
+        datetime.datetime.fromtimestamp(created_at_raw, tz=datetime.timezone.utc).isoformat()
+        if isinstance(created_at_raw, (int, float)) and created_at_raw
+        else str(created_at_raw)
+    )
+
+    preview_children = [
+        _serialize_comment(child)
+        for child in (raw.get("preview_child_comments") or [])
+    ]
+
+    return {
+        "pk": str(raw.get("pk", "")),
+        "text": raw.get("text", ""),
+        "created_at_utc": created_at,
+        "like_count": raw.get("comment_like_count", 0),
+        "has_liked": bool(raw.get("has_liked_comment", False)),
+        "replied_to_comment_id": str(raw["replied_to_comment_id"]) if raw.get("replied_to_comment_id") else None,
+        "child_comment_count": raw.get("child_comment_count", 0),
+        "user": {
+            "pk": str(user.get("pk", "")),
+            "username": user.get("username", ""),
+            "full_name": user.get("full_name", ""),
+            "profile_pic_url": user.get("profile_pic_url"),
+        },
+        "preview_child_comments": preview_children,
+    }
+
+
 # ─── Debug ────────────────────────────────────────────────────────────────────
 
 def _instagram_response_debug(raw: Optional[dict]) -> dict:

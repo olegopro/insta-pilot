@@ -1,5 +1,6 @@
-export type { MediaPost, MediaUser, MediaResource, InstagramUserDetail, Location } from './model/types'
+export type { MediaPost, MediaUser, MediaResource, InstagramUserDetail, Location, PostComment, CommentUser } from './model/types'
 export { useFeedStore } from './model/feedStore'
 export { useSearchStore } from './model/searchStore'
+export { useCommentStore } from './model/commentStore'
 export { MOCK_FEED } from './model/mockFeed'
 export { MEDIA_TYPE } from './model/constants'

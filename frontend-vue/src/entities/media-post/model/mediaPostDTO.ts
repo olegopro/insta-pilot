@@ -2,9 +2,11 @@ import type {
   MediaPostApi,
   MediaUserApi,
   MediaResourceApi,
-  InstagramUserDetailApi
+  InstagramUserDetailApi,
+  CommentUserApi,
+  CommentApi
 } from './apiTypes'
-import type { MediaPost, MediaUser, MediaResource, InstagramUserDetail } from './types'
+import type { MediaPost, MediaUser, MediaResource, InstagramUserDetail, CommentUser, PostComment } from './types'
 import { proxyImageUrl } from '@/shared/lib'
 
 class MediaPostDTO {
@@ -71,6 +73,36 @@ class MediaPostDTO {
 
   toLocal(data: MediaPostApi[]): MediaPost[] {
     return data.map((post) => this.toLocalPost(post))
+  }
+
+  toLocalCommentUser(data: CommentUserApi): CommentUser {
+    return {
+      pk: data.pk,
+      username: data.username,
+      fullName: data.full_name,
+      profilePicUrl: proxyImageUrl(data.profile_pic_url)
+    }
+  }
+
+  toLocalComment(data: CommentApi): PostComment {
+    return {
+      pk: data.pk,
+      text: data.text,
+      createdAtUtc: data.created_at_utc,
+      likeCount: data.like_count,
+      hasLiked: data.has_liked,
+      repliedToCommentId: data.replied_to_comment_id,
+      childCommentCount: data.child_comment_count,
+      user: this.toLocalCommentUser(data.user),
+      previewChildComments: data.preview_child_comments.map((child) => this.toLocalComment(child)),
+      childComments: [],
+      childCommentsCursor: null,
+      childCommentsLoading: false
+    }
+  }
+
+  toLocalComments(data: CommentApi[]): PostComment[] {
+    return data.map((comment) => this.toLocalComment(comment))
   }
 }
 

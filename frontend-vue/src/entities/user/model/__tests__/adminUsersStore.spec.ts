@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import type { User } from '@/entities/user/model/types'
+import type { UserApi } from '@/entities/user/model/apiTypes'
 
 vi.mock('@/boot/axios', () => ({
   api: {
@@ -12,7 +12,7 @@ vi.mock('@/boot/axios', () => ({
 import { api } from '@/boot/axios'
 import { useAdminUsersStore } from '@/entities/user/model/adminUsersStore'
 
-const mockUser: User = {
+const mockUserApi: UserApi = {
   id: 1,
   name: 'Test User',
   email: 'test@example.com',
@@ -30,7 +30,7 @@ describe('adminUsersStore', () => {
 
   it('fetchUsers вызывает GET /admin/users', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({
-      data: { success: true, data: [mockUser], message: 'OK' }
+      data: { success: true, data: [mockUserApi], message: 'OK' }
     })
 
     const store = useAdminUsersStore()
@@ -39,15 +39,15 @@ describe('adminUsersStore', () => {
     expect(api.get).toHaveBeenCalledWith('/admin/users')
   })
 
-  it('users содержит данные после fetchUsers', async () => {
+  it('users содержит данные после fetchUsers (camelCase)', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({
-      data: { success: true, data: [mockUser], message: 'OK' }
+      data: { success: true, data: [mockUserApi], message: 'OK' }
     })
 
     const store = useAdminUsersStore()
     await store.fetchUsers()
 
-    expect(store.users).toMatchObject([{ id: 1 }])
+    expect(store.users).toMatchObject([{ id: 1, isActive: true }])
   })
 
   it('users = [] до вызова fetchUsers', () => {
@@ -58,7 +58,7 @@ describe('adminUsersStore', () => {
 
   it('toggleActive вызывает PATCH с нужным URL', async () => {
     vi.mocked(api.patch).mockResolvedValueOnce({
-      data: { success: true, data: { ...mockUser, is_active: false }, message: 'OK' }
+      data: { success: true, data: { ...mockUserApi, is_active: false }, message: 'OK' }
     })
 
     const store = useAdminUsersStore()
@@ -69,7 +69,7 @@ describe('adminUsersStore', () => {
 
   it('updateRole отправляет role в теле запроса', async () => {
     vi.mocked(api.patch).mockResolvedValueOnce({
-      data: { success: true, data: { ...mockUser, roles: [{ id: 2, name: 'admin', guard_name: 'web' }] }, message: 'OK' }
+      data: { success: true, data: { ...mockUserApi, roles: [{ id: 2, name: 'admin', guard_name: 'web' }] }, message: 'OK' }
     })
 
     const store = useAdminUsersStore()
