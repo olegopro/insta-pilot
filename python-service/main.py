@@ -529,11 +529,22 @@ async def fetch_media_comments(data: FetchCommentsRequest):
             if result.get("has_more_headload_comments"):
                 next_min_id = result.get("next_min_id")
 
+            debug_info = {
+                "instagram_request": {
+                    "method": "private_request",
+                    "endpoint": f"media/{data.media_pk}/comments/",
+                    "media_pk": data.media_pk,
+                    "min_id": data.min_id,
+                },
+                "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+            }
+
             return FetchCommentsResponse(
                 success=True,
                 comments=comments,
                 next_min_id=next_min_id,
                 comment_count=result.get("comment_count", 0),
+                debug_info=debug_info,
             )
         except Exception as e:
             code = error_to_code(e)

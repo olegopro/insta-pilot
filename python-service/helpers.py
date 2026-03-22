@@ -248,6 +248,15 @@ def _instagram_response_debug(raw: Optional[dict]) -> dict:
         }
         return result
 
+    # Ответ на загрузку комментариев — содержит comments[]
+    if "comments" in raw:
+        raw_comments = raw.get("comments") or []
+        result["comment_count"] = raw.get("comment_count", 0)
+        result["returned"] = len(raw_comments)
+        result["has_more"] = raw.get("has_more_headload_comments", False)
+        result["has_next_min_id"] = bool(raw.get("next_min_id"))
+        return result
+
     # Для всех остальных ответов — возвращаем как есть
     return raw
 

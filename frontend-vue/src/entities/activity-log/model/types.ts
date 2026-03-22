@@ -10,6 +10,7 @@ export type ActionType =
   | 'search_location_medias'
   | 'fetch_user_info'
   | 'generate_comment'
+  | 'fetch_comments'
 
 export type ActionStatus =
   | 'success'

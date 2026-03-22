@@ -152,6 +152,7 @@ class FetchCommentsResponse(BaseModel):
     comment_count: int = 0
     error: Optional[str] = None
     error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
 
 
 class FetchCommentRepliesRequest(SessionRequest):

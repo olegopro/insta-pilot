@@ -26,7 +26,7 @@ export const useSidebarActivityStore = defineStore('sidebarActivity', () => {
 
   const FILTER_ACTIONS: Partial<Record<Exclude<QuickFilter, 'all' | 'errors'>, ActionType[]>> = {
     likes:    ['like'],
-    comments: ['comment', 'generate_comment']
+    comments: ['comment', 'generate_comment', 'fetch_comments']
   }
 
   const filteredEntries = computed(() => {

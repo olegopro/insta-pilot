@@ -9,7 +9,8 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   search_locations:       'Поиск локаций',
   search_location_medias: 'Медиа локации',
   fetch_user_info:        'Инфо пользователя',
-  generate_comment:       'Генерация комм.'
+  generate_comment:       'Генерация комм.',
+  fetch_comments:         'Комментарии поста'
 }
 
 export const ACTION_ICONS: Record<ActionType, string> = {
@@ -21,7 +22,8 @@ export const ACTION_ICONS: Record<ActionType, string> = {
   search_locations:       'place',
   search_location_medias: 'photo_library',
   fetch_user_info:        'person',
-  generate_comment:       'auto_awesome'
+  generate_comment:       'auto_awesome',
+  fetch_comments:         'chat_bubble_outline'
 }
 
 export const ACTION_COLORS: Record<ActionType, string> = {
@@ -33,7 +35,8 @@ export const ACTION_COLORS: Record<ActionType, string> = {
   search_locations:       'teal',
   search_location_medias: 'teal',
   fetch_user_info:        'grey',
-  generate_comment:       'orange'
+  generate_comment:       'orange',
+  fetch_comments:         'indigo'
 }
 
 export interface StatusConfig {
