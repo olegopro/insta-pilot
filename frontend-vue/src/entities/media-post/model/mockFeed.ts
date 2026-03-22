@@ -25,7 +25,8 @@ export const MOCK_FEED: MediaPost[] = [
       profilePicUrl: 'https://picsum.photos/seed/avatar1/100/100'
     },
     resources: [],
-    locationName: 'Yosemite National Park'
+    locationName: 'Yosemite National Park',
+    locationPk: 213385402
   },
   {
     pk: 'mock2',
@@ -55,7 +56,8 @@ export const MOCK_FEED: MediaPost[] = [
       { pk: 'r2', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2b/600/600', videoUrl: null, width: 600, height: 600 },
       { pk: 'r3', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta2c/600/600', videoUrl: null, width: 600, height: 600 }
     ],
-    locationName: 'Barcelona, Spain'
+    locationName: 'Barcelona, Spain',
+    locationPk: 225951957
   },
   {
     pk: 'mock3',
@@ -81,7 +83,8 @@ export const MOCK_FEED: MediaPost[] = [
       profilePicUrl: 'https://picsum.photos/seed/avatar3/100/100'
     },
     resources: [],
-    locationName: null
+    locationName: null,
+    locationPk: null
   },
   {
     pk: 'mock4',
@@ -107,7 +110,8 @@ export const MOCK_FEED: MediaPost[] = [
       profilePicUrl: 'https://picsum.photos/seed/avatar4/100/100'
     },
     resources: [],
-    locationName: 'Los Angeles, CA'
+    locationName: 'Los Angeles, CA',
+    locationPk: 44127780
   },
   {
     pk: 'mock5',
@@ -133,7 +137,8 @@ export const MOCK_FEED: MediaPost[] = [
       profilePicUrl: 'https://picsum.photos/seed/avatar5/100/100'
     },
     resources: [],
-    locationName: 'New York City'
+    locationName: 'New York City',
+    locationPk: 212988663
   },
   {
     pk: 'mock6',
@@ -162,6 +167,7 @@ export const MOCK_FEED: MediaPost[] = [
       { pk: 'r4', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6a/600/600', videoUrl: null, width: 600, height: 600 },
       { pk: 'r5', mediaType: 1, thumbnailUrl: 'https://picsum.photos/seed/insta6b/600/600', videoUrl: null, width: 600, height: 600 }
     ],
-    locationName: null
+    locationName: null,
+    locationPk: null
   }
 ]

@@ -46,6 +46,16 @@
     await generate(url, props.post.captionText, props.accountId)
   }
 
+  const buildLocationUrl = (): string => {
+    const params = new URLSearchParams({
+      mode: 'location',
+      location_pk: String(props.post.locationPk),
+      location_name: props.post.locationName ?? ''
+    })
+    props.accountId && params.set('account', String(props.accountId))
+    return `/search?${params.toString()}`
+  }
+
   const sendCommentHandler = async () => {
     if (!commentText.value.trim() || !props.accountId) return
     try {
@@ -117,7 +127,17 @@
         <CaptionText v-if="post.captionText" :text="post.captionText" :account-id="accountId" />
 
         <div class="meta text-caption text-grey">
-          <span v-if="post.locationName">
+          <a
+            v-if="post.locationName && post.locationPk"
+            :href="buildLocationUrl()"
+            class="location-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <q-icon name="location_on" size="14px" />
+            {{ post.locationName }}
+          </a>
+          <span v-else-if="post.locationName">
             <q-icon name="location_on" size="14px" />
             {{ post.locationName }}
           </span>
@@ -262,6 +282,18 @@
         display: flex;
         flex-direction: column;
         gap: $indent-xs;
+
+        .location-link {
+          color: $content-secondary;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+
+          &:hover {
+            color: $primary;
+            text-decoration: underline;
+          }
+        }
       }
 
       .bottom-section {

@@ -144,6 +144,7 @@ def _serialize_media(media_dict: dict) -> Optional[dict]:
         },
         "resources": resources,
         "location_name": location.get("name") if isinstance(location, dict) else None,
+        "location_pk": location.get("pk") if isinstance(location, dict) else None,
         "thumbnail_width": media_dict.get("original_width"),
         "thumbnail_height": media_dict.get("original_height"),
         # Размеры видео совпадают с оригинальными только для видео-постов

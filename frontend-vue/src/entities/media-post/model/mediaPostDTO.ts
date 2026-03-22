@@ -45,6 +45,7 @@ class MediaPostDTO {
       user: this.toLocalUser(data.user),
       resources: data.resources.map((resource) => this.toLocalResource(resource)),
       locationName: data.location_name,
+      locationPk: data.location_pk,
       thumbnailWidth: data.thumbnail_width,
       thumbnailHeight: data.thumbnail_height,
       videoWidth: data.video_width,
