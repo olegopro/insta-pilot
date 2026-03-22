@@ -18,7 +18,6 @@ class InstagramAccount extends Model {
         'instagram_login',
         'instagram_password',
         'session_data',
-        'proxy',
         'device_profile_id',
         'device_model_name',
         'full_name',

@@ -11,7 +11,7 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\InstagramAccountController;
 use App\Http\Controllers\InstagramUserController;
 use App\Http\Controllers\LlmSettingsController;
-use App\Http\Controllers\ProxyMediaController;
+use App\Http\Controllers\ProxyImageController;
 use App\Http\Controllers\SearchController;
 use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Support\Facades\Broadcast;
@@ -33,9 +33,8 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// --- Media proxy (public — img src не передаёт Authorization header) ---
-Route::get('/proxy/media/{accountId}', [ProxyMediaController::class, 'show']);
-Route::get('/proxy/avatar', [ProxyMediaController::class, 'avatar']);
+// --- Image proxy (public — img src не передаёт Authorization header) ---
+Route::get('/proxy/image', [ProxyImageController::class, 'show']);
 
 // --- Protected routes ---
 Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function () {

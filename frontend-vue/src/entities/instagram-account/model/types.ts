@@ -5,7 +5,6 @@ export interface InstagramAccount {
   instagramLogin: string
   fullName: Nullable<string>
   profilePicUrl: Nullable<string>
-  proxy: Nullable<string>
   deviceProfileId: Nullable<number>
   deviceModelName: Nullable<string>
   isActive: boolean
@@ -21,7 +20,6 @@ export interface InstagramAccountDetailed extends InstagramAccount {
 export interface AddAccountRequest {
   instagramLogin: string
   instagramPassword: string
-  proxy?: string
   deviceProfileId: number
 }
 

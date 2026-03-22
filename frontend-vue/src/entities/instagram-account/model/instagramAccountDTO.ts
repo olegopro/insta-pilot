@@ -5,7 +5,7 @@ import type {
   DeviceProfileApi
 } from './apiTypes'
 import type { InstagramAccount, InstagramAccountDetailed, AddAccountRequest, DeviceProfile } from './types'
-import { proxyAvatarUrl } from '@/shared/lib'
+import { proxyImageUrl } from '@/shared/lib'
 
 class InstagramAccountDTO {
   toLocal(data: InstagramAccountApi): InstagramAccount {
@@ -13,8 +13,7 @@ class InstagramAccountDTO {
       id: data.id,
       instagramLogin: data.instagram_login,
       fullName: data.full_name,
-      profilePicUrl: proxyAvatarUrl(data.profile_pic_url),
-      proxy: data.proxy,
+      profilePicUrl: proxyImageUrl(data.profile_pic_url),
       deviceProfileId: data.device_profile_id,
       deviceModelName: data.device_model_name,
       isActive: data.is_active,
@@ -51,7 +50,6 @@ class InstagramAccountDTO {
     return {
       instagram_login: data.instagramLogin,
       instagram_password: data.instagramPassword,
-      ...(data.proxy ? { proxy: data.proxy } : {}),
       device_profile_id: data.deviceProfileId
     }
   }

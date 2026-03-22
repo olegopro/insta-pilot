@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 interface InstagramClientServiceInterface {
-    public function login(string $login, string $password, ?string $proxy = null, ?array $deviceProfile = null, ?int $accountId = null): array;
+    public function login(string $login, string $password, ?array $deviceProfile = null, ?int $accountId = null): array;
     public function getUserInfo(string $sessionData, ?int $accountId = null): array;
     public function addLike(string $sessionData, string $mediaId, int $accountId): array;
     public function getFeed(

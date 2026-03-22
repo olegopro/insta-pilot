@@ -17,13 +17,12 @@ class InstagramClientService implements InstagramClientServiceInterface {
     public function login(
         string $login,
         string $password,
-        ?string $proxy = null,
         ?array $deviceProfile = null,
         ?int $accountId = null,
     ): array {
         $start    = microtime(true);
         $endpoint = '/auth/login';
-        $payload  = compact('login', 'password', 'proxy');
+        $payload  = compact('login', 'password');
 
         if ($deviceProfile !== null) {
             $payload['device_profile'] = $deviceProfile;
@@ -44,11 +43,9 @@ class InstagramClientService implements InstagramClientServiceInterface {
                 endpoint:        $endpoint,
                 requestPayload:  [
                     'instagram_login' => $login,
-                    'has_proxy'       => $proxy !== null,
                     'python_request'  => [
                         'endpoint'        => $endpoint,
                         'instagram_login' => $login,
-                        'has_proxy'       => $proxy !== null,
                     ],
                 ],
                 responseSummary: [

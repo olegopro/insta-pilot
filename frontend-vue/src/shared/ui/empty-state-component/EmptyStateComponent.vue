@@ -25,7 +25,7 @@
     align-items: center;
     justify-content: center;
     gap: $indent-ml;
-    color: $content-tertiary;
+    color: rgba($content-tertiary, 0.4);
   }
 
   .text {

@@ -101,10 +101,6 @@ async def login(data: LoginRequest):
             # так как сессия ещё не существует
             cl = Client()
 
-            # Прокси задаётся до авторизации, иначе первый запрос уйдёт без него
-            if data.proxy:
-                cl.set_proxy(data.proxy)
-
             # Профиль устройства (device_settings + user_agent) — имитирует конкретный
             # Android-телефон, снижает вероятность блокировки
             if data.device_profile:

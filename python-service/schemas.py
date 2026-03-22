@@ -15,7 +15,6 @@ class SessionRequest(BaseModel):
 class LoginRequest(BaseModel):
     login: str
     password: str
-    proxy: Optional[str] = None
     # Профиль устройства (manufacturer, model, user_agent и др.)
     device_profile: Optional[dict] = None
 

@@ -21,7 +21,6 @@
   const form = reactive<AddAccountForm>({
     instagramLogin: '',
     instagramPassword: '',
-    proxy: '',
     deviceProfileId: null
   })
 
@@ -31,7 +30,6 @@
   const resetHandler = () => {
     form.instagramLogin = ''
     form.instagramPassword = ''
-    form.proxy = ''
     form.deviceProfileId = store.deviceProfiles[0]?.id ?? null
     isOpen.value = false
   }
@@ -45,7 +43,6 @@
     store.addAccount({
       instagramLogin: form.instagramLogin,
       instagramPassword: form.instagramPassword,
-      ...(form.proxy ? { proxy: form.proxy } : {}),
       deviceProfileId: form.deviceProfileId
     })
       .then(() => {
@@ -105,11 +102,6 @@
       map-options
       outlined
       :rules="requiredDeviceRule"
-    />
-    <InputComponent
-      v-model="form.proxy"
-      label-text="Прокси (необязательно)"
-      outlined
     />
   </ModalComponent>
 </template>

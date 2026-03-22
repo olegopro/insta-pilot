@@ -49,7 +49,7 @@ export const useFeedStore = defineStore('feed', () => {
     const minPosts = cache.minPostsPerLoad.value ?? undefined
     const { data } = await fetchFeedApi.execute({ accountId, ...(reason ? { reason } : {}), ...(minPosts ? { minPosts } : {}) })
 
-    posts.value = mediaPostDTO.toLocal(data.posts, accountId)
+    posts.value = mediaPostDTO.toLocal(data.posts)
     nextMaxId.value = data.next_max_id
     moreAvailable.value = data.more_available
 
@@ -86,7 +86,7 @@ export const useFeedStore = defineStore('feed', () => {
     })
 
     const existingPks = new Set(posts.value.map((post) => post.pk))
-    const newPosts = mediaPostDTO.toLocal(data.posts, accountId).filter((post) => !existingPks.has(post.pk))
+    const newPosts = mediaPostDTO.toLocal(data.posts).filter((post) => !existingPks.has(post.pk))
     if (newPosts.length === 0) {
       moreAvailable.value = false
       return

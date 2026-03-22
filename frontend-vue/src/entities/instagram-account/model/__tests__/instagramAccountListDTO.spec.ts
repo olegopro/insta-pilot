@@ -7,7 +7,6 @@ const makeAccount = (overrides: Partial<InstagramAccount> = {}): InstagramAccoun
   instagramLogin: 'testuser',
   fullName: 'Test Account',
   profilePicUrl: null,
-  proxy: null,
   deviceProfileId: null,
   deviceModelName: 'Samsung Galaxy S24 Ultra',
   isActive: true,

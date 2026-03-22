@@ -35,8 +35,8 @@ export interface MediaPost {
   resources: MediaResource[]
   locationName: Nullable<string>
   locationPk: Nullable<number>
-  thumbnailWidth: Nullable<number>
-  thumbnailHeight: Nullable<number>
+  thumbnailWidth: number
+  thumbnailHeight: number
   videoWidth: Nullable<number>
   videoHeight: Nullable<number>
 }

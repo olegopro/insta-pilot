@@ -95,7 +95,7 @@
 
   watch(isOpen, (opened) => {
     if (opened) {
-      props.accountId && void commentStore.fetchComments(props.accountId, props.post.pk)
+      props.accountId && props.post.commentCount > 0 && void commentStore.fetchComments(props.accountId, props.post.pk)
     } else {
       cleanup()
       commentStore.cancelFetch()

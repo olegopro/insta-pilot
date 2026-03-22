@@ -1,7 +1,6 @@
 import hashlib
 import json
 import time
-from typing import Optional
 
 from instagrapi import Client
 
@@ -21,7 +20,7 @@ def session_key(session_data: str) -> str:
     return hashlib.md5(session_data.encode()).hexdigest()
 
 
-def _make_client(session_data: str, proxy: Optional[str] = None) -> Client:
+def _make_client(session_data: str) -> Client:
     """
     Возвращает Client из кеша или создаёт новый на основе session_data.
 
@@ -46,8 +45,6 @@ def _make_client(session_data: str, proxy: Optional[str] = None) -> Client:
 
     # Создаём новый клиент и восстанавливаем сессию из JSON
     cl = Client()
-    if proxy:
-        cl.set_proxy(proxy)
     cl.set_settings(json.loads(session_data))
 
     _client_cache[cache_key] = (cl, now)

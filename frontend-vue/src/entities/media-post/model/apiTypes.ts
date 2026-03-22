@@ -33,8 +33,8 @@ export interface MediaPostApi {
   resources: MediaResourceApi[]
   location_name: Nullable<string>
   location_pk: Nullable<number>
-  thumbnail_width: Nullable<number>
-  thumbnail_height: Nullable<number>
+  thumbnail_width: number
+  thumbnail_height: number
   video_width: Nullable<number>
   video_height: Nullable<number>
 }

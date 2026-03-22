@@ -15,6 +15,7 @@
   defineEmits(['open', 'like', 'openUser'])
 
   const isUserLoading = computed(() => props.loadingUserPk === props.post.user.pk)
+  const aspectRatio = computed(() => props.post.thumbnailWidth / props.post.thumbnailHeight)
 </script>
 
 <template>
@@ -23,13 +24,13 @@
     :class="{ mock: isMock }"
     @click="$emit('open', post)"
   >
-    <div class="image-wrap">
+    <div class="image-wrap" :style="{ aspectRatio }">
       <img
         v-if="post.thumbnailUrl"
         :src="post.thumbnailUrl"
         :alt="post.captionText"
         class="image"
-        loading="lazy"
+        loading="eager"
       >
       <div v-else class="placeholder">
         <q-icon name="image" size="48px" color="grey-4" />

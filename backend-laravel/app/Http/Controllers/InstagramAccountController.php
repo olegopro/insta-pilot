@@ -43,7 +43,6 @@ final class InstagramAccountController extends Controller {
         $validated = $request->validate([
             'instagram_login'    => 'required|string|unique:instagram_accounts,instagram_login',
             'instagram_password' => 'required|string',
-            'proxy'              => 'nullable|string',
             'device_profile_id'  => 'required|integer|exists:device_profiles,id'
         ]);
 
@@ -59,7 +58,6 @@ final class InstagramAccountController extends Controller {
         $result = $this->instagramClient->login(
             $validated['instagram_login'],
             $validated['instagram_password'],
-            $validated['proxy'] ?? null,
             [
                 'device_settings' => $deviceProfile->device_settings,
                 'user_agent'      => $deviceProfile->user_agent
@@ -80,7 +78,6 @@ final class InstagramAccountController extends Controller {
             'session_data'       => $result['session_data'],
             'full_name'          => $result['full_name'] ?? null,
             'profile_pic_url'    => $result['profile_pic_url'] ?? null,
-            'proxy'              => $validated['proxy'] ?? null,
             'device_profile_id'  => $deviceProfile->id,
             'device_model_name'  => $deviceProfile->title
         ]);

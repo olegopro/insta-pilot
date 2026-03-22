@@ -5,7 +5,6 @@ export interface InstagramAccountApi {
   instagram_login: string
   full_name: Nullable<string>
   profile_pic_url: Nullable<string>
-  proxy: Nullable<string>
   device_profile_id: Nullable<number>
   device_model_name: Nullable<string>
   is_active: boolean
@@ -21,7 +20,6 @@ export interface InstagramAccountDetailedApi extends InstagramAccountApi {
 export interface AddAccountRequestApi {
   instagram_login: string
   instagram_password: string
-  proxy?: string
   device_profile_id: number
 }
 
