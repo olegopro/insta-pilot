@@ -6,6 +6,7 @@
   import type { Nullable } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
   import { MediaDisplay } from '@/shared/ui/media-display'
+  import { CaptionText } from '@/shared/ui/caption-text'
   import { InputComponent } from '@/shared/ui/input-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { useCommentGeneration, GenerationStatus } from '@/features/generate-comment'
@@ -113,7 +114,7 @@
           </div>
         </div>
 
-        <p v-if="post.captionText">{{ post.captionText }}</p>
+        <CaptionText v-if="post.captionText" :text="post.captionText" :account-id="accountId" />
 
         <div class="meta text-caption text-grey">
           <span v-if="post.locationName">
