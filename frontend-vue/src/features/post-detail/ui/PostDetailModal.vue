@@ -114,7 +114,7 @@
   >
     <div class="body">
       <div class="media">
-        <MediaDisplay v-model:slide="carouselSlide" :post="post" :max-width="`calc(70vw - ${INFO_PANEL_WIDTH})`" />
+        <MediaDisplay v-model:slide="carouselSlide" :post="post" :max-width="`calc(70vw - ${INFO_PANEL_WIDTH})`" max-height="85vh" />
       </div>
 
       <div class="info">
@@ -222,7 +222,7 @@
   .modal-inner.post-detail-modal__inner {
     display: inline-flex;
     max-width: 70vw;
-    height: 85vh;
+    max-height: 85vh;
     min-width: 0;
     padding: 0;
     flex-direction: column;
@@ -247,7 +247,7 @@
 
     .media {
       flex: 0 0 auto;
-      height: 85vh;
+      align-self: flex-start;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -255,6 +255,7 @@
     }
 
     .info {
+      align-self: stretch;
       width: $info-panel-width;
       padding: $spacing-card-padding;
       overflow-y: auto;
