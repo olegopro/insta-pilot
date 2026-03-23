@@ -8,7 +8,7 @@
 </script>
 
 <template>
-  <ButtonComponent flat round dense icon="view_column">
+  <ButtonComponent flat round dense icon="view_column" icon-scale="lg">
     <q-menu anchor="bottom end" self="top end" :offset="[0, 8]">
       <q-list dense style="min-width: 160px">
         <q-item

@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 final class UserRepository implements UserRepositoryInterface {
     public function all(): Collection {
@@ -23,7 +24,15 @@ final class UserRepository implements UserRepositoryInterface {
     }
 
     public function updateRole(User $user, string $role): User {
-        $user->syncRoles([$role]);
+        if ($user->hasRole($role)) {
+            return $user->fresh('roles');
+        }
+
+        try {
+            $user->syncRoles([$role]);
+        } catch (UniqueConstraintViolationException) {
+            // race condition: параллельный запрос уже назначил эту роль
+        }
 
         return $user->fresh('roles');
     }

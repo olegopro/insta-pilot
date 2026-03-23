@@ -23,7 +23,14 @@ final class AdminUserController extends Controller {
         ]);
     }
 
-    public function toggleActive(int $id): JsonResponse {
+    public function toggleActive(int $id, Request $request): JsonResponse {
+        if ($request->user()->id === $id) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Нельзя изменить статус собственного аккаунта',
+            ], 403);
+        }
+
         $user = $this->userRepository->findById($id);
 
         if (! $user) {
@@ -43,6 +50,13 @@ final class AdminUserController extends Controller {
     }
 
     public function updateRole(int $id, Request $request): JsonResponse {
+        if ($request->user()->id === $id) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Нельзя изменить собственную роль',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'role' => 'required|string|in:admin,user',
         ]);
