@@ -138,14 +138,14 @@
 
 <template>
   <PageComponent title="Настройки LLM" icon="smart_toy">
-    <div class="llm-list q-mb-lg" style="max-width: 640px">
+    <div class="list q-mb-lg">
       <div
         v-for="setting in store.settings"
         :key="setting.id"
-        class="llm-item"
+        class="item"
       >
-        <div class="llm-item__info">
-          <div class="text-weight-medium text-subtitle1 provider-name">
+        <div class="info">
+          <div class="text-weight-medium text-subtitle1 name">
             {{ providerLabel(setting.provider) }}
             <BadgeComponent v-if="setting.isDefault" color="primary" label="По умолчанию" size="lg" />
           </div>
@@ -154,7 +154,7 @@
           </div>
         </div>
 
-        <div class="llm-item__actions">
+        <div class="actions">
           <ButtonComponent
             v-if="!setting.isDefault"
             flat
@@ -196,12 +196,12 @@
       @click="showForm = true"
     />
 
-    <CardComponent v-if="showForm" class="llm-form q-mt-lg" style="max-width: 640px">
+    <CardComponent v-if="showForm" class="form">
       <CardSectionComponent class="q-pb-sm">
         <div class="text-h6">{{ form.provider ? providerLabel(form.provider) : 'Новый провайдер' }}</div>
       </CardSectionComponent>
 
-      <CardSectionComponent class="llm-form__fields">
+      <CardSectionComponent class="fields">
         <SelectComponent
           v-model="form.provider"
           label="Провайдер"
@@ -249,8 +249,8 @@
           label="Передавать описание поста в LLM"
         />
 
-        <div class="base-prompt-field">
-          <div class="base-prompt-field__header">
+        <div class="base-prompt">
+          <div class="base-prompt__header">
             <span class="text-caption text-grey-6">Базовый системный промпт</span>
             <div class="row items-center q-gutter-xs">
               <BadgeComponent v-if="store.basePromptIsModified" color="warning" label="Изменён" size="sm" />
@@ -329,13 +329,16 @@
 </template>
 
 <style scoped lang="scss">
-.llm-list {
+$form-max-width: 700px;
+
+.list {
+  max-width: $form-max-width;
   display: flex;
   flex-direction: column;
   gap: $indent-s;
 }
 
-.llm-item {
+.item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -346,15 +349,13 @@
   box-shadow: $elevation-card;
   gap: $indent-m;
 
-  &__info {
-    & > .provider-name {
-      display: flex;
-      align-items: center;
-      gap: $indent-s;
-    }
+  .name {
+    display: flex;
+    align-items: center;
+    gap: $indent-s;
   }
 
-  &__actions {
+  .actions {
     display: flex;
     align-items: center;
     gap: $indent-xs;
@@ -362,20 +363,22 @@
   }
 }
 
-.llm-form {
-  &__fields {
-    display: flex;
-    flex-direction: column;
-    gap: $indent-m;
-  }
+.form {
+  max-width: $form-max-width;
 }
 
-.base-prompt-field {
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: $indent-m;
+}
+
+.base-prompt {
   display: flex;
   flex-direction: column;
   gap: $indent-xs;
 
-  &__header {
+  .base-prompt__header {
     display: flex;
     align-items: center;
     justify-content: space-between;

@@ -27,7 +27,7 @@
 
 <template>
   <q-form class="login-form" @submit="submitHandler">
-    <div class="text-h5 q-mb-lg">Вход в систему</div>
+    <div class="text-h5 text-center text-uppercase q-mb-lg">Вход в систему</div>
 
     <InputComponent
       v-model="email"
