@@ -8,6 +8,7 @@
   import { ButtonComponent } from '@/shared/ui/button-component'
   import AppNavTabs from '@/layouts/AppNavTabs.vue'
   import UserMenuDropdown from '@/layouts/UserMenuDropdown.vue'
+  import RobotIcon from 'src/shared/ui/icons/RobotIcon.vue'
 
   const router = useRouter()
 
@@ -27,7 +28,7 @@
   <q-layout view="LHh LpR fFf">
     <q-header class="app-header">
       <q-toolbar>
-        <q-toolbar-title class="app-logo">Insta Pilot</q-toolbar-title>
+        <q-toolbar-title class="app-logo"> <RobotIcon size="28" /> Insta Pilot</q-toolbar-title>
 
         <q-space />
 
@@ -83,8 +84,14 @@
   }
 
   .app-logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    text-transform: uppercase;
     font-weight: $font-weight-bold;
     color: $primary;
+    user-select: none;
+    cursor: default;
   }
 
   .sidebar-toggle {

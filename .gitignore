@@ -32,3 +32,4 @@ backend-laravel/session_*.json
 
 # Claude Code
 .claude/
+.clinerules/
