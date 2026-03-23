@@ -17,7 +17,7 @@ vi.mock('@/shared/lib', async (importOriginal) => {
   }
 })
 
-import LoginForm from '../LoginForm.vue'
+import LoginForm from '@/features/auth-login/ui/LoginForm.vue'
 import { useAuthStore } from '@/entities/user'
 import { useRouter } from 'vue-router'
 import { notifyError } from '@/shared/lib'

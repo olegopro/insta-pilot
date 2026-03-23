@@ -4,9 +4,9 @@
   import { useSidebarActivityStore } from '@/entities/activity-log'
   import type { SidebarActivityEntry, QuickFilter } from '@/entities/activity-log'
   import { ButtonComponent } from '@/shared/ui/button-component'
-  import type { ScrollInfo } from '../model/types'
-  import ActivitySidebarEntry from './ActivitySidebarEntry.vue'
-  import SidebarResizeHandle from './SidebarResizeHandle.vue'
+  import type { ScrollInfo } from '@/widgets/activity-sidebar/model/types'
+  import ActivitySidebarEntry from '@/widgets/activity-sidebar/ui/ActivitySidebarEntry.vue'
+  import SidebarResizeHandle from '@/widgets/activity-sidebar/ui/SidebarResizeHandle.vue'
 
   const FILTER_OPTIONS: { label: string; value: QuickFilter; icon: string; color: string }[] = [
     { label: 'Все', value: 'all', icon: 'apps', color: 'primary' },

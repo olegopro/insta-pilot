@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { computed, ref } from 'vue'
   import type { ActivityLogRowModel } from '@/entities/activity-log'
-  import type { TabMode } from '../model/types'
+  import type { TabMode } from '@/widgets/activity-log-table/model/types'
   import {
     NESTED_REQUEST_KEYS,
     NESTED_RESPONSE_KEYS,
@@ -10,7 +10,7 @@
     hasNestedData,
     previewTooltip,
     display
-  } from '../lib/responseFormatters'
+  } from '@/widgets/activity-log-table/lib/responseFormatters'
   import { BadgeComponent } from '@/shared/ui/badge-component'
 
   interface Props {

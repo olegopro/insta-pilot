@@ -5,8 +5,8 @@ import type {
   InstagramUserDetailApi,
   CommentUserApi,
   CommentApi
-} from './apiTypes'
-import type { MediaPost, MediaUser, MediaResource, InstagramUserDetail, CommentUser, PostComment } from './types'
+} from '@/entities/media-post/model/apiTypes'
+import type { MediaPost, MediaUser, MediaResource, InstagramUserDetail, CommentUser, PostComment } from '@/entities/media-post/model/types'
 import { proxyImageUrl } from '@/shared/lib'
 
 class MediaPostDTO {

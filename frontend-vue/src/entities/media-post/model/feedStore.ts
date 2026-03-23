@@ -3,10 +3,10 @@ import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { Nullable } from '@/shared/lib'
-import type { MediaPost, InstagramUserDetail } from './types'
-import type { FeedResponseApi, InstagramUserDetailApi } from './apiTypes'
-import mediaPostDTO from './mediaPostDTO'
-import { useFeedCache } from './useFeedCache'
+import type { MediaPost, InstagramUserDetail } from '@/entities/media-post/model/types'
+import type { FeedResponseApi, InstagramUserDetailApi } from '@/entities/media-post/model/apiTypes'
+import mediaPostDTO from '@/entities/media-post/model/mediaPostDTO'
+import { useFeedCache } from '@/entities/media-post/model/useFeedCache'
 
 export const useFeedStore = defineStore('feed', () => {
   const posts = ref<MediaPost[]>([])

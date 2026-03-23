@@ -9,8 +9,8 @@
   const router = useRouter()
   const authStore = useAuthStore()
 
-  const email = ref('')
-  const password = ref('')
+  const email = ref('admin@insta-pilot.local')
+  const password = ref('password')
 
   const emailRules = [requiredField, checkEmail]
   const passwordRules = [requiredField]

@@ -1,5 +1,5 @@
-import type { AccountActivitySummary } from './types'
-import type { SummaryRowModel } from './activitySummaryTableColumns'
+import type { AccountActivitySummary } from '@/entities/activity-log/model/types'
+import type { SummaryRowModel } from '@/entities/activity-log/model/activitySummaryTableColumns'
 import { formatTimeHM } from '@/shared/lib'
 
 class ActivitySummaryListDTO {

@@ -1,5 +1,5 @@
-import type { UserApi, RoleApi, AuthResponseApi } from './apiTypes'
-import type { User, Role, AuthResponse } from './types'
+import type { UserApi, RoleApi, AuthResponseApi } from '@/entities/user/model/apiTypes'
+import type { User, Role, AuthResponse } from '@/entities/user/model/types'
 
 class UserDTO {
   toLocalRole(data: RoleApi): Role {

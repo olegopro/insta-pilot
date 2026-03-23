@@ -1,5 +1,5 @@
-import type { LlmSetting, LlmProvider, LlmTone } from './types'
-import type { LlmSettingApi } from './apiTypes'
+import type { LlmSetting, LlmProvider, LlmTone } from '@/entities/llm-settings/model/types'
+import type { LlmSettingApi } from '@/entities/llm-settings/model/apiTypes'
 
 class LlmSettingsDTO {
   toLocal(item: LlmSettingApi): LlmSetting {

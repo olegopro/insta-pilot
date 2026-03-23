@@ -1,4 +1,4 @@
-import type { LlmProvider, LlmTone } from './types'
+import type { LlmProvider, LlmTone } from '@/entities/llm-settings/model/types'
 
 export const PROVIDERS: { value: LlmProvider; label: string }[] = [
   { value: 'glm', label: 'GLM (Z.ai / Zhipu AI)' },

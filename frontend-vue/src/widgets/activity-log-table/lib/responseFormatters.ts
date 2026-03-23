@@ -1,5 +1,5 @@
 import type { Nullable } from '@/shared/lib'
-import type { JsonObj, TabMode } from '../model/types'
+import type { JsonObj, TabMode } from '@/widgets/activity-log-table/model/types'
 
 export const NESTED_REQUEST_KEYS = ['python_request', 'instagram_request', 'llm_request']
 export const NESTED_RESPONSE_KEYS = ['python_response', 'instagram_response', 'llm_response']

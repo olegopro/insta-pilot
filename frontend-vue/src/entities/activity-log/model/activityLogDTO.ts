@@ -1,6 +1,6 @@
 import type { Nullable } from '@/shared/lib'
-import type { ActivityLogApi, ActivityStatsApi, AccountActivitySummaryApi, ActivityLogsResponseApi } from './apiTypes'
-import type { ActivityLog, ActivityStats, AccountActivitySummary } from './types'
+import type { ActivityLogApi, ActivityStatsApi, AccountActivitySummaryApi, ActivityLogsResponseApi } from '@/entities/activity-log/model/apiTypes'
+import type { ActivityLog, ActivityStats, AccountActivitySummary } from '@/entities/activity-log/model/types'
 
 interface LogsResponse {
   items: ActivityLog[]

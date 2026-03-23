@@ -1,6 +1,6 @@
-import type { ActivityLogApi } from './apiTypes'
-import type { SidebarActivityEntry } from './types'
-import { summarizeResponse } from './activityLogListDTO'
+import type { ActivityLogApi } from '@/entities/activity-log/model/apiTypes'
+import type { SidebarActivityEntry } from '@/entities/activity-log/model/types'
+import { summarizeResponse } from '@/entities/activity-log/model/activityLogListDTO'
 
 class SidebarActivityDTO {
   toLocal(event: ActivityLogApi): SidebarActivityEntry {

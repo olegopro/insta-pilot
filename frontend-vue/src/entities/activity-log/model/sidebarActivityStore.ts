@@ -1,8 +1,8 @@
 import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { SidebarActivityEntry, ActionType, QuickFilter } from './types'
-import type { ActivityLogApi } from './apiTypes'
-import sidebarActivityDTO from './sidebarActivityDTO'
+import type { SidebarActivityEntry, ActionType, QuickFilter } from '@/entities/activity-log/model/types'
+import type { ActivityLogApi } from '@/entities/activity-log/model/apiTypes'
+import sidebarActivityDTO from '@/entities/activity-log/model/sidebarActivityDTO'
 
 const MAX_ENTRIES = 200
 const SIDEBAR_WIDTH_KEY = 'sidebar_width'

@@ -5,8 +5,8 @@
   import 'swiper/css/pagination'
   import { MEDIA_TYPE } from '@/entities/media-post'
   import type { MediaPost } from '@/entities/media-post'
-  import { useMediaStyle } from './useMediaStyle'
-  import { useSwiperCarousel } from './useSwiperCarousel'
+  import { useMediaStyle } from '@/shared/ui/media-display/useMediaStyle'
+  import { useSwiperCarousel } from '@/shared/ui/media-display/useSwiperCarousel'
 
   const props = defineProps<{
     post: MediaPost

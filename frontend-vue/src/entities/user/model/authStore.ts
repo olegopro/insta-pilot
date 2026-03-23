@@ -2,10 +2,10 @@ import { computed, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
-import type { UserApi, LoginRequestApi, AuthResponseApi } from './apiTypes'
-import type { User, LoginRequest } from './types'
+import type { UserApi, LoginRequestApi, AuthResponseApi } from '@/entities/user/model/apiTypes'
+import type { User, LoginRequest } from '@/entities/user/model/types'
 import type { Nullable } from '@/shared/lib'
-import userDTO from './userDTO'
+import userDTO from '@/entities/user/model/userDTO'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = shallowRef<Nullable<User>>(null)

@@ -2,7 +2,7 @@
   import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
   import { useSearchStore, useCommentStore, MEDIA_TYPE } from '@/entities/media-post'
-  import CommentList from './CommentList.vue'
+  import CommentList from '@/features/post-detail/ui/CommentList.vue'
   import { formatCount, formatDate, notifyError, notifySuccess } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
@@ -11,7 +11,7 @@
   import { InputComponent } from '@/shared/ui/input-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { useCommentGeneration, GenerationStatus } from '@/features/generate-comment'
-  import type { PostState } from '../model/types'
+  import type { PostState } from '@/features/post-detail/model/types'
 
   const props = defineProps<{
     post: MediaPost

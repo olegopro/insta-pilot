@@ -8,9 +8,9 @@ import type {
   InstagramAccountDetailedApi,
   AddAccountResponseApi,
   DeviceProfileApi
-} from './apiTypes'
-import type { InstagramAccount, InstagramAccountDetailed, AddAccountRequest, DeviceProfile } from './types'
-import instagramAccountDTO from './instagramAccountDTO'
+} from '@/entities/instagram-account/model/apiTypes'
+import type { InstagramAccount, InstagramAccountDetailed, AddAccountRequest, DeviceProfile } from '@/entities/instagram-account/model/types'
+import instagramAccountDTO from '@/entities/instagram-account/model/instagramAccountDTO'
 
 export const useAccountStore = defineStore('accounts', () => {
   const fetchAccountsApi = useApi<ApiResponseWrapper<InstagramAccountApi[]>>(

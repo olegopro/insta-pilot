@@ -6,7 +6,7 @@
   import { BadgeComponent } from '@/shared/ui/badge-component'
   import { activityLogTableColumns } from '@/entities/activity-log'
   import type { ActivityLogRowModel } from '@/entities/activity-log'
-  import ActivityLogExpandedRow from './ActivityLogExpandedRow.vue'
+  import ActivityLogExpandedRow from '@/widgets/activity-log-table/ui/ActivityLogExpandedRow.vue'
 
   interface Props {
     rows: ActivityLogRowModel[]

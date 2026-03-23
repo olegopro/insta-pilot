@@ -3,9 +3,9 @@ import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { Nullable } from '@/shared/lib'
-import type { MediaPost, Location } from './types'
-import type { SearchResponseApi, SearchLocationsResponseApi, SendCommentResponseApi } from './apiTypes'
-import mediaPostDTO from './mediaPostDTO'
+import type { MediaPost, Location } from '@/entities/media-post/model/types'
+import type { SearchResponseApi, SearchLocationsResponseApi, SendCommentResponseApi } from '@/entities/media-post/model/apiTypes'
+import mediaPostDTO from '@/entities/media-post/model/mediaPostDTO'
 
 export const useSearchStore = defineStore('search', () => {
   const searchResults = ref<MediaPost[]>([])

@@ -2,9 +2,9 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import { api } from '@/boot/axios'
-import type { UserApi } from './apiTypes'
-import type { User } from './types'
-import userDTO from './userDTO'
+import type { UserApi } from '@/entities/user/model/apiTypes'
+import type { User } from '@/entities/user/model/types'
+import userDTO from '@/entities/user/model/userDTO'
 
 export const useAdminUsersStore = defineStore('adminUsers', () => {
   const listApi = useApi<ApiResponseWrapper<UserApi[]>>(

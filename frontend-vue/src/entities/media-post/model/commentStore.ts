@@ -4,9 +4,9 @@ import { isCancel } from 'axios'
 import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { Nullable } from '@/shared/lib'
-import type { PostComment } from './types'
-import type { FetchCommentsResponseApi, FetchCommentRepliesResponseApi } from './apiTypes'
-import mediaPostDTO from './mediaPostDTO'
+import type { PostComment } from '@/entities/media-post/model/types'
+import type { FetchCommentsResponseApi, FetchCommentRepliesResponseApi } from '@/entities/media-post/model/apiTypes'
+import mediaPostDTO from '@/entities/media-post/model/mediaPostDTO'
 
 export const useCommentStore = defineStore('comments', () => {
   const comments = ref<PostComment[]>([])

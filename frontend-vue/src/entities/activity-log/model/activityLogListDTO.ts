@@ -1,7 +1,7 @@
-import type { ActivityLog } from './types'
-import type { ActivityLogRowModel } from './activityLogTableColumns'
+import type { ActivityLog } from '@/entities/activity-log/model/types'
+import type { ActivityLogRowModel } from '@/entities/activity-log/model/activityLogTableColumns'
 import type { Nullable } from '@/shared/lib'
-import { ACTION_LABELS, ACTION_COLORS, STATUS_CONFIG, HTTP_CODE_COLOR } from './constants'
+import { ACTION_LABELS, ACTION_COLORS, STATUS_CONFIG, HTTP_CODE_COLOR } from '@/entities/activity-log/model/constants'
 import { formatTimeHMS, formatDuration } from '@/shared/lib'
 
 export function summarizeResponse(summary: Nullable<Record<string, unknown>>): string {

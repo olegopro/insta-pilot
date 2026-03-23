@@ -3,8 +3,8 @@ import type {
   InstagramAccountDetailedApi,
   AddAccountRequestApi,
   DeviceProfileApi
-} from './apiTypes'
-import type { InstagramAccount, InstagramAccountDetailed, AddAccountRequest, DeviceProfile } from './types'
+} from '@/entities/instagram-account/model/apiTypes'
+import type { InstagramAccount, InstagramAccountDetailed, AddAccountRequest, DeviceProfile } from '@/entities/instagram-account/model/types'
 import { proxyImageUrl } from '@/shared/lib'
 
 class InstagramAccountDTO {

@@ -1,4 +1,4 @@
-import type { MediaPost } from './types'
+import type { MediaPost } from '@/entities/media-post/model/types'
 
 export const MOCK_FEED: MediaPost[] = [
   {

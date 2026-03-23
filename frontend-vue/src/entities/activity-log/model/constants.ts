@@ -1,4 +1,4 @@
-import type { ActionType, ActionStatus } from './types'
+import type { ActionType, ActionStatus } from '@/entities/activity-log/model/types'
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   login:                  'Авторизация',

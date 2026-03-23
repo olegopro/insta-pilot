@@ -1,4 +1,4 @@
-import type { Nullable } from './types'
+import type { Nullable } from '@/shared/lib/types'
 
 export const formatCount = (count: number): string => {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`

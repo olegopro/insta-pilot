@@ -2,9 +2,9 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
-import type { ActivityLog, ActivityStats, AccountActivitySummary, ActivityFilters } from './types'
-import type { ActivityLogsResponseApi, ActivityStatsApi, AccountActivitySummaryApi, ActivityLogApi } from './apiTypes'
-import activityLogDTO from './activityLogDTO'
+import type { ActivityLog, ActivityStats, AccountActivitySummary, ActivityFilters } from '@/entities/activity-log/model/types'
+import type { ActivityLogsResponseApi, ActivityStatsApi, AccountActivitySummaryApi, ActivityLogApi } from '@/entities/activity-log/model/apiTypes'
+import activityLogDTO from '@/entities/activity-log/model/activityLogDTO'
 
 export const useActivityLogStore = defineStore('activityLog', () => {
   const logs = ref<ActivityLog[]>([])

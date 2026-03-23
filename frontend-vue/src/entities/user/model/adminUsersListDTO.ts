@@ -1,5 +1,5 @@
-import type { User } from './types'
-import type { UserRowModel } from './adminUsersTableColumns'
+import type { User } from '@/entities/user/model/types'
+import type { UserRowModel } from '@/entities/user/model/adminUsersTableColumns'
 
 class AdminUsersListDTO {
   toLocal(data: User[]): UserRowModel[] {

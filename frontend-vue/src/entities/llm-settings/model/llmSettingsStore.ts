@@ -2,9 +2,9 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import { api } from '@/boot/axios'
-import type { LlmSetting, LlmSettingFormData } from './types'
-import type { LlmSettingApi, LlmSettingDetailApi, LlmBasePromptApi } from './apiTypes'
-import llmSettingsDTO from './llmSettingsDTO'
+import type { LlmSetting, LlmSettingFormData } from '@/entities/llm-settings/model/types'
+import type { LlmSettingApi, LlmSettingDetailApi, LlmBasePromptApi } from '@/entities/llm-settings/model/apiTypes'
+import llmSettingsDTO from '@/entities/llm-settings/model/llmSettingsDTO'
 
 export const useLlmSettingsStore = defineStore('llmSettings', () => {
   const fetchAllApi = useApi<ApiResponseWrapper<LlmSettingApi[]>>(

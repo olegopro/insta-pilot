@@ -18,7 +18,7 @@
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'
   import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
-  import type { SearchMode } from '../model/types'
+  import type { SearchMode } from '@/pages/search/model/types'
 
   const route = useRoute()
   const router = useRouter()

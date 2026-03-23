@@ -4,6 +4,7 @@ import pluginVue from 'eslint-plugin-vue'
 import pluginQuasar from '@quasar/app-vite/eslint'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import stylisticPlugin from '@stylistic/eslint-plugin'
+import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths'
 // import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting';
 
 export default defineConfigWithVueTs(
@@ -38,13 +39,21 @@ export default defineConfigWithVueTs(
 
   {
     files: ['**/*.ts', '**/*.vue'],
-    plugins: { '@stylistic': stylisticPlugin },
+    plugins: {
+      '@stylistic': stylisticPlugin,
+      'no-relative-import-paths': noRelativeImportPaths
+    },
     rules: {
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       '@typescript-eslint/no-confusing-void-expression': 'off',
       '@stylistic/quotes': ['warn', 'single', { avoidEscape: true }],
       '@stylistic/arrow-parens': ['error', 'always'],
-      '@stylistic/semi': ['error', 'never']
+      '@stylistic/semi': ['error', 'never'],
+      'no-relative-import-paths/no-relative-import-paths': ['error', {
+        allowSameFolder: false,
+        rootDir: 'src',
+        prefix: '@'
+      }]
     }
   },
 

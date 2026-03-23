@@ -6,8 +6,8 @@
   import { useGlobalActivityLive } from '@/features/activity-live'
   import { ActivitySidebar } from '@/widgets/activity-sidebar'
   import { ButtonComponent } from '@/shared/ui/button-component'
-  import AppNavTabs from './AppNavTabs.vue'
-  import UserMenuDropdown from './UserMenuDropdown.vue'
+  import AppNavTabs from '@/layouts/AppNavTabs.vue'
+  import UserMenuDropdown from '@/layouts/UserMenuDropdown.vue'
 
   const router = useRouter()
 

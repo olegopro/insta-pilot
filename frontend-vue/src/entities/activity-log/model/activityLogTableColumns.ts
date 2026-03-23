@@ -1,6 +1,6 @@
 import type { QTableColumn } from 'quasar'
 import type { Nullable } from '@/shared/lib'
-import type { ActionType, ActionStatus } from './types'
+import type { ActionType, ActionStatus } from '@/entities/activity-log/model/types'
 
 export interface ActivityLogRowModel {
   id: number
