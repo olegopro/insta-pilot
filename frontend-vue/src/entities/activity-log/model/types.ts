@@ -11,6 +11,7 @@ export type ActionType =
   | 'fetch_user_info'
   | 'generate_comment'
   | 'fetch_comments'
+  | 'fetch_comment_replies'
 
 export type ActionStatus =
   | 'success'

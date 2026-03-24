@@ -24,7 +24,7 @@
 .login-page {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, $primary 0%, $primary 70%, $surface-primary 200%);
+  background: linear-gradient(180deg,  $primary 90%, $action-search 200%, $surface-primary 20%);
   min-height: 100vh;
 }
 
