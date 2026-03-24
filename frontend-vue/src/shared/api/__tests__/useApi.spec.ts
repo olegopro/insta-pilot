@@ -5,9 +5,7 @@ import { useApi } from '@/shared/api'
 describe('useApi', () => {
   it('loading становится true во время запроса, false после завершения', async () => {
     let resolveFn!: (value: string) => void
-    const pending = new Promise<string>((resolve) => {
-      resolveFn = resolve
-    })
+    const pending = new Promise<string>((resolve) => resolveFn = resolve)
     const { execute, loading } = useApi(() => pending)
 
     const promise = execute()

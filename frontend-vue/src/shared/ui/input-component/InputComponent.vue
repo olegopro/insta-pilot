@@ -22,9 +22,7 @@
   const model = defineModel<QInputProps['modelValue']>()
   const passType = ref(props.type)
 
-  const changePassVisibilityHandler = () => {
-    passType.value = passType.value === 'password' ? 'text' : 'password'
-  }
+  const changePassVisibilityHandler = () => passType.value = passType.value === 'password' ? 'text' : 'password'
 </script>
 
 <template>

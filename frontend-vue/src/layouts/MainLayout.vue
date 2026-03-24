@@ -16,9 +16,11 @@
 
   const { subscribe, unsubscribe } = useGlobalActivityLive()
 
-  const entryClickHandler = (entry: SidebarActivityEntry) => {
-    void router.push({ path: `/logs/${String(entry.accountId)}`, query: { highlight: String(entry.id) } })
-  }
+  const entryClickHandler = (entry: SidebarActivityEntry) =>
+    void router.push({
+      path: `/logs/${String(entry.accountId)}`,
+      query: { highlight: String(entry.id) }
+    })
 
   onMounted(subscribe)
   onBeforeUnmount(unsubscribe)

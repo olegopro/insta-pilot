@@ -15,14 +15,12 @@
   const emailRules = [requiredField, checkEmail]
   const passwordRules = [requiredField]
 
-  const submitHandler = async () => {
-    await authStore.login({
-      email: email.value,
-      password: password.value
-    })
-      .then(() => router.push('/'))
-      .catch(() => notifyError(authStore.loginError ?? 'Ошибка входа'))
-  }
+  const submitHandler = async () => await authStore.login({
+    email: email.value,
+    password: password.value
+  })
+    .then(() => router.push('/'))
+    .catch(() => notifyError(authStore.loginError ?? 'Ошибка входа'))
 </script>
 
 <template>

@@ -5,6 +5,7 @@ import pluginQuasar from '@quasar/app-vite/eslint'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import stylisticPlugin from '@stylistic/eslint-plugin'
 import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths'
+import localPlugin from './eslint-local-rules/index.js'
 // import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting';
 
 export default defineConfigWithVueTs(
@@ -151,6 +152,11 @@ export default defineConfigWithVueTs(
       '@stylistic/eol-last': ['error', 'always'],
       '@stylistic/object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }]
     }
+  },
+
+  {
+    plugins: { local: localPlugin },
+    rules: { 'local/arrow-concise-body': 'warn' }
   },
 
   {

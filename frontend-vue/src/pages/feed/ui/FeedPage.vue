@@ -29,10 +29,8 @@
   const isMockMode = computed(() => !isInitializing.value && !selectedAccount.value)
   const displayPosts = computed(() => isMockMode.value ? MOCK_FEED : feedStore.posts)
 
-  watch(selectedAccount, (account) => {
-    account && feedStore.loadFeed(account.id)
-      .catch((error: unknown) => isCancelledRequest(error) || notifyError(feedStore.feedError ?? 'Ошибка загрузки ленты'))
-  })
+  watch(selectedAccount, (account) => account && feedStore.loadFeed(account.id)
+    .catch((error: unknown) => isCancelledRequest(error) || notifyError(feedStore.feedError ?? 'Ошибка загрузки ленты')))
 
   const refreshFeedHandler = () => {
     if (!selectedAccount.value) return
@@ -40,9 +38,7 @@
       .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка обновления ленты'))
   }
 
-  const cacheToggleHandler = (enabled: boolean) => {
-    selectedAccount.value && feedStore.setCacheEnabled(selectedAccount.value.id, enabled)
-  }
+  const cacheToggleHandler = (enabled: boolean) => selectedAccount.value && feedStore.setCacheEnabled(selectedAccount.value.id, enabled)
 
   const minPostsOptions = [
     { label: 'По умолчанию', value: null },
@@ -86,9 +82,7 @@
       .finally(() => loadingUserPk.value = null)
   }
 
-  onMounted(() => {
-    void initAccounts()
-  })
+  onMounted(() => void initAccounts())
 
   onBeforeRouteLeave(() => {
     feedStore.cancelFeedLoad()

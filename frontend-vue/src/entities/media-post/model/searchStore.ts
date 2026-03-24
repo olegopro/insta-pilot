@@ -64,9 +64,7 @@ export const useSearchStore = defineStore('search', () => {
     searchCursor.value = null
   }
 
-  const clearLocations = () => {
-    locations.value = []
-  }
+  const clearLocations = () => locations.value = []
 
   const searchHashtag = async (accountId: number, tag: string, amount?: number) => {
     lastHashtag.value = tag

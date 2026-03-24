@@ -36,7 +36,7 @@ export function useSwiperCarousel(
     if (deltaX >= deltaY || deltaY < 50 || !swiperRef.value || wheelLocked) return
     event.preventDefault()
     wheelLocked = true
-    setTimeout(() => { wheelLocked = false }, 500)
+    setTimeout(() => wheelLocked = false, 500)
     event.deltaY > 0 ? swiperRef.value.slideNext() : swiperRef.value.slidePrev()
   }
 
@@ -53,7 +53,7 @@ export function useSwiperCarousel(
    * Вызывается при событии `@slide-change` — синхронизирует индекс активного
    * слайда с внешней v-model переменной `carouselSlide`.
    */
-  const slideChangeHandler = (swiper: SwiperClass) => { carouselSlide.value = swiper.activeIndex }
+  const slideChangeHandler = (swiper: SwiperClass) => carouselSlide.value = swiper.activeIndex
 
   // Внешнее изменение carouselSlide (например, из PostDetailModal) → прокрутка Swiper
   watch(carouselSlide, (index) => swiperRef.value?.activeIndex !== index && swiperRef.value?.slideTo(index))

@@ -18,22 +18,18 @@
   const basePromptEdit = ref<string>('')
   const basePromptDirty = computed(() => basePromptEdit.value !== (store.basePrompt ?? ''))
 
-  watch(() => store.basePrompt, (value) => { basePromptEdit.value = value ?? '' })
+  watch(() => store.basePrompt, (value) => basePromptEdit.value = value ?? '')
 
-  const saveBasePromptHandler = () => {
-    store.updateBasePrompt(basePromptEdit.value)
-      .then(() => notifySuccess('Базовый промпт сохранён'))
-      .catch(() => notifyError('Ошибка сохранения'))
-  }
+  const saveBasePromptHandler = () => store.updateBasePrompt(basePromptEdit.value)
+    .then(() => notifySuccess('Базовый промпт сохранён'))
+    .catch(() => notifyError('Ошибка сохранения'))
 
-  const resetBasePromptHandler = () => {
-    store.resetBasePrompt()
-      .then(() => {
-        basePromptEdit.value = store.basePrompt ?? ''
-        notifySuccess('Базовый промпт сброшен до дефолтного')
-      })
-      .catch(() => notifyError('Ошибка сброса'))
-  }
+  const resetBasePromptHandler = () => store.resetBasePrompt()
+    .then(() => {
+      basePromptEdit.value = store.basePrompt ?? ''
+      notifySuccess('Базовый промпт сброшен до дефолтного')
+    })
+    .catch(() => notifyError('Ошибка сброса'))
 
   const showForm = ref(false)
   const settingToDelete = ref<LlmSetting | null>(null)
@@ -81,11 +77,9 @@
       .catch(() => notifyError(store.saveSettingError ?? 'Ошибка сохранения'))
   }
 
-  const setDefaultHandler = (id: number) => {
-    store.setDefault(id)
-      .then(() => notifySuccess('Провайдер по умолчанию обновлён'))
-      .catch(() => notifyError('Ошибка'))
-  }
+  const setDefaultHandler = (id: number) => store.setDefault(id)
+    .then(() => notifySuccess('Провайдер по умолчанию обновлён'))
+    .catch(() => notifyError('Ошибка'))
 
   const deleteHandler = (setting: LlmSetting) => {
     settingToDelete.value = setting
@@ -116,15 +110,13 @@
       .catch(() => notifyError(store.testConnectionError ?? 'Ошибка подключения'))
   }
 
-  const resetForm = () => {
-    form.value = {
-      provider: 'glm',
-      apiKey: '',
-      modelName: 'glm-4.6v-flash',
-      systemPrompt: null,
-      tone: 'friendly',
-      useCaption: true
-    }
+  const resetForm = () => form.value = {
+    provider: 'glm',
+    apiKey: '',
+    modelName: 'glm-4.6v-flash',
+    systemPrompt: null,
+    tone: 'friendly',
+    useCaption: true
   }
 
   const providerLabel = (provider: LlmProvider) =>

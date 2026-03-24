@@ -16,12 +16,11 @@ export function useGlobalActivityLive() {
 
     channelName = `activity-global.${String(userId)}`
     echo.private(channelName)
-      .listen('.ActivityLogCreated', (event: ActivityLogApi) => {
-        sidebarStore.addEntry(event)
-      })
-      .subscribed(() => {
-        isConnected.value = true
-      })
+      .listen(
+        '.ActivityLogCreated',
+        (event: ActivityLogApi) => sidebarStore.addEntry(event)
+      )
+      .subscribed(() => isConnected.value = true)
   }
 
   const unsubscribe = () => {

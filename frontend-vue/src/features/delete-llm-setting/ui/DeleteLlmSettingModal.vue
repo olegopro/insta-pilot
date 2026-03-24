@@ -15,15 +15,13 @@
   const store = useLlmSettingsStore()
   const isOpen = defineModel<boolean>({ default: false })
 
-  const submitHandler = () => {
-    store.deleteSetting(props.setting.id)
-      .then(() => {
-        notifySuccess('Провайдер удалён')
-        emit('deleted')
-        isOpen.value = false
-      })
-      .catch(() => notifyError(store.deleteSettingError ?? 'Ошибка удаления'))
-  }
+  const submitHandler = () => store.deleteSetting(props.setting.id)
+    .then(() => {
+      notifySuccess('Провайдер удалён')
+      emit('deleted')
+      isOpen.value = false
+    })
+    .catch(() => notifyError(store.deleteSettingError ?? 'Ошибка удаления'))
 </script>
 
 <template>

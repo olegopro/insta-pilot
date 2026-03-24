@@ -47,9 +47,7 @@ export const useSidebarActivityStore = defineStore('sidebarActivity', () => {
     unreadCount.value = 0
   }
 
-  const close = () => {
-    isOpen.value = false
-  }
+  const close = () => isOpen.value = false
 
   const setWidth = (value: number) => {
     width.value = Math.min(600, Math.max(250, value))

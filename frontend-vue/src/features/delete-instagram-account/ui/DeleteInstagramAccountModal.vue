@@ -15,15 +15,13 @@
   const store = useAccountStore()
   const isOpen = defineModel<boolean>({ default: false })
 
-  const submitHandler = () => {
-    store.deleteAccount(props.account.id)
-      .then(() => {
-        notifySuccess('Аккаунт удалён')
-        emit('deleted')
-        isOpen.value = false
-      })
-      .catch(() => notifyError(store.deleteAccountError ?? 'Ошибка'))
-  }
+  const submitHandler = () => store.deleteAccount(props.account.id)
+    .then(() => {
+      notifySuccess('Аккаунт удалён')
+      emit('deleted')
+      isOpen.value = false
+    })
+    .catch(() => notifyError(store.deleteAccountError ?? 'Ошибка'))
 </script>
 
 <template>

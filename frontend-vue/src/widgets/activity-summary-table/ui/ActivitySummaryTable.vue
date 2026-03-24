@@ -22,9 +22,7 @@
 
   const rows = computed(() => activitySummaryListDTO.toLocal(props.data))
 
-  const rowClickHandler = (_: Event, row: { accountId: number }) => {
-    emit('row-click', row.accountId)
-  }
+  const rowClickHandler = (_: Event, row: { accountId: number }) => emit('row-click', row.accountId)
 </script>
 
 <template>

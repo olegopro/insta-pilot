@@ -60,9 +60,7 @@
     }
 
     store.fetchDeviceProfiles()
-      .then(() => {
-        form.deviceProfileId = store.deviceProfiles[0]?.id ?? null
-      })
+      .then(() => form.deviceProfileId = store.deviceProfiles[0]?.id ?? null)
       .catch(() => notifyError('Не удалось загрузить устройства'))
   })
 </script>

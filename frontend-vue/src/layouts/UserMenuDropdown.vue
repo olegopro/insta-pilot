@@ -7,11 +7,9 @@
   const router = useRouter()
   const authStore = useAuthStore()
 
-  const logoutHandler = async () => {
-    await authStore.logout()
-      .then(() => router.push('/login'))
-      .catch(() => notifyError('Ошибка выхода'))
-  }
+  const logoutHandler = async () => await authStore.logout()
+    .then(() => router.push('/login'))
+    .catch(() => notifyError('Ошибка выхода'))
 </script>
 
 <template>

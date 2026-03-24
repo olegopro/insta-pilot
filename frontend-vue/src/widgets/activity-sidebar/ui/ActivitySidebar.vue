@@ -31,13 +31,9 @@
   const lastScrollInfo = ref<ScrollInfo | null>(null)
   const showFilterLabels = computed(() => store.width > 400)
 
-  const resizeHandler = (delta: number) => {
-    store.setWidth(store.width + delta)
-  }
+  const resizeHandler = (delta: number) => store.setWidth(store.width + delta)
 
-  const scrollHandler = (info: ScrollInfo) => {
-    lastScrollInfo.value = info
-  }
+  const scrollHandler = (info: ScrollInfo) => lastScrollInfo.value = info
 
   const isAtBottom = () => {
     if (!lastScrollInfo.value) return true

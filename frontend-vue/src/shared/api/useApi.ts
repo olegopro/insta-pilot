@@ -40,9 +40,7 @@ export function useApi<TData, TArgs = void>(
     }
   }
 
-  const abort = () => {
-    abortController?.abort()
-  }
+  const abort = () => abortController?.abort()
 
   return { execute, abort, loading, response, error }
 }

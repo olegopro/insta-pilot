@@ -14,18 +14,14 @@ export function useFeedCache() {
     return saved ? Number(saved) : null
   })())
 
-  const loadCacheState = (accountId: number) => {
-    cacheEnabled.value = localStorage.getItem(`${CACHE_ENABLED_KEY}${String(accountId)}`) === '1'
-  }
+  const loadCacheState = (accountId: number) => cacheEnabled.value = localStorage.getItem(`${CACHE_ENABLED_KEY}${String(accountId)}`) === '1'
 
   const setCacheEnabled = (accountId: number, enabled: boolean) => {
     cacheEnabled.value = enabled
     localStorage.setItem(`${CACHE_ENABLED_KEY}${String(accountId)}`, enabled ? '1' : '0')
   }
 
-  const saveSeenPosts = (accountId: number) => {
-    localStorage.setItem(`${SEEN_POSTS_KEY}${String(accountId)}`, JSON.stringify(seenPosts.value))
-  }
+  const saveSeenPosts = (accountId: number) => localStorage.setItem(`${SEEN_POSTS_KEY}${String(accountId)}`, JSON.stringify(seenPosts.value))
 
   const loadSeenPosts = (accountId: number): string[] => {
     try {
@@ -45,9 +41,7 @@ export function useFeedCache() {
     }
   }
 
-  const resetSeenPosts = () => {
-    seenPosts.value = []
-  }
+  const resetSeenPosts = () => seenPosts.value = []
 
   /** Объединяет новые ID постов с кэшированными, ограничивая размер */
   const mergeSeenPosts = (accountId: number, newIds: string[]) => {

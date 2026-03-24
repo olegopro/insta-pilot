@@ -69,9 +69,7 @@
     }
   }
 
-  watch(generatedComment, (comment) => {
-    comment && (commentText.value = comment)
-  })
+  watch(generatedComment, (comment) => comment && (commentText.value = comment))
 
   watch(() => props.post.id, (newId, oldId) => {
     if (oldId) {
@@ -85,7 +83,7 @@
     const cached = postStateCache.get(newId)
     if (cached) {
       restore(cached.step, cached.comment, cached.error)
-      void nextTick(() => { commentText.value = cached.commentText })
+      void nextTick(() => commentText.value = cached.commentText)
     } else {
       reset()
       commentText.value = ''

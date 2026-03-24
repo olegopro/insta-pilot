@@ -41,9 +41,7 @@
     await store.loadOlderLogs(accountId.value, filters.value)
   }
 
-  const applyFiltersHandler = () => {
-    accountId.value && void store.fetchLogs(accountId.value, filters.value)
-  }
+  const applyFiltersHandler = () => accountId.value && void store.fetchLogs(accountId.value, filters.value)
 
   const selectActionHandler = (action: ActionType | null) => {
     const updated = { ...filters.value }
@@ -61,13 +59,8 @@
     applyFiltersHandler()
   }
 
-  const rowClickHandler = (id: number) => {
-    void router.push(`/logs/${String(id)}`)
-  }
-
-  const backHandler = () => {
-    void router.push('/logs')
-  }
+  const rowClickHandler = (id: number) => void router.push(`/logs/${String(id)}`)
+  const backHandler = () => void router.push('/logs')
 
   const scrollToHighlight = async (id: number) => {
     await nextTick()

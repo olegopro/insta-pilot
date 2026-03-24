@@ -20,9 +20,7 @@
   let observer: Nullable<ResizeObserver> = null
   let previousLength = 0
 
-  const setColumnRef = (element: Nullable<HTMLElement>, index: number) => {
-    columnRefs.value[index] = element
-  }
+  const setColumnRef = (element: Nullable<HTMLElement>, index: number) => columnRefs.value[index] = element
 
   const resetColumns = () => {
     columnItems.value = Array.from({ length: columnCount.value }, () => [])
@@ -73,9 +71,7 @@
 
   onMounted(() => {
     observer = new ResizeObserver(() => {
-      columnRefs.value.forEach((element, index) => {
-        element && (columnHeights.value[index] = element.scrollHeight)
-      })
+      columnRefs.value.forEach((element, index) => element && (columnHeights.value[index] = element.scrollHeight))
       const firstColumn = columnRefs.value[0]
       firstColumn && (columnWidth.value = firstColumn.clientWidth)
     })

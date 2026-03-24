@@ -13,12 +13,11 @@ export function useActivityLive(accountId: Ref<number>) {
     if (!accountId.value) return
     channelName = `account-activity.${String(accountId.value)}`
     echo.private(channelName)
-      .listen('.ActivityLogCreated', (event: ActivityLogApi) => {
-        store.appendNewLog(event)
-      })
-      .subscribed(() => {
-        isConnected.value = true
-      })
+      .listen(
+        '.ActivityLogCreated',
+        (event: ActivityLogApi) => store.appendNewLog(event)
+      )
+      .subscribed(() => isConnected.value = true)
   }
 
   const unsubscribe = () => {

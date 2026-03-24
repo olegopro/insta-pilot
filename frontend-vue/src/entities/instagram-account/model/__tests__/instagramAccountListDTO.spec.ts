@@ -28,9 +28,7 @@ describe('instagramAccountListDTO.toLocal', () => {
     })
   })
 
-  it('возвращает пустой массив при пустом входе', () => {
-    expect(instagramAccountListDTO.toLocal([])).toEqual([])
-  })
+  it('возвращает пустой массив при пустом входе', () => expect(instagramAccountListDTO.toLocal([])).toEqual([]))
 
   it('маппит несколько аккаунтов', () => {
     const accounts = [makeAccount({ id: 1 }), makeAccount({ id: 2, instagramLogin: 'second' })]

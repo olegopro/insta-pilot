@@ -42,9 +42,7 @@ describe('adminUsersListDTO.toLocal', () => {
     expect(result).toMatchObject([{ role: 'user' }])
   })
 
-  it('возвращает пустой массив при пустом входе', () => {
-    expect(adminUsersListDTO.toLocal([])).toEqual([])
-  })
+  it('возвращает пустой массив при пустом входе', () => expect(adminUsersListDTO.toLocal([])).toEqual([]))
 
   it('маппит несколько пользователей', () => {
     const users = [makeUser({ id: 1 }), makeUser({ id: 2, email: 'second@example.com' })]

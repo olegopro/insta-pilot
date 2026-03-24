@@ -131,7 +131,7 @@
     feedStore.fetchUserInfo(selectedAccount.value.id, post.user.pk)
       .then(() => userModal.open())
       .catch(() => notifyError('Не удалось загрузить профиль'))
-      .finally(() => { loadingUserPk.value = null })
+      .finally(() => loadingUserPk.value = null)
   }
 
   const openPostHandler = (post: MediaPost) => {
@@ -150,47 +150,45 @@
     void router.replace({ query: { account: String(account.id) } })
   })
 
-  onMounted(() => {
-    void initAccounts().then(() => {
-      const { mode, tag, account, location_pk, location_name } = route.query
+  onMounted(() => void initAccounts().then(() => {
+    const { mode, tag, account, location_pk, location_name } = route.query
 
-      if (account) {
-        isUrlInitializing = true
-        const found = accountStore.accounts.find((a) => String(a.id) === String(account))
-        found && (selectedAccount.value = found)
-        isUrlInitializing = false
-      }
+    if (account) {
+      isUrlInitializing = true
+      const found = accountStore.accounts.find((a) => String(a.id) === String(account))
+      found && (selectedAccount.value = found)
+      isUrlInitializing = false
+    }
 
-      const tagStr = tag ? String(tag) : ''
-      const locationPkNum = location_pk ? Number(location_pk) : 0
-      const locationNameStr = location_name ? String(location_name) : ''
+    const tagStr = tag ? String(tag) : ''
+    const locationPkNum = location_pk ? Number(location_pk) : 0
+    const locationNameStr = location_name ? String(location_name) : ''
 
-      if (mode === 'location' && locationPkNum && locationNameStr) {
-        searchMode.value = 'location'
-        const locationObj: Location = { pk: locationPkNum, name: locationNameStr, address: '', lat: 0, lng: 0 }
-        selectedLocation.value = locationObj
-        if (searchStore.searchResults.length > 0 && searchStore.lastLocation?.pk === locationPkNum) return
-        selectedAccount.value &&
-          searchStore.fetchLocationMedias(selectedAccount.value.id, locationObj)
-            .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка загрузки медиа локации'))
-      } else if (tagStr) {
+    if (mode === 'location' && locationPkNum && locationNameStr) {
+      searchMode.value = 'location'
+      const locationObj: Location = { pk: locationPkNum, name: locationNameStr, address: '', lat: 0, lng: 0 }
+      selectedLocation.value = locationObj
+      if (searchStore.searchResults.length > 0 && searchStore.lastLocation?.pk === locationPkNum) return
+      selectedAccount.value &&
+        searchStore.fetchLocationMedias(selectedAccount.value.id, locationObj)
+          .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка загрузки медиа локации'))
+    } else if (tagStr) {
+      searchMode.value = 'hashtag'
+      hashtagInput.value = tagStr
+      if (searchStore.searchResults.length > 0 && searchStore.lastHashtag === tagStr) return
+      selectedAccount.value &&
+        searchStore.searchHashtag(selectedAccount.value.id, tagStr)
+          .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка поиска по хэштегу'))
+    } else {
+      if (searchStore.lastHashtag) {
+        hashtagInput.value = searchStore.lastHashtag
         searchMode.value = 'hashtag'
-        hashtagInput.value = tagStr
-        if (searchStore.searchResults.length > 0 && searchStore.lastHashtag === tagStr) return
-        selectedAccount.value &&
-          searchStore.searchHashtag(selectedAccount.value.id, tagStr)
-            .catch((error: unknown) => isCancelledRequest(error) || notifyError('Ошибка поиска по хэштегу'))
-      } else {
-        if (searchStore.lastHashtag) {
-          hashtagInput.value = searchStore.lastHashtag
-          searchMode.value = 'hashtag'
-        } else if (searchStore.lastLocation) {
-          selectedLocation.value = searchStore.lastLocation
-          searchMode.value = 'location'
-        }
+      } else if (searchStore.lastLocation) {
+        selectedLocation.value = searchStore.lastLocation
+        searchMode.value = 'location'
       }
-    })
-  })
+    }
+  }))
 
   onBeforeRouteLeave(() => {
     searchStore.cancelSearch()

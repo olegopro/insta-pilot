@@ -49,13 +49,11 @@
       })
   })
 
-  const toggleActionHandler = (action: ActionType) => {
+  const toggleActionHandler = (action: ActionType) =>
     emit('select-action', props.activeAction === action ? null : action)
-  }
 
-  const toggleStatusHandler = (status: ActionStatus) => {
+  const toggleStatusHandler = (status: ActionStatus) =>
     emit('select-status', props.activeStatus === status ? null : status)
-  }
 </script>
 
 <template>
