@@ -114,6 +114,15 @@ class AuthTest extends TestCase {
             ]);
     }
 
+    public function test_login_fails_with_invalid_email_format(): void {
+        $response = $this->postJson('/api/auth/login', [
+            'email'    => 'not-an-email',
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(422);
+    }
+
     public function test_unauthenticated_cannot_access_me(): void {
         $response = $this->getJson('/api/auth/me');
 
