@@ -21,7 +21,9 @@ class InstagramAccountRepository implements InstagramAccountRepositoryInterface 
     }
 
     public function updateSessionData(int $id, string $sessionData): void {
-        InstagramAccount::where('id', $id)->update(['session_data' => $sessionData]);
+        $account = InstagramAccount::findOrFail($id);
+        $account->session_data = $sessionData;
+        $account->save();
     }
 
     public function findById(int $id): InstagramAccount | null {

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\EncryptsWithSalt;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class LlmSetting extends Model {
+    use HasFactory;
     use EncryptsWithSalt;
 
     protected $fillable = [
