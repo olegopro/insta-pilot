@@ -190,7 +190,7 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 - UI компоненты: только кастомные обёртки из `shared/ui/` (ButtonComponent, InputComponent, SelectComponent, ToggleComponent, ...) над Quasar, суффикс `Component`
 - Каждый action в store — через `useApi`, никакого внутреннего state в store
 - Public API слайсов — через `index.ts` в каждом сегменте
-- Стиль кода: стрелочные функции без `{}` если тело — один expression (`.catch(() => Notify.create(...))`)
+- Стиль кода: стрелочные функции без `{}` если тело — один expression (`.catch(() => Notify.create(...))`); enforced ESLint-правилом `local/arrow-concise-body` с autofix
 - Стиль кода: параметры callback-ов — только полные имена, без однобуквенных сокращений (`.then((response) => response.data)`, `.find((account) => account.id === id)`, не `r`, `a`, `e` и т.п.)`
 - Стиль кода: `&&` вместо `if` для коротких условных вызовов (`opened && fn()`)
 - Стиль кода: хуки жизненного цикла (`onMounted`, `onBeforeUnmount` и др.) размещать в самом конце `<script setup>`, после всех переменных, computed и watch — ESLint это не проверяет, соглашение проекта
