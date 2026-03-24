@@ -1,5 +1,4 @@
 import type { Nullable } from '@/shared/lib'
-import { ACTION_LABELS } from '@/entities/activity-log'
 
 export type ActionType =
   | 'login'
