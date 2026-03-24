@@ -16,7 +16,11 @@ export const useFeedStore = defineStore('feed', () => {
 
   const cache = useFeedCache()
 
-  const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; reason?: string; minPosts?: number }>(
+  const fetchFeedApi = useApi<ApiResponseWrapper<FeedResponseApi>, {
+    accountId: number;
+    reason?: string;
+    minPosts?: number
+  }>(
     ({ accountId, reason, minPosts }, signal) =>
       api.get(`/feed/${String(accountId)}`, {
         params: {
@@ -58,7 +62,12 @@ export const useFeedStore = defineStore('feed', () => {
 
   const refreshFeed = (accountId: number) => loadFeed(accountId, 'pull_to_refresh')
 
-  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>, { accountId: number; maxId?: string; seenPostsParam?: string; minPosts?: number }>(
+  const loadMoreApi = useApi<ApiResponseWrapper<FeedResponseApi>, {
+    accountId: number;
+    maxId?: string;
+    seenPostsParam?: string;
+    minPosts?: number
+  }>(
     ({ accountId, maxId, seenPostsParam, minPosts }, signal) =>
       api.get(`/feed/${String(accountId)}`, {
         params: {

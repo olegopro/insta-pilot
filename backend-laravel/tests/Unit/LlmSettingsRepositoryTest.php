@@ -83,8 +83,8 @@ class LlmSettingsRepositoryTest extends TestCase {
     }
 
     public function test_set_default_switches_default(): void {
-        $old = LlmSetting::factory()->default()->create();
-        $new = LlmSetting::factory()->create(['is_default' => false]);
+        $old = LlmSetting::factory()->openai()->default()->create();
+        $new = LlmSetting::factory()->glm()->create(['is_default' => false]);
 
         $this->repository->setDefault($new->id);
 
