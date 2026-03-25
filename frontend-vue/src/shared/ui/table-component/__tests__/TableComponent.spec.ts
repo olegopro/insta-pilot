@@ -29,7 +29,7 @@ describe('TableComponent', () => {
     const table = wrapper.find('[data-q-table]')
     const passedRows = JSON.parse(table.attributes('data-rows') ?? '[]') as typeof rows
     expect(passedRows).toHaveLength(2)
-    expect(passedRows[0].name).toBe('Alice')
+    expect(passedRows[0]!.name).toBe('Alice')
   })
 
   it('пробрасывает columns с правильными именами', () => {
@@ -39,13 +39,14 @@ describe('TableComponent', () => {
     })
     const table = wrapper.find('[data-q-table]')
     const passedColumns = JSON.parse(table.attributes('data-columns') ?? '[]') as typeof columns
-    expect(passedColumns[0].name).toBe('id')
-    expect(passedColumns[1].name).toBe('name')
+    expect(passedColumns[0]!.name).toBe('id')
+    expect(passedColumns[1]!.name).toBe('name')
   })
 
   it('проксирует слот body-cell', () => {
     const wrapper = mount(TableComponent, {
       props:    { columns, rows },
+      // @ts-expect-error partial slots object — QTable slot typing requires all slots
       slots:    { 'body-cell': '<span data-slot-body-cell>cell</span>' },
       global:   { stubs: { 'q-table': QTableStub } }
     })

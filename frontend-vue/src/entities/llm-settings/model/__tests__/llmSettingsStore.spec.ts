@@ -47,7 +47,7 @@ describe('llmSettingsStore', () => {
     await store.fetchAll()
 
     expect(store.settings).toHaveLength(2)
-    expect(store.settings[0].provider).toBe('openai')
+    expect(store.settings[0]!.provider).toBe('openai')
   })
 
   it('fetchAll маппит snake_case в camelCase', async () => {
@@ -58,9 +58,10 @@ describe('llmSettingsStore', () => {
     const store = useLlmSettingsStore()
     await store.fetchAll()
 
-    expect(store.settings[0].isDefault).toBe(true)
-    expect(store.settings[0].useCaption).toBe(false)
-    expect(store.settings[0].modelName).toBe('gpt-4o-mini')
+    const setting = store.settings[0]!
+    expect(setting.isDefault).toBe(true)
+    expect(setting.useCaption).toBe(false)
+    expect(setting.modelName).toBe('gpt-4o-mini')
   })
 
   it('saveSetting отправляет POST и перезагружает список', async () => {
@@ -93,7 +94,7 @@ describe('llmSettingsStore', () => {
     await store.setDefault(1)
 
     expect(api.patch).toHaveBeenCalledWith('/llm-settings/1/default')
-    expect(store.settings[0].isDefault).toBe(true)
+    expect(store.settings[0]!.isDefault).toBe(true)
   })
 
   it('deleteSetting отправляет DELETE и перезагружает список', async () => {

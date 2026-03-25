@@ -61,7 +61,7 @@ describe('searchStore', () => {
     await store.searchHashtag(1, 'travel')
 
     expect(store.searchResults).toHaveLength(1)
-    expect(store.searchResults[0].pk).toBe('1')
+    expect(store.searchResults[0]!.pk).toBe('1')
     expect(store.lastHashtag).toBe('travel')
   })
 
@@ -113,7 +113,7 @@ describe('searchStore', () => {
     await store.fetchLocations(1, 'Moscow')
 
     expect(store.locations).toHaveLength(1)
-    expect(store.locations[0].name).toBe('Red Square')
+    expect(store.locations[0]!.name).toBe('Red Square')
   })
 
   it('fetchLocationMedias загружает посты локации', async () => {
@@ -124,7 +124,7 @@ describe('searchStore', () => {
     await store.fetchLocationMedias(1, { pk: 1001, name: 'Red Square', address: 'Moscow', lat: 55.75, lng: 37.62 })
 
     expect(store.searchResults).toHaveLength(1)
-    expect(store.searchResults[0].pk).toBe('5')
+    expect(store.searchResults[0]!.pk).toBe('5')
   })
 
   it('loadMoreLocationMedias дозагружает посты локации', async () => {

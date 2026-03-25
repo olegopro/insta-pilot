@@ -65,7 +65,7 @@ const createTestRouter = () => {
   const router = createRouter({ history: createMemoryHistory(), routes })
 
   router.beforeEach(async (to) => {
-    const authStore = useAuthStore() as ReturnType<typeof makeAuthStore>
+    const authStore = useAuthStore() as unknown as ReturnType<typeof makeAuthStore>
     const token = localStorage.getItem('token')
 
     if (to.meta.requiresAuth) {

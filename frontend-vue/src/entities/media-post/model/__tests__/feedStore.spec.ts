@@ -67,7 +67,7 @@ describe('feedStore', () => {
     await store.loadFeed(1)
 
     expect(store.posts).toHaveLength(1)
-    expect(store.posts[0].id).toBe('1_111')
+    expect(store.posts[0]!.id).toBe('1_111')
     expect(store.nextMaxId).toBe('cursor-1')
     expect(store.moreAvailable).toBe(true)
   })
@@ -82,7 +82,7 @@ describe('feedStore', () => {
     await store.loadFeed(1)
 
     expect(store.posts).toHaveLength(1)
-    expect(store.posts[0].pk).toBe('3')
+    expect(store.posts[0]!.pk).toBe('3')
   })
 
   it('loadMoreFeed дозагружает посты', async () => {
@@ -132,7 +132,7 @@ describe('feedStore', () => {
     const store = useFeedStore()
     await store.loadFeed(1)
 
-    const post = store.posts[0]
+    const post = store.posts[0]!
     expect(post.hasLiked).toBe(false)
     expect(post.likeCount).toBe(10)
 
@@ -149,7 +149,7 @@ describe('feedStore', () => {
     const store = useFeedStore()
     await store.loadFeed(1)
 
-    const post = store.posts[0]
+    const post = store.posts[0]!
     try { await store.likePost(1, post) } catch { /* expected */ }
 
     expect(post.hasLiked).toBe(false)
@@ -205,7 +205,7 @@ describe('feedStore', () => {
     const store = useFeedStore()
     await store.loadFeed(1)
 
-    expect(store.isLiking(store.posts[0].id)).toBe(false)
+    expect(store.isLiking(store.posts[0]!.id)).toBe(false)
   })
 
   it('feedLoading маппит посты в camelCase', async () => {
@@ -214,8 +214,9 @@ describe('feedStore', () => {
     const store = useFeedStore()
     await store.loadFeed(1)
 
-    expect(store.posts[0].captionText).toBe('Hello')
-    expect(store.posts[0].likeCount).toBe(10)
-    expect(store.posts[0].user.username).toBe('testuser')
+    const post = store.posts[0]!
+    expect(post.captionText).toBe('Hello')
+    expect(post.likeCount).toBe(10)
+    expect(post.user.username).toBe('testuser')
   })
 })

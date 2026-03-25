@@ -52,7 +52,7 @@ describe('instagramAccountDTO.toLocalList', () => {
     ])
 
     expect(result).toHaveLength(2)
-    expect(result[1].instagramLogin).toBe('second')
+    expect(result[1]!.instagramLogin).toBe('second')
   })
 
   it('возвращает пустой массив при пустом входе', () => expect(instagramAccountDTO.toLocalList([])).toEqual([]))
@@ -83,8 +83,8 @@ describe('instagramAccountDTO.toLocalDeviceProfiles', () => it('маппит м�
   const result = instagramAccountDTO.toLocalDeviceProfiles(profiles)
 
   expect(result).toHaveLength(2)
-  expect(result[0].code).toBe('samsung_s20')
-  expect(result[1].title).toBe('Google Pixel 6')
+  expect(result[0]!.code).toBe('samsung_s20')
+  expect(result[1]!.title).toBe('Google Pixel 6')
 }))
 
 describe('instagramAccountDTO.toApiRequest', () => it('преобразует camelCase в snake_case для отправки на API', () => {

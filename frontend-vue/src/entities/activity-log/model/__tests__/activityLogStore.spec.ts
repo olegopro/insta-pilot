@@ -55,8 +55,8 @@ describe('activityLogStore', () => {
     await store.fetchLogs(10)
 
     expect(store.logs).toHaveLength(1)
-    expect(store.logs[0].action).toBe('like')
-    expect(store.logs[0].instagramLogin).toBe('user1')
+    expect(store.logs[0]!.action).toBe('like')
+    expect(store.logs[0]!.instagramLogin).toBe('user1')
   })
 
   it('fetchLogs устанавливает hasMoreBefore и total', async () => {
@@ -126,8 +126,8 @@ describe('activityLogStore', () => {
 
     expect(store.focusedId).toBe(3)
     // reverse() разворачивает порядок
-    expect(store.logs[0].id).toBe(1)
-    expect(store.logs[2].id).toBe(5)
+    expect(store.logs[0]!.id).toBe(1)
+    expect(store.logs[2]!.id).toBe(5)
   })
 
   it('appendNewLog добавляет запись в начало и увеличивает счётчик', () => {
@@ -137,7 +137,7 @@ describe('activityLogStore', () => {
     store.appendNewLog(makeLogApi({ id: 99 }))
 
     expect(store.logs).toHaveLength(1)
-    expect(store.logs[0].id).toBe(99)
+    expect(store.logs[0]!.id).toBe(99)
     expect(store.totalCount).toBe(6)
   })
 
@@ -197,8 +197,8 @@ describe('activityLogStore', () => {
     await store.fetchSummary()
 
     expect(store.summary).toHaveLength(1)
-    expect(store.summary[0].instagramLogin).toBe('user1')
-    expect(store.summary[0].successRate).toBe(0.95)
+    expect(store.summary[0]!.instagramLogin).toBe('user1')
+    expect(store.summary[0]!.successRate).toBe(0.95)
   })
 
   it('fetchLogsLoading изначально false', () => {

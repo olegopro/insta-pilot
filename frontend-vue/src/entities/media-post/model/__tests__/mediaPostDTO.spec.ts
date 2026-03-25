@@ -86,8 +86,8 @@ describe('mediaPostDTO.toLocalPost', () => {
     const result = mediaPostDTO.toLocalPost(post)
 
     expect(result.resources).toHaveLength(2)
-    expect(result.resources[0].pk).toBe('r1')
-    expect(result.resources[1].pk).toBe('r2')
+    expect(result.resources[0]!.pk).toBe('r1')
+    expect(result.resources[1]!.pk).toBe('r2')
   })
 
   it('маппит вложенного user', () => {
@@ -109,8 +109,8 @@ describe('mediaPostDTO.toLocal', () => it('маппит массив посто�
   const result = mediaPostDTO.toLocal([makePostApi({ pk: 'p1' }), makePostApi({ pk: 'p2' })])
 
   expect(result).toHaveLength(2)
-  expect(result[0].pk).toBe('p1')
-  expect(result[1].pk).toBe('p2')
+  expect(result[0]!.pk).toBe('p1')
+  expect(result[1]!.pk).toBe('p2')
 }))
 
 describe('mediaPostDTO.toLocalUserDetail', () => it('маппит расширенный профиль пользователя', () => {
@@ -165,7 +165,7 @@ describe('mediaPostDTO.toLocalComment', () => {
     const result = mediaPostDTO.toLocalComment(comment)
 
     expect(result.previewChildComments).toHaveLength(1)
-    expect(result.previewChildComments[0].pk).toBe('reply1')
+    expect(result.previewChildComments[0]!.pk).toBe('reply1')
   })
 })
 

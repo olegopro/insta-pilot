@@ -172,7 +172,8 @@ export default defineConfigWithVueTs(
     files: ['**/__tests__/**/*.ts', '**/*.spec.ts'],
     rules: {
       '@typescript-eslint/prefer-promise-reject-errors': 'off',
-      '@typescript-eslint/unbound-method': 'off'
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off'
     }
   }
   // prettierSkipFormatting,

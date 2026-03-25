@@ -33,7 +33,7 @@ describe('sidebarActivityStore', () => {
     store.addEntry(makeLogApi({ id: 2 }))
 
     expect(store.entries).toHaveLength(2)
-    expect(store.entries[1].id).toBe(2)
+    expect(store.entries[1]!.id).toBe(2)
   })
 
   it('addEntry увеличивает unreadCount если сайдбар закрыт', () => {
@@ -63,7 +63,7 @@ describe('sidebarActivityStore', () => {
     store.quickFilter = 'errors'
 
     expect(store.filteredEntries).toHaveLength(1)
-    expect(store.filteredEntries[0].id).toBe(2)
+    expect(store.filteredEntries[0]!.id).toBe(2)
   })
 
   it('filteredEntries фильтрует по типу действия likes', () => {
@@ -74,7 +74,7 @@ describe('sidebarActivityStore', () => {
     store.quickFilter = 'likes'
 
     expect(store.filteredEntries).toHaveLength(1)
-    expect(store.filteredEntries[0].action).toBe('like')
+    expect(store.filteredEntries[0]!.action).toBe('like')
   })
 
   it('setWidth ограничивает ширину диапазоном 250–600', () => {

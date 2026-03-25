@@ -60,8 +60,8 @@ describe('llmSettingsDTO.toLocalList', () => {
     ])
 
     expect(result).toHaveLength(2)
-    expect(result[0].provider).toBe('openai')
-    expect(result[1].isDefault).toBe(true)
+    expect(result[0]!.provider).toBe('openai')
+    expect(result[1]!.isDefault).toBe(true)
   })
 
   it('возвращает пустой массив при пустом входе', () => expect(llmSettingsDTO.toLocalList([])).toEqual([]))

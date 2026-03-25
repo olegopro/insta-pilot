@@ -15,7 +15,7 @@ const makeWrapper = (propsDefinition: Record<string, unknown>, passedProps: Reco
     render() { return h('div') }
   })
 
-  return mount(Inner, { props: passedProps })
+  return mount(Inner, { props: passedProps as unknown as Record<string, undefined> })
 }
 
 describe('useForwardProps', () => {

@@ -151,10 +151,11 @@ describe('activityLogDTO.toLocalSummaryList', () => it('маппит масси�
   const result = activityLogDTO.toLocalSummaryList(items)
 
   expect(result).toHaveLength(1)
-  expect(result[0].accountId).toBe(5)
-  expect(result[0].instagramLogin).toBe('acc1')
-  expect(result[0].totalActions).toBe(300)
-  expect(result[0].errorCountToday).toBe(3)
-  expect(result[0].successRate).toBe(0.88)
-  expect(result[0].lastError).toBe('Login failed')
+  const summary = result[0]!
+  expect(summary.accountId).toBe(5)
+  expect(summary.instagramLogin).toBe('acc1')
+  expect(summary.totalActions).toBe(300)
+  expect(summary.errorCountToday).toBe(3)
+  expect(summary.successRate).toBe(0.88)
+  expect(summary.lastError).toBe('Login failed')
 }))

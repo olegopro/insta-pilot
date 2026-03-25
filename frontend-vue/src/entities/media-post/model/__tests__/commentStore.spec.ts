@@ -45,7 +45,7 @@ describe('commentStore', () => {
     await store.fetchComments(1, 'media123')
 
     expect(store.comments).toHaveLength(2)
-    expect(store.comments[0].pk).toBe('c1')
+    expect(store.comments[0]!.pk).toBe('c1')
     expect(store.commentCount).toBe(2)
   })
 
@@ -59,7 +59,7 @@ describe('commentStore', () => {
     await store.fetchComments(1, 'media2')
 
     expect(store.comments).toHaveLength(1)
-    expect(store.comments[0].pk).toBe('c3')
+    expect(store.comments[0]!.pk).toBe('c3')
   })
 
   it('loadMoreComments дозагружает комментарии', async () => {
@@ -101,8 +101,9 @@ describe('commentStore', () => {
     await store.fetchComments(1, 'media123')
     await store.fetchReplies(1, 'media123', 'c1')
 
-    expect(store.comments[0].childComments).toHaveLength(2)
-    expect(store.comments[0].childComments[0].pk).toBe('r1')
+    const comment = store.comments[0]!
+    expect(comment.childComments).toHaveLength(2)
+    expect(comment.childComments[0]!.pk).toBe('r1')
   })
 
   it('commentsLoading изначально false', () => {

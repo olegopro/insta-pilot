@@ -52,7 +52,7 @@ describe('accountStore', () => {
     await store.fetchAccounts()
 
     expect(store.accounts).toHaveLength(1)
-    expect(store.accounts[0].instagramLogin).toBe('test_user')
+    expect(store.accounts[0]!.instagramLogin).toBe('test_user')
   })
 
   it('fetchAccounts при ошибке бросает исключение', async () => {
@@ -71,7 +71,7 @@ describe('accountStore', () => {
     const store = useAccountStore()
     await store.fetchAccounts()
 
-    const account = store.accounts[0]
+    const account = store.accounts[0]!
     expect(account.isActive).toBe(true)
     expect(account.deviceModelName).toBe('Samsung Galaxy S20')
     expect(account.createdAt).toBe('2026-01-01T00:00:00Z')
@@ -119,8 +119,8 @@ describe('accountStore', () => {
     await store.fetchDeviceProfiles()
 
     expect(store.deviceProfiles).toHaveLength(1)
-    expect(store.deviceProfiles[0].code).toBe('samsung_s20')
-    expect(store.deviceProfiles[0].title).toBe('Samsung Galaxy S20')
+    expect(store.deviceProfiles[0]!.code).toBe('samsung_s20')
+    expect(store.deviceProfiles[0]!.title).toBe('Samsung Galaxy S20')
   })
 
   it('deleteAccount вызывает DELETE /accounts/{id}', async () => {
