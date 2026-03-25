@@ -7,9 +7,7 @@ describe('proxyImageUrl', () => {
     expect(result).toBe('/api/proxy/image?url=https%3A%2F%2Fcdninstagram.com%2Favatar.jpg')
   })
 
-  it('возвращает null при null', () => {
-    expect(proxyImageUrl(null)).toBeNull()
-  })
+  it('возвращает null при null', () => expect(proxyImageUrl(null)).toBeNull())
 
   it('корректно URL-кодирует специальные символы', () => {
     const url = 'https://cdn.example.com/path/file?x=1&y=2'

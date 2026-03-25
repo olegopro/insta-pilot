@@ -2,19 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { requiredField, checkEmail } from '@/shared/lib/validators'
 
 describe('requiredField', () => {
-  it('возвращает true для непустой строки', () => {
-    expect(requiredField('hello')).toBe(true)
-  })
+  it('возвращает true для непустой строки', () => expect(requiredField('hello')).toBe(true))
 
-  it('возвращает сообщение об ошибке для пустой строки', () => {
-    expect(requiredField('')).toBe('Обязательное поле')
-  })
+  it('возвращает сообщение об ошибке для пустой строки', () => expect(requiredField('')).toBe('Обязательное поле'))
 })
 
 describe('checkEmail', () => {
-  it('возвращает true для валидного email', () => {
-    expect(checkEmail('user@example.com')).toBe(true)
-  })
+  it('возвращает true для валидного email', () => expect(checkEmail('user@example.com')).toBe(true))
 
   it('возвращает сообщение об ошибке для невалидного email', () => {
     expect(checkEmail('not-an-email')).toBe('Некорректный email')

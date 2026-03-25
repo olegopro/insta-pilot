@@ -133,30 +133,28 @@ describe('activityLogDTO.toLocalStats', () => {
   })
 })
 
-describe('activityLogDTO.toLocalSummaryList', () => {
-  it('маппит массив сводок в camelCase', () => {
-    const items: AccountActivitySummaryApi[] = [
-      {
-        account_id:        5,
-        instagram_login:   'acc1',
-        total_actions:     300,
-        today_actions:     20,
-        error_count_today: 3,
-        success_rate:      0.88,
-        last_activity_at:  '2026-01-15T09:00:00Z',
-        last_error:        'Login failed',
-        last_error_at:     '2026-01-14T08:00:00Z'
-      }
-    ]
+describe('activityLogDTO.toLocalSummaryList', () => it('маппит массив сводок в camelCase', () => {
+  const items: AccountActivitySummaryApi[] = [
+    {
+      account_id:        5,
+      instagram_login:   'acc1',
+      total_actions:     300,
+      today_actions:     20,
+      error_count_today: 3,
+      success_rate:      0.88,
+      last_activity_at:  '2026-01-15T09:00:00Z',
+      last_error:        'Login failed',
+      last_error_at:     '2026-01-14T08:00:00Z'
+    }
+  ]
 
-    const result = activityLogDTO.toLocalSummaryList(items)
+  const result = activityLogDTO.toLocalSummaryList(items)
 
-    expect(result).toHaveLength(1)
-    expect(result[0].accountId).toBe(5)
-    expect(result[0].instagramLogin).toBe('acc1')
-    expect(result[0].totalActions).toBe(300)
-    expect(result[0].errorCountToday).toBe(3)
-    expect(result[0].successRate).toBe(0.88)
-    expect(result[0].lastError).toBe('Login failed')
-  })
-})
+  expect(result).toHaveLength(1)
+  expect(result[0].accountId).toBe(5)
+  expect(result[0].instagramLogin).toBe('acc1')
+  expect(result[0].totalActions).toBe(300)
+  expect(result[0].errorCountToday).toBe(3)
+  expect(result[0].successRate).toBe(0.88)
+  expect(result[0].lastError).toBe('Login failed')
+}))

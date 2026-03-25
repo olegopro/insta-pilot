@@ -105,46 +105,42 @@ describe('mediaPostDTO.toLocalPost', () => {
   })
 })
 
-describe('mediaPostDTO.toLocal', () => {
-  it('маппит массив постов', () => {
-    const result = mediaPostDTO.toLocal([makePostApi({ pk: 'p1' }), makePostApi({ pk: 'p2' })])
+describe('mediaPostDTO.toLocal', () => it('маппит массив постов', () => {
+  const result = mediaPostDTO.toLocal([makePostApi({ pk: 'p1' }), makePostApi({ pk: 'p2' })])
 
-    expect(result).toHaveLength(2)
-    expect(result[0].pk).toBe('p1')
-    expect(result[1].pk).toBe('p2')
+  expect(result).toHaveLength(2)
+  expect(result[0].pk).toBe('p1')
+  expect(result[1].pk).toBe('p2')
+}))
+
+describe('mediaPostDTO.toLocalUserDetail', () => it('маппит расширенный профиль пользователя', () => {
+  const api: InstagramUserDetailApi = {
+    pk:              '999',
+    username:        'iguser',
+    full_name:       'IG User',
+    profile_pic_url: null,
+    biography:       'My bio',
+    external_url:    'https://example.com',
+    is_private:      false,
+    is_verified:     true,
+    media_count:     150,
+    follower_count:  5000,
+    following_count: 200
+  }
+
+  const result = mediaPostDTO.toLocalUserDetail(api)
+
+  expect(result).toMatchObject({
+    pk:             '999',
+    username:       'iguser',
+    biography:      'My bio',
+    isPrivate:      false,
+    isVerified:     true,
+    mediaCount:     150,
+    followerCount:  5000,
+    followingCount: 200
   })
-})
-
-describe('mediaPostDTO.toLocalUserDetail', () => {
-  it('маппит расширенный профиль пользователя', () => {
-    const api: InstagramUserDetailApi = {
-      pk:              '999',
-      username:        'iguser',
-      full_name:       'IG User',
-      profile_pic_url: null,
-      biography:       'My bio',
-      external_url:    'https://example.com',
-      is_private:      false,
-      is_verified:     true,
-      media_count:     150,
-      follower_count:  5000,
-      following_count: 200
-    }
-
-    const result = mediaPostDTO.toLocalUserDetail(api)
-
-    expect(result).toMatchObject({
-      pk:             '999',
-      username:       'iguser',
-      biography:      'My bio',
-      isPrivate:      false,
-      isVerified:     true,
-      mediaCount:     150,
-      followerCount:  5000,
-      followingCount: 200
-    })
-  })
-})
+}))
 
 describe('mediaPostDTO.toLocalComment', () => {
   it('маппит комментарий', () => {

@@ -28,9 +28,7 @@ describe('formatCount', () => {
 })
 
 describe('formatDate', () => {
-  it('возвращает пустую строку для пустого значения', () => {
-    expect(formatDate('')).toBe('')
-  })
+  it('возвращает пустую строку для пустого значения', () => expect(formatDate('')).toBe(''))
 
   it('форматирует ISO дату по-русски', () => {
     const result = formatDate('2026-01-15T00:00:00Z')
@@ -52,9 +50,7 @@ describe('formatTimeHMS', () => {
 })
 
 describe('formatTimeHM', () => {
-  it('возвращает null для null', () => {
-    expect(formatTimeHM(null)).toBeNull()
-  })
+  it('возвращает null для null', () => expect(formatTimeHM(null)).toBeNull())
 
   it('форматирует ISO время как HH:MM', () => {
     const result = formatTimeHM('2026-01-15T10:30:00Z')
@@ -63,13 +59,9 @@ describe('formatTimeHM', () => {
 })
 
 describe('formatDuration', () => {
-  it('возвращает тире для null', () => {
-    expect(formatDuration(null)).toEqual({ text: '—', color: '' })
-  })
+  it('возвращает тире для null', () => expect(formatDuration(null)).toEqual({ text: '—', color: '' }))
 
-  it('возвращает мс для значений < 1000', () => {
-    expect(formatDuration(500)).toEqual({ text: '500ms', color: '' })
-  })
+  it('возвращает мс для значений < 1000', () => expect(formatDuration(500)).toEqual({ text: '500ms', color: '' }))
 
   it('возвращает секунды с color=warning для 1000-2999', () => {
     const result = formatDuration(1500)
@@ -107,11 +99,7 @@ describe('formatRelativeTime', () => {
 })
 
 describe('formatDateRu', () => {
-  it('возвращает пустую строку для пустого значения', () => {
-    expect(formatDateRu('')).toBe('')
-  })
+  it('возвращает пустую строку для пустого значения', () => expect(formatDateRu('')).toBe(''))
 
-  it('форматирует ISO дату как DD.MM.YYYY', () => {
-    expect(formatDateRu('2026-01-15')).toBe('15.01.2026')
-  })
+  it('форматирует ISO дату как DD.MM.YYYY', () => expect(formatDateRu('2026-01-15')).toBe('15.01.2026'))
 })

@@ -7,11 +7,10 @@ vi.mock('@/boot/axios', () => ({
   api: { get: vi.fn(), post: vi.fn() }
 }))
 
-let listenHandler: ((event: unknown) => void) | null = null
 let subscribedCallback: (() => void) | null = null
 
 const mockChannel = {
-  listen:     vi.fn((_, handler: (event: unknown) => void) => { listenHandler = handler; return mockChannel }),
+  listen:     vi.fn(() => mockChannel),
   subscribed: vi.fn((cb: () => void) => { subscribedCallback = cb; return mockChannel })
 }
 
@@ -44,7 +43,6 @@ describe('useActivityLive', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    listenHandler = null
     subscribedCallback = null
   })
 

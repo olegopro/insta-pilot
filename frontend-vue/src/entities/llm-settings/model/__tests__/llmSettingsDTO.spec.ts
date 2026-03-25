@@ -64,7 +64,5 @@ describe('llmSettingsDTO.toLocalList', () => {
     expect(result[1].isDefault).toBe(true)
   })
 
-  it('возвращает пустой массив при пустом входе', () => {
-    expect(llmSettingsDTO.toLocalList([])).toEqual([])
-  })
+  it('возвращает пустой массив при пустом входе', () => expect(llmSettingsDTO.toLocalList([])).toEqual([]))
 })

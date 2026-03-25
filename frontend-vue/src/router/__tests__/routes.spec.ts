@@ -26,10 +26,10 @@ vi.mock('@/router/routes', () => {
       component: stub,
       meta: { requiresAuth: true },
       children: [
-        { path: '',           component: stub },
-        { path: 'feed',       component: stub },
-        { path: 'search',     component: stub },
-        { path: 'logs',       component: stub },
+        { path: '', component: stub },
+        { path: 'feed', component: stub },
+        { path: 'search', component: stub },
+        { path: 'logs', component: stub },
         {
           path: 'settings/llm',
           component: stub,
@@ -50,7 +50,7 @@ vi.mock('@/router/routes', () => {
 import routes from '@/router/routes'
 import { useAuthStore } from '@/entities/user'
 
-const mockFetchMe  = vi.fn()
+const mockFetchMe = vi.fn()
 const mockClearAuth = vi.fn()
 
 const makeAuthStore = (overrides: Record<string, unknown> = {}) => ({
@@ -70,6 +70,7 @@ const createTestRouter = () => {
 
     if (to.meta.requiresAuth) {
       if (!token) return { path: '/login' }
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!authStore.user) {
         try {
           await authStore.fetchMe()
@@ -81,6 +82,7 @@ const createTestRouter = () => {
       if (to.meta.requiresAdmin && !authStore.isAdmin) return { path: '/' }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (to.meta.requiresGuest && token && authStore.user) return { path: '/' }
   })
 

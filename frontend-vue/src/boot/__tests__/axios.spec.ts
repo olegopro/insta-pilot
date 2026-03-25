@@ -16,31 +16,36 @@ describe('axios api', () => {
   it('request interceptor добавляет Authorization header при наличии токена', () => {
     localStorage.setItem('token', 'my-secret-token')
 
-    // Получаем обработчик request interceptor
-    const handlers = (api.interceptors.request as unknown as { handlers: Array<{ fulfilled: (cfg: InternalAxiosRequestConfig) => InternalAxiosRequestConfig }> }).handlers
-    const handler = handlers.find((h) => h !== null)
+    type RequestHandler = { fulfilled: (cfg: InternalAxiosRequestConfig) => InternalAxiosRequestConfig } | null
+    const handlers = (api.interceptors.request as unknown as { handlers: RequestHandler[] }).handlers
+    const handler = handlers.find((h): h is NonNullable<typeof h> => h !== null)
     expect(handler).toBeDefined()
+    if (!handler) return
 
     const config = { headers: {} } as InternalAxiosRequestConfig
-    const result = handler!.fulfilled(config)
+    const result = handler.fulfilled(config)
     expect((result.headers as Record<string, string>).Authorization).toBe('Bearer my-secret-token')
   })
 
   it('request interceptor не добавляет Authorization без токена', () => {
-    const handlers = (api.interceptors.request as unknown as { handlers: Array<{ fulfilled: (cfg: InternalAxiosRequestConfig) => InternalAxiosRequestConfig }> }).handlers
-    const handler = handlers.find((h) => h !== null)
+    type RequestHandler = { fulfilled: (cfg: InternalAxiosRequestConfig) => InternalAxiosRequestConfig } | null
+    const handlers = (api.interceptors.request as unknown as { handlers: RequestHandler[] }).handlers
+    const handler = handlers.find((h): h is NonNullable<typeof h> => h !== null)
+    if (!handler) return
 
     const config = { headers: {} } as InternalAxiosRequestConfig
-    const result = handler!.fulfilled(config)
+    const result = handler.fulfilled(config)
     expect((result.headers as Record<string, string>).Authorization).toBeUndefined()
   })
 
-  it('response interceptor при 401 удаляет токен', async () => {
+  it('response interceptor при 401 удаляет токен', () => {
     localStorage.setItem('token', 'old-token')
 
-    const responseHandlers = (api.interceptors.response as unknown as { handlers: Array<{ rejected: (err: unknown) => never }> }).handlers
-    const handler = responseHandlers.find((h) => h !== null)
+    type ResponseHandler = { rejected: (err: unknown) => unknown } | null
+    const responseHandlers = (api.interceptors.response as unknown as { handlers: ResponseHandler[] }).handlers
+    const handler = responseHandlers.find((h): h is NonNullable<typeof h> => h !== null)
     expect(handler).toBeDefined()
+    if (!handler) return
 
     const error = {
       config: { url: '/feed' },
@@ -48,7 +53,7 @@ describe('axios api', () => {
     }
 
     try {
-      await handler!.rejected(error)
+      handler.rejected(error)
     } catch {
       // ожидаемое поведение — interceptor выбрасывает ошибку
     }

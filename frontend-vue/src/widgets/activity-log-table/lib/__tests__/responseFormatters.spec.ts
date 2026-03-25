@@ -14,13 +14,9 @@ describe('extractKey', () => {
     expect(result).toEqual({ url: '/feed', method: 'GET' })
   })
 
-  it('возвращает null если ключ не является объектом', () => {
-    expect(extractKey({ status: 200 }, 'status')).toBeNull()
-  })
+  it('возвращает null если ключ не является объектом', () => expect(extractKey({ status: 200 }, 'status')).toBeNull())
 
-  it('возвращает null для null входа', () => {
-    expect(extractKey(null, 'any')).toBeNull()
-  })
+  it('возвращает null для null входа', () => expect(extractKey(null, 'any')).toBeNull())
 
   it('возвращает null для массива', () => {
     const obj = { items: [1, 2, 3] }
@@ -35,9 +31,7 @@ describe('compactify', () => {
     expect(result).toEqual({ id: 1, name: 'test', nullVal: null })
   })
 
-  it('возвращает null для null входа', () => {
-    expect(compactify(null)).toBeNull()
-  })
+  it('возвращает null для null входа', () => expect(compactify(null)).toBeNull())
 
   it('возвращает null если все поля — объекты', () => {
     const obj = { nested: { a: 1 }, arr: [1, 2] }
@@ -46,21 +40,13 @@ describe('compactify', () => {
 })
 
 describe('hasNestedData', () => {
-  it('возвращает true если есть вложенные объекты', () => {
-    expect(hasNestedData({ a: 1, b: { c: 2 } })).toBe(true)
-  })
+  it('возвращает true если есть вложенные объекты', () => expect(hasNestedData({ a: 1, b: { c: 2 } })).toBe(true))
 
-  it('возвращает true если есть массивы', () => {
-    expect(hasNestedData({ items: [1, 2] })).toBe(true)
-  })
+  it('возвращает true если есть массивы', () => expect(hasNestedData({ items: [1, 2] })).toBe(true))
 
-  it('возвращает false для плоского объекта', () => {
-    expect(hasNestedData({ a: 1, b: 'text', c: null })).toBe(false)
-  })
+  it('возвращает false для плоского объекта', () => expect(hasNestedData({ a: 1, b: 'text', c: null })).toBe(false))
 
-  it('возвращает false для null', () => {
-    expect(hasNestedData(null)).toBe(false)
-  })
+  it('возвращает false для null', () => expect(hasNestedData(null)).toBe(false))
 })
 
 describe('previewTooltip', () => {
@@ -72,13 +58,9 @@ describe('previewTooltip', () => {
     expect(result).toContain('Сокращённый preview')
   })
 
-  it('возвращает null если нет _preview полей', () => {
-    expect(previewTooltip({ status: 200, items: [1] })).toBeNull()
-  })
+  it('возвращает null если нет _preview полей', () => expect(previewTooltip({ status: 200, items: [1] })).toBeNull())
 
-  it('возвращает null для null', () => {
-    expect(previewTooltip(null)).toBeNull()
-  })
+  it('возвращает null для null', () => expect(previewTooltip(null)).toBeNull())
 })
 
 describe('display', () => {
@@ -94,7 +76,5 @@ describe('display', () => {
     expect(result).toEqual(obj)
   })
 
-  it('возвращает null для null', () => {
-    expect(display(null, 'compact')).toBeNull()
-  })
+  it('возвращает null для null', () => expect(display(null, 'compact')).toBeNull())
 })

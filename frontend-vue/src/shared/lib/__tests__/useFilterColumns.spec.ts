@@ -3,8 +3,8 @@ import type { QTableColumn } from 'quasar'
 import { useFilterColumns } from '@/shared/lib/useFilterColumns'
 
 const makeColumns = (): QTableColumn[] => [
-  { name: 'id',     label: 'ID',     field: 'id',     align: 'left' },
-  { name: 'name',   label: 'Имя',    field: 'name',   align: 'left' },
+  { name: 'id', label: 'ID', field: 'id', align: 'left' },
+  { name: 'name', label: 'Имя', field: 'name', align: 'left' },
   { name: 'status', label: 'Статус', field: 'status', align: 'left' }
 ]
 

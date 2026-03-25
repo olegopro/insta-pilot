@@ -4,8 +4,8 @@ import TableComponent from '@/shared/ui/table-component/TableComponent.vue'
 import type { QTableColumn } from 'quasar'
 
 const columns: QTableColumn[] = [
-  { name: 'id',   label: 'ID',   field: 'id',   align: 'left' },
-  { name: 'name', label: 'Имя',  field: 'name', align: 'left' }
+  { name: 'id', label: 'ID', field: 'id', align: 'left' },
+  { name: 'name', label: 'Имя', field: 'name', align: 'left' }
 ]
 const rows = [{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }]
 
@@ -52,13 +52,10 @@ describe('TableComponent', () => {
     expect(wrapper.find('[data-slot-body-cell]').exists()).toBe(true)
   })
 
-  it('forwarded props не содержат undefined для непереданных пропсов', () => {
-    // Рендер без ошибок TypeScript — если undefined просачивается, vue выдаст предупреждение
-    expect(() =>
-      mount(TableComponent, {
-        props:  { columns, rows },
-        global: { stubs: { 'q-table': QTableStub } }
-      })
-    ).not.toThrow()
-  })
+  it('forwarded props не содержат undefined для непереданных пропсов', () => expect(() =>
+    mount(TableComponent, {
+      props:  { columns, rows },
+      global: { stubs: { 'q-table': QTableStub } }
+    })
+  ).not.toThrow())
 })
