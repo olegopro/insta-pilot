@@ -48,6 +48,21 @@ describe('useApi', () => {
     expect(error.value).toBe('Неизвестная ошибка')
   })
 
+  it('loading становится false после ошибки', async () => {
+    const { execute, loading } = useApi(() => Promise.reject(new Error('fail')))
+
+    await expect(execute()).rejects.toThrow()
+    expect(loading.value).toBe(false)
+  })
+
+  it('execute() возвращает данные напрямую', async () => {
+    const mockData = { id: 42 }
+    const { execute } = useApi(() => Promise.resolve(mockData))
+
+    const result = await execute()
+    expect(result).toEqual(mockData)
+  })
+
   it('повторный execute сбрасывает response и error перед запросом', async () => {
     const requestFn = vi.fn<() => Promise<string>>()
     requestFn.mockResolvedValueOnce('first').mockRejectedValueOnce(new Error('fail'))

@@ -92,7 +92,7 @@ describe('LoginForm', () => {
     expect(mockPush).toHaveBeenCalledWith('/')
   })
 
-  it('при ошибке вызывает notifyError', async () => {
+  it('при ошибке вызывает notifyError и не делает redirect', async () => {
     mockLogin.mockRejectedValueOnce(new Error('Unauthorized'))
     vi.mocked(useAuthStore).mockReturnValue(
       createStore({ loginError: 'Неверный пароль' }) as unknown as ReturnType<typeof useAuthStore>
@@ -104,6 +104,7 @@ describe('LoginForm', () => {
     await flushPromises()
 
     expect(notifyError).toHaveBeenCalledWith('Неверный пароль')
+    expect(mockPush).not.toHaveBeenCalled()
   })
 
   it('кнопка показывает состояние loading', () => {

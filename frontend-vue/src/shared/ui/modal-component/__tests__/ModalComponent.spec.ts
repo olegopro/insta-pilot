@@ -53,4 +53,14 @@ describe('ModalComponent', () => {
     })
     expect(wrapper.find('[data-slot-content]').exists()).toBe(true)
   })
+
+  it('рендерит submit-кнопку при submitLabel', () => {
+    const wrapper = mount(ModalComponent, {
+      props:  { modelValue: true, submitLabel: 'Сохранить' },
+      global: { stubs: globalStubs }
+    })
+    const submitBtn = wrapper.find('button[type="submit"]')
+    expect(submitBtn.exists()).toBe(true)
+    expect(submitBtn.text()).toBe('Сохранить')
+  })
 })

@@ -99,4 +99,12 @@ describe('adminUsersStore', () => {
 
     await expect(store.toggleActive(1)).rejects.toThrow()
   })
+
+  it('updateRole при ошибке выбрасывает исключение', async () => {
+    vi.mocked(api.patch).mockRejectedValueOnce(new Error('Forbidden'))
+
+    const store = useAdminUsersStore()
+
+    await expect(store.updateRole(5, 'admin')).rejects.toThrow()
+  })
 })
