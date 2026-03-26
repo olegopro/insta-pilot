@@ -11,10 +11,12 @@ from schemas import (
     FetchCommentRepliesRequest,
     FetchCommentsRequest,
     LoginRequest,
+    MediaLikeRequest,
     SearchHashtagRequest,
     SearchLocationRequest,
     SearchLocationsRequest,
     SessionRequest,
+    UserInfoByPkRequest,
 )
 
 
@@ -154,3 +156,31 @@ class TestSearchLocationRequest:
     def test_with_pagination(self):
         req = SearchLocationRequest(session_data='{}', location_pk=12345, next_max_id='{"cursor": "abc"}')
         assert req.next_max_id == '{"cursor": "abc"}'
+
+
+class TestMediaLikeRequest:
+    def test_requires_media_id(self):
+        with pytest.raises(ValidationError):
+            MediaLikeRequest(session_data='{}')
+
+    def test_requires_session_data(self):
+        with pytest.raises(ValidationError):
+            MediaLikeRequest(media_id="111_999")
+
+    def test_valid(self):
+        req = MediaLikeRequest(session_data='{}', media_id="111_999")
+        assert req.media_id == "111_999"
+
+
+class TestUserInfoByPkRequest:
+    def test_requires_user_pk(self):
+        with pytest.raises(ValidationError):
+            UserInfoByPkRequest(session_data='{}')
+
+    def test_requires_session_data(self):
+        with pytest.raises(ValidationError):
+            UserInfoByPkRequest(user_pk="123456")
+
+    def test_valid(self):
+        req = UserInfoByPkRequest(session_data='{}', user_pk="123456")
+        assert req.user_pk == "123456"

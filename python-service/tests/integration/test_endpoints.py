@@ -657,3 +657,21 @@ class TestCommonErrorBehavior:
 
         assert resp.status_code == 401
         assert resp.json()["error_code"] == "challenge_required"
+
+    @pytest.mark.parametrize("endpoint,payload_extra,mock_method", [
+        ("/account/info", {}, "account_info"),
+        ("/media/like", {"media_id": "111_999"}, "media_like"),
+        ("/media/comment", {"media_id": "111_999", "text": "hi"}, "media_comment"),
+    ])
+    def test_generic_exception_returns_500_without_traceback(self, client, endpoint, payload_extra, mock_method):
+        mock_cl = make_mock_client()
+        getattr(mock_cl, mock_method).side_effect = RuntimeError("internal failure")
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post(endpoint, json={**SESSION_PAYLOAD, **payload_extra})
+
+        assert resp.status_code == 500
+        body = resp.json()
+        assert body["success"] is False
+        assert body["error_code"] == "error"
+        assert "Traceback" not in body["error"]
