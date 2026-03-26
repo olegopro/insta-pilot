@@ -116,13 +116,17 @@ describe('mediaPostDTO.toLocalPost', () => {
   })
 })
 
-describe('mediaPostDTO.toLocal', () => it('маппит массив постов', () => {
-  const result = mediaPostDTO.toLocal([makePostApi({ pk: 'p1' }), makePostApi({ pk: 'p2' })])
+describe('mediaPostDTO.toLocal', () => {
+  it('маппит массив постов', () => {
+    const result = mediaPostDTO.toLocal([makePostApi({ pk: 'p1' }), makePostApi({ pk: 'p2' })])
 
-  expect(result).toHaveLength(2)
-  expect(result[0]!.pk).toBe('p1')
-  expect(result[1]!.pk).toBe('p2')
-}))
+    expect(result).toHaveLength(2)
+    expect(result[0]!.pk).toBe('p1')
+    expect(result[1]!.pk).toBe('p2')
+  })
+
+  it('возвращает пустой массив при пустом входе', () => expect(mediaPostDTO.toLocal([])).toEqual([]))
+})
 
 describe('mediaPostDTO.toLocalUserDetail', () => it('маппит расширенный профиль пользователя', () => {
   const api: InstagramUserDetailApi = {

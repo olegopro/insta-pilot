@@ -1,16 +1,5 @@
-import { test, expect, type Page } from '@playwright/test'
-
-const ADMIN_EMAIL = 'admin@insta-pilot.local'
-const USER_EMAIL  = 'user@insta-pilot.local'
-const PASSWORD = 'password'
-
-async function loginAs(page: Page, email: string) {
-  await page.goto('/#/login')
-  await page.fill('input[type="email"]', email)
-  await page.fill('input[type="password"]', PASSWORD)
-  await page.click('button[type="submit"]')
-  await expect(page).not.toHaveURL(/\/#\/login/)
-}
+import { test, expect } from '@playwright/test'
+import { loginAs, ADMIN_EMAIL, USER_EMAIL } from './helpers'
 
 test.describe('LLM Settings — E2E', () => {
   test('только admin видит страницу настроек LLM', async ({ page }) => {
@@ -43,14 +32,14 @@ test.describe('LLM Settings — E2E', () => {
   })
 
   test('страница base prompt доступна для admin', async ({ page }) => {
+    const jsErrors: string[] = []
+    page.on('pageerror', (err) => jsErrors.push(err.message))
+
     await loginAs(page, ADMIN_EMAIL)
     await page.goto('/#/settings/llm')
 
     await expect(page).toHaveURL(/\/#\/settings\/llm/)
-    // Страница загружается без JS-ошибок
-    const jsErrors: string[] = []
-    page.on('pageerror', (err) => jsErrors.push(err.message))
-    await page.waitForTimeout(500)
+    await page.waitForLoadState('networkidle')
     expect(jsErrors).toHaveLength(0)
   })
 })

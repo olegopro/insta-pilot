@@ -111,6 +111,38 @@ describe('commentStore', () => {
     expect(store.commentsLoading).toBe(false)
   })
 
+  it('fetchComments при ошибке бросает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useCommentStore()
+
+    await expect(store.fetchComments(1, 'media123')).rejects.toThrow()
+    expect(store.comments).toHaveLength(0)
+  })
+
+  it('loadMoreComments при ошибке бросает исключение', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce(wrapResponse({ comments: [makeCommentApi()], next_min_id: 'cursor-2', comment_count: 2 }))
+      .mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useCommentStore()
+    await store.fetchComments(1, 'media123')
+
+    await expect(store.loadMoreComments(1, 'media123')).rejects.toThrow()
+    expect(store.comments).toHaveLength(1)
+  })
+
+  it('fetchReplies при ошибке бросает исключение', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce(wrapResponse({ comments: [makeCommentApi('c1')], next_min_id: null, comment_count: 1 }))
+      .mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useCommentStore()
+    await store.fetchComments(1, 'media123')
+
+    await expect(store.fetchReplies(1, 'media123', 'c1')).rejects.toThrow()
+  })
+
   it('canLoadMore false при null cursor', async () => {
     vi.mocked(api.get).mockResolvedValueOnce(
       wrapResponse({ comments: [], next_min_id: null, comment_count: 0 })

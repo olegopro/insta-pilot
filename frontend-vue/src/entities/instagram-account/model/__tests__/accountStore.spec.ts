@@ -149,6 +149,32 @@ describe('accountStore', () => {
     expect(store.deleteAccountLoading).toBe(false)
   })
 
+  it('fetchAccountDetails при ошибке бросает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Not Found'))
+
+    const store = useAccountStore()
+
+    await expect(store.fetchAccountDetails(999)).rejects.toThrow()
+    expect(store.accountDetail).toBeNull()
+  })
+
+  it('fetchDeviceProfiles при ошибке бросает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Server Error'))
+
+    const store = useAccountStore()
+
+    await expect(store.fetchDeviceProfiles()).rejects.toThrow()
+    expect(store.deviceProfiles).toHaveLength(0)
+  })
+
+  it('deleteAccount при ошибке бросает исключение', async () => {
+    vi.mocked(api.delete).mockRejectedValueOnce(new Error('Forbidden'))
+
+    const store = useAccountStore()
+
+    await expect(store.deleteAccount(1)).rejects.toThrow()
+  })
+
   it('addAccountError содержит сообщение при ошибке запроса', async () => {
     vi.mocked(api.post).mockRejectedValueOnce(new Error('Forbidden'))
 

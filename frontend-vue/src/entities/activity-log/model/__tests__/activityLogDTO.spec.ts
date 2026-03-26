@@ -36,6 +36,7 @@ describe('activityLogDTO.toLocal', () => {
       requestPayload:        { text: 'Hello' },
       responseSummary:       { comment_pk: 'pk-1' },
       errorMessage:          null,
+      errorCode:             null,
       durationMs:            300,
       createdAt:             '2026-01-15T12:00:00Z'
     })
@@ -43,17 +44,23 @@ describe('activityLogDTO.toLocal', () => {
 
   it('сохраняет null-поля', () => {
     const result = activityLogDTO.toLocal(makeLogApi({
-      instagram_login: null,
-      http_code:       null,
-      request_payload: null,
+      instagram_login:  null,
+      http_code:        null,
+      endpoint:         null,
+      request_payload:  null,
       response_summary: null,
-      duration_ms:     null
+      error_message:    null,
+      error_code:       null,
+      duration_ms:      null
     }))
 
     expect(result.instagramLogin).toBeNull()
     expect(result.httpCode).toBeNull()
+    expect(result.endpoint).toBeNull()
     expect(result.requestPayload).toBeNull()
     expect(result.responseSummary).toBeNull()
+    expect(result.errorMessage).toBeNull()
+    expect(result.errorCode).toBeNull()
     expect(result.durationMs).toBeNull()
   })
 })

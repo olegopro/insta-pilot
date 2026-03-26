@@ -1,20 +1,9 @@
-import { test, expect, type Page } from '@playwright/test'
-
-const ADMIN_EMAIL = 'admin@insta-pilot.local'
-const USER_EMAIL = 'user@insta-pilot.local'
-const PASSWORD = 'password'
-
-async function loginAs(page: Page, email: string, password: string) {
-  await page.goto('/#/login')
-  await page.fill('input[type="email"]', email)
-  await page.fill('input[type="password"]', password)
-  await page.click('button[type="submit"]')
-  await expect(page).not.toHaveURL(/\/#\/login/)
-}
+import { test, expect } from '@playwright/test'
+import { loginAs, ADMIN_EMAIL, USER_EMAIL } from './helpers'
 
 test.describe('Admin Users — E2E', () => {
   test('admin видит список пользователей', async ({ page }) => {
-    await loginAs(page, ADMIN_EMAIL, PASSWORD)
+    await loginAs(page, ADMIN_EMAIL)
 
     await page.goto('/#/admin/users')
 
@@ -24,7 +13,7 @@ test.describe('Admin Users — E2E', () => {
   })
 
   test('не-admin не может зайти на /admin/users → редирект на /', async ({ page }) => {
-    await loginAs(page, USER_EMAIL, PASSWORD)
+    await loginAs(page, USER_EMAIL)
 
     await page.goto('/#/admin/users')
 

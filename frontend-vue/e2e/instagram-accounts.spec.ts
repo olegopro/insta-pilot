@@ -1,15 +1,5 @@
-import { test, expect, type Page } from '@playwright/test'
-
-const ADMIN_EMAIL = 'admin@insta-pilot.local'
-const PASSWORD = 'password'
-
-async function loginAsAdmin(page: Page) {
-  await page.goto('/#/login')
-  await page.fill('input[type="email"]', ADMIN_EMAIL)
-  await page.fill('input[type="password"]', PASSWORD)
-  await page.click('button[type="submit"]')
-  await expect(page).not.toHaveURL(/\/#\/login/)
-}
+import { test, expect } from '@playwright/test'
+import { loginAsAdmin, loginAs, USER_EMAIL } from './helpers'
 
 test.describe('Instagram Accounts — E2E', () => {
   test('отображение списка аккаунтов (таблица)', async ({ page }) => {
@@ -63,11 +53,7 @@ test.describe('Instagram Accounts — E2E', () => {
   })
 
   test('не-admin пользователь видит только свои аккаунты', async ({ page }) => {
-    await page.goto('/#/login')
-    await page.fill('input[type="email"]', 'user@insta-pilot.local')
-    await page.fill('input[type="password"]', PASSWORD)
-    await page.click('button[type="submit"]')
-    await expect(page).not.toHaveURL(/\/#\/login/)
+    await loginAs(page, USER_EMAIL)
 
     await expect(page.locator('.q-table__container')).toBeVisible()
   })

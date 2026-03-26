@@ -226,7 +226,7 @@ describe('activityLogStore', () => {
   })
 
   it('fetchStats при ошибке выбрасывает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Server error'))
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Server Error'))
 
     const store = useActivityLogStore()
 
@@ -235,7 +235,7 @@ describe('activityLogStore', () => {
   })
 
   it('fetchSummary при ошибке выбрасывает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Server error'))
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Server Error'))
 
     const store = useActivityLogStore()
 

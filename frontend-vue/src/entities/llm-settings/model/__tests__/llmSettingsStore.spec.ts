@@ -158,4 +158,76 @@ describe('llmSettingsStore', () => {
     const store = useLlmSettingsStore()
     expect(store.fetchAllLoading).toBe(false)
   })
+
+  it('fetchAll при ошибке бросает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useLlmSettingsStore()
+
+    await expect(store.fetchAll()).rejects.toThrow()
+    expect(store.settings).toHaveLength(0)
+  })
+
+  it('saveSetting при ошибке бросает исключение', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('Unprocessable'))
+
+    const store = useLlmSettingsStore()
+
+    await expect(store.saveSetting({
+      provider:     'openai',
+      apiKey:       'sk-bad',
+      modelName:    'gpt-4o-mini',
+      systemPrompt: null,
+      tone:         'friendly',
+      useCaption:   true
+    })).rejects.toThrow()
+  })
+
+  it('setDefault при ошибке бросает исключение', async () => {
+    vi.mocked(api.patch).mockRejectedValueOnce(new Error('Not Found'))
+
+    const store = useLlmSettingsStore()
+
+    await expect(store.setDefault(999)).rejects.toThrow()
+  })
+
+  it('deleteSetting при ошибке бросает исключение', async () => {
+    vi.mocked(api.delete).mockRejectedValueOnce(new Error('Not Found'))
+
+    const store = useLlmSettingsStore()
+
+    await expect(store.deleteSetting(999)).rejects.toThrow()
+  })
+
+  it('testConnection при ошибке бросает исключение', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('Unauthorized'))
+
+    const store = useLlmSettingsStore()
+
+    await expect(store.testConnection('openai', 'bad-key', 'gpt-4o-mini')).rejects.toThrow()
+  })
+
+  it('fetchBasePrompt при ошибке бросает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useLlmSettingsStore()
+
+    await expect(store.fetchBasePrompt()).rejects.toThrow()
+  })
+
+  it('updateBasePrompt при ошибке бросает исключение', async () => {
+    vi.mocked(api.put).mockRejectedValueOnce(new Error('Server Error'))
+
+    const store = useLlmSettingsStore()
+
+    await expect(store.updateBasePrompt('bad prompt')).rejects.toThrow()
+  })
+
+  it('resetBasePrompt при ошибке бросает исключение', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('Server Error'))
+
+    const store = useLlmSettingsStore()
+
+    await expect(store.resetBasePrompt()).rejects.toThrow()
+  })
 })

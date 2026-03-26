@@ -1,15 +1,5 @@
-import { test, expect, type Page } from '@playwright/test'
-
-const ADMIN_EMAIL = 'admin@insta-pilot.local'
-const PASSWORD = 'password'
-
-async function loginAsAdmin(page: Page) {
-  await page.goto('/#/login')
-  await page.fill('input[type="email"]', ADMIN_EMAIL)
-  await page.fill('input[type="password"]', PASSWORD)
-  await page.click('button[type="submit"]')
-  await expect(page).not.toHaveURL(/\/#\/login/)
-}
+import { test, expect } from '@playwright/test'
+import { loginAsAdmin } from './helpers'
 
 test.describe('Search — E2E', () => {
   test('страница поиска загружается', async ({ page }) => {

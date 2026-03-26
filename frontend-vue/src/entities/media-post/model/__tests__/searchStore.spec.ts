@@ -160,4 +160,65 @@ describe('searchStore', () => {
     const store = useSearchStore()
     expect(store.canLoadMore).toBe(false)
   })
+
+  it('searchHashtag при ошибке бросает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useSearchStore()
+
+    await expect(store.searchHashtag(1, 'travel')).rejects.toThrow()
+    expect(store.searchResults).toHaveLength(0)
+  })
+
+  it('loadMoreHashtag при ошибке бросает исключение', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce(wrapResponse({ items: [makePostApi()], next_max_id: 'cursor-2' }))
+      .mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useSearchStore()
+    await store.searchHashtag(1, 'travel')
+
+    await expect(store.loadMoreHashtag(1, 'travel')).rejects.toThrow()
+    expect(store.searchResults).toHaveLength(1)
+  })
+
+  it('fetchLocations при ошибке бросает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useSearchStore()
+
+    await expect(store.fetchLocations(1, 'Moscow')).rejects.toThrow()
+    expect(store.locations).toHaveLength(0)
+  })
+
+  it('fetchLocationMedias при ошибке бросает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useSearchStore()
+
+    await expect(
+      store.fetchLocationMedias(1, { pk: 1001, name: 'Red Square', address: 'Moscow', lat: 55.75, lng: 37.62 })
+    ).rejects.toThrow()
+    expect(store.searchResults).toHaveLength(0)
+  })
+
+  it('loadMoreLocationMedias при ошибке бросает исключение', async () => {
+    vi.mocked(api.get)
+      .mockResolvedValueOnce(wrapResponse({ items: [makePostApi()], next_max_id: 'cursor-2' }))
+      .mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useSearchStore()
+    await store.fetchLocationMedias(1, { pk: 1001, name: 'Red Square', address: 'Moscow', lat: 55.75, lng: 37.62 })
+
+    await expect(store.loadMoreLocationMedias(1, 1001)).rejects.toThrow()
+    expect(store.searchResults).toHaveLength(1)
+  })
+
+  it('sendComment при ошибке бросает исключение', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('Forbidden'))
+
+    const store = useSearchStore()
+
+    await expect(store.sendComment('media123', 1, 'Hello!')).rejects.toThrow()
+  })
 })
