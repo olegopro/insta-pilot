@@ -70,23 +70,18 @@ class ActivityLoggerServiceTest extends TestCase {
         $this->assertDatabaseHas('account_activity_logs', ['action' => 'comment', 'status' => 'fail']);
     }
 
-    public function test_sanitize_removes_session_data(): void {
-        Event::fake();
-
-        $this->service->log(
-            accountId:      $this->account->id,
-            userId:         $this->user->id,
-            action:         'login',
-            status:         'success',
-            requestPayload: ['session_data' => 'secret-session', 'endpoint' => '/auth/login'],
-        );
-
-        $stored = AccountActivityLog::first()->request_payload;
-        $this->assertArrayNotHasKey('session_data', $stored);
-        $this->assertArrayHasKey('endpoint', $stored);
+    public static function sensitiveKeyProvider(): array {
+        return [
+            'session_data'       => [['session_data' => 'secret-session', 'endpoint' => '/auth/login'], 'session_data',       'endpoint'],
+            'password'           => [['password' => 'mypassword',         'login' => 'user123'],        'password',           'login'],
+            'instagram_password' => [['instagram_password' => 'secret',   'login' => 'user123'],        'instagram_password', 'login'],
+            'cookie'             => [['cookie' => 'c=1',                  'action' => 'login'],         'cookie',             'action'],
+            'token'              => [['token' => 'abc',                   'action' => 'login'],         'token',              'action'],
+        ];
     }
 
-    public function test_sanitize_removes_password(): void {
+    #[\PHPUnit\Framework\Attributes\DataProvider('sensitiveKeyProvider')]
+    public function test_sanitize_removes_sensitive_key(array $payload, string $removedKey, string $keptKey): void {
         Event::fake();
 
         $this->service->log(
@@ -94,29 +89,12 @@ class ActivityLoggerServiceTest extends TestCase {
             userId:         $this->user->id,
             action:         'login',
             status:         'success',
-            requestPayload: ['password' => 'mypassword', 'login' => 'user123'],
+            requestPayload: $payload,
         );
 
         $stored = AccountActivityLog::first()->request_payload;
-        $this->assertArrayNotHasKey('password', $stored);
-        $this->assertArrayHasKey('login', $stored);
-    }
-
-    public function test_sanitize_removes_cookie_and_token(): void {
-        Event::fake();
-
-        $this->service->log(
-            accountId:      $this->account->id,
-            userId:         $this->user->id,
-            action:         'login',
-            status:         'success',
-            requestPayload: ['cookie' => 'c=1', 'token' => 'abc', 'action' => 'login'],
-        );
-
-        $stored = AccountActivityLog::first()->request_payload;
-        $this->assertArrayNotHasKey('cookie', $stored);
-        $this->assertArrayNotHasKey('token', $stored);
-        $this->assertArrayHasKey('action', $stored);
+        $this->assertArrayNotHasKey($removedKey, $stored);
+        $this->assertArrayHasKey($keptKey, $stored);
     }
 
     public function test_sanitize_keeps_safe_fields(): void {

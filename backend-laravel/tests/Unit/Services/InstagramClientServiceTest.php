@@ -263,6 +263,55 @@ class InstagramClientServiceTest extends TestCase {
         Http::assertSent(fn (Request $r) => !isset($r['min_id']));
     }
 
+    // --- getUserInfoByPk ---
+
+    public function test_get_user_info_by_pk_sends_session_and_user_pk(): void {
+        Http::fake(['http://python:8001/user/info' => Http::response([
+            'success' => true,
+            'user'    => ['pk' => '42', 'username' => 'testuser'],
+        ], 200)]);
+
+        $this->service->getUserInfoByPk('my-session', '42', 1);
+
+        Http::assertSent(function (Request $request) {
+            return $request->url() === 'http://python:8001/user/info'
+                && $request['session_data'] === 'my-session'
+                && $request['user_pk'] === '42';
+        });
+    }
+
+    public function test_get_user_info_by_pk_deactivates_on_login_required(): void {
+        Http::fake(['http://python:8001/user/info' => Http::response([
+            'error'      => 'Login required',
+            'error_code' => 'login_required',
+        ], 401)]);
+
+        $this->repo->expects($this->once())->method('deactivateAccount')->with(5);
+
+        $this->service->getUserInfoByPk('session', '42', 5);
+    }
+
+    // --- login with device_profile ---
+
+    public function test_login_sends_device_profile_when_provided(): void {
+        Http::fake(['http://python:8001/auth/login' => Http::response(['session_data' => '{}'], 200)]);
+
+        $this->service->login('user', 'pass', ['model' => 'Pixel 8']);
+
+        Http::assertSent(function (Request $request) {
+            return isset($request['device_profile'])
+                && $request['device_profile']['model'] === 'Pixel 8';
+        });
+    }
+
+    public function test_login_omits_device_profile_when_null(): void {
+        Http::fake(['http://python:8001/auth/login' => Http::response(['session_data' => '{}'], 200)]);
+
+        $this->service->login('user', 'pass');
+
+        Http::assertSent(fn (Request $r) => !isset($r['device_profile']));
+    }
+
     // --- fetchCommentReplies ---
 
     public function test_fetch_comment_replies_sends_required_params(): void {
