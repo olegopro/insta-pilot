@@ -57,7 +57,14 @@ class InstagramAccountTest extends TestCase {
         $account = new InstagramAccount();
         $fillable = $account->getFillable();
 
-        foreach (['user_id', 'instagram_login', 'instagram_password', 'session_data', 'is_active'] as $field) {
+        $fields = [
+            'user_id',
+            'instagram_login',
+            'instagram_password',
+            'session_data',
+            'is_active'
+        ];
+        foreach ($fields as $field) {
             $this->assertContains($field, $fillable);
         }
     }

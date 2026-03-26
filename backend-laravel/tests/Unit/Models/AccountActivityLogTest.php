@@ -6,6 +6,7 @@ namespace Tests\Unit\Models;
 
 use App\Models\AccountActivityLog;
 use App\Models\InstagramAccount;
+use App\Models\User;
 use Tests\TestCase;
 
 class AccountActivityLogTest extends TestCase {
@@ -43,5 +44,19 @@ class AccountActivityLogTest extends TestCase {
 
         $this->assertInstanceOf(InstagramAccount::class, $log->instagramAccount);
         $this->assertEquals($account->id, $log->instagramAccount->id);
+    }
+
+    public function test_belongs_to_user(): void {
+        $user = User::factory()->create();
+        $log  = AccountActivityLog::factory()->create(['user_id' => $user->id]);
+
+        $this->assertInstanceOf(User::class, $log->user);
+        $this->assertEquals($user->id, $log->user->id);
+    }
+
+    public function test_request_payload_nullable_stays_null(): void {
+        $log = AccountActivityLog::factory()->create(['request_payload' => null]);
+
+        $this->assertNull(AccountActivityLog::find($log->id)->request_payload);
     }
 }

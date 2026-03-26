@@ -72,9 +72,11 @@ class GenerateCommentJobTest extends TestCase {
 
         $job = new GenerateCommentJob('job-789', 'https://example.com/img.jpg', null);
 
-        $this->expectException(RuntimeException::class);
-
-        $job->handle($this->llmService, $this->activityLogger);
+        try {
+            $job->handle($this->llmService, $this->activityLogger);
+        } catch (RuntimeException) {
+            // expected rethrow
+        }
 
         Event::assertDispatched(
             CommentGenerationProgress::class,

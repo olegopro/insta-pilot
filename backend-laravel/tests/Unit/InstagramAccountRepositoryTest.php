@@ -28,7 +28,7 @@ class InstagramAccountRepositoryTest extends TestCase {
     public function test_get_accounts_by_user_returns_only_that_users_accounts(): void {
         $user = User::factory()->create();
         InstagramAccount::factory()->count(2)->create(['user_id' => $user->id]);
-        InstagramAccount::factory()->create(); // чужой аккаунт
+        InstagramAccount::factory()->create();
 
         $result = $this->repository->getAccountsByUser($user->id);
 
@@ -119,7 +119,9 @@ class InstagramAccountRepositoryTest extends TestCase {
 
     public function test_update_session_data_persists(): void {
         $account = InstagramAccount::factory()->create(['session_data' => null]);
-        $newSessionData = '{"uuids":{"phone_id":"test"},"cookies":{},"last_login":0,"device_settings":{},"user_agent":"","country":"US","country_code":1,"locale":"en_US","timezone_offset":0,"authorization_data":{}}';
+        $newSessionData = '{"uuids":{"phone_id":"test"},"cookies":{},"last_login":0,' .
+            '"device_settings":{},"user_agent":"","country":"US","country_code":1,' .
+            '"locale":"en_US","timezone_offset":0,"authorization_data":{}}';
 
         $this->repository->updateSessionData($account->id, $newSessionData);
 

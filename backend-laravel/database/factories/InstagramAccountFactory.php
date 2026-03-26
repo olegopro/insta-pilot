@@ -14,7 +14,7 @@ class InstagramAccountFactory extends Factory {
     public function definition(): array {
         return [
             'user_id'            => User::factory(),
-            'instagram_login'    => fake()->userName(),
+            'instagram_login'    => fake()->unique()->userName(),
             'instagram_password' => 'password',
             'session_data'       => null,
             'proxy'              => null,

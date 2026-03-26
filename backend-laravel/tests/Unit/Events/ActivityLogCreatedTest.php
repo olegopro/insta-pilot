@@ -41,7 +41,15 @@ class ActivityLogCreatedTest extends TestCase {
         $event   = new ActivityLogCreated($this->log);
         $payload = $event->broadcastWith();
 
-        foreach (['id', 'instagram_account_id', 'user_id', 'action', 'status', 'created_at'] as $field) {
+        $fields = [
+            'id',
+            'instagram_account_id',
+            'user_id',
+            'action',
+            'status',
+            'created_at'
+        ];
+        foreach ($fields as $field) {
             $this->assertArrayHasKey($field, $payload);
         }
         $this->assertEquals($this->log->id, $payload['id']);

@@ -190,4 +190,25 @@ class ActivityLogRepositoryTest extends TestCase {
         $this->assertEquals('Rate limited', $stats['last_error']['error_message']);
         $this->assertEquals('rate_limited', $stats['last_error']['error_code']);
     }
+
+    // ─── pruneOlderThan ────────────────────────────────────────────────────────
+
+    public function test_prune_older_than_deletes_old_records(): void {
+        $this->makeLog(['created_at' => now()->subDays(100)]);
+        $this->makeLog(['created_at' => now()->subDays(50)]);
+        $recent = $this->makeLog(['created_at' => now()->subDays(1)]);
+
+        $deleted = $this->repository->pruneOlderThan(60);
+
+        $this->assertEquals(1, $deleted);
+        $this->assertDatabaseHas('account_activity_logs', ['id' => $recent->id]);
+    }
+
+    public function test_prune_older_than_returns_zero_when_nothing_to_delete(): void {
+        $this->makeLog(['created_at' => now()->subDays(1)]);
+
+        $deleted = $this->repository->pruneOlderThan(30);
+
+        $this->assertEquals(0, $deleted);
+    }
 }

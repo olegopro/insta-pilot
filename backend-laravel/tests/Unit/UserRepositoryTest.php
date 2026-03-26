@@ -45,6 +45,22 @@ class UserRepositoryTest extends TestCase {
         $this->assertFalse($result->hasRole('user'));
     }
 
+    public function test_all_returns_all_users(): void {
+        User::factory()->count(3)->create();
+
+        $result = $this->repository->all();
+
+        $this->assertCount(3, $result);
+    }
+
+    public function test_find_by_id_returns_user_when_found(): void {
+        $user = User::factory()->create();
+
+        $result = $this->repository->findById($user->id);
+
+        $this->assertEquals($user->id, $result->id);
+    }
+
     public function test_find_by_id_returns_null_for_unknown_id(): void {
         $result = $this->repository->findById(99999);
 

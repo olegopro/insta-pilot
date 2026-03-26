@@ -16,7 +16,7 @@ class ActivityLogTest extends TestCase {
 
     protected function setUp(): void {
         parent::setUp();
-        Event::fake(); // предотвращаем реальный broadcast при создании логов
+        Event::fake();
 
         $this->user    = User::factory()->create();
         $this->account = InstagramAccount::factory()->create(['user_id' => $this->user->id]);
@@ -150,7 +150,7 @@ class ActivityLogTest extends TestCase {
     }
 
     public function test_index_cursor_pagination_with_before_id(): void {
-        $log1 = $this->makeLog(['action' => 'like']);
+        $this->makeLog(['action' => 'like']);
         $this->makeLog(['action' => 'like']);
         $log3 = $this->makeLog(['action' => 'like']);
 
@@ -164,7 +164,7 @@ class ActivityLogTest extends TestCase {
     public function test_index_cursor_pagination_with_after_id(): void {
         $log1 = $this->makeLog(['action' => 'like']);
         $this->makeLog(['action' => 'like']);
-        $log3 = $this->makeLog(['action' => 'like']);
+        $this->makeLog(['action' => 'like']);
 
         // after_id возвращает записи с id > after_id
         $this->actingAs($this->user)

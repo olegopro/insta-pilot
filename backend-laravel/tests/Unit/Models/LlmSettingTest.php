@@ -41,7 +41,15 @@ class LlmSettingTest extends TestCase {
         $setting = new LlmSetting();
         $fillable = $setting->getFillable();
 
-        foreach (['provider', 'api_key', 'model_name', 'tone', 'use_caption', 'is_default'] as $field) {
+        $fields = [
+            'provider',
+            'api_key',
+            'model_name',
+            'tone',
+            'use_caption',
+            'is_default'
+        ];
+        foreach ($fields as $field) {
             $this->assertContains($field, $fillable);
         }
     }

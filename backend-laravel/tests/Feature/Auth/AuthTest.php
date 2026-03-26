@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AuthTest extends TestCase {
@@ -27,6 +28,22 @@ class AuthTest extends TestCase {
                 'data' => ['user', 'token'],
             ])
             ->assertJson(['success' => true]);
+    }
+
+    public function test_register_hashes_password_in_database(): void {
+        $email = 'hash@example.com';
+
+        $this->postJson('/api/auth/register', [
+            'name'                  => 'Hash Test',
+            'email'                 => $email,
+            'password'              => 'plainpassword123',
+            'password_confirmation' => 'plainpassword123',
+        ])->assertStatus(201);
+
+        $raw = DB::table('users')->where('email', $email)->value('password');
+
+        $this->assertNotNull($raw);
+        $this->assertNotEquals('plainpassword123', $raw);
     }
 
     public function test_register_validates_required_fields(): void {
