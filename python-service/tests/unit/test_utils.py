@@ -55,6 +55,9 @@ class TestErrorToCode:
             pass
         assert error_to_code(CustomError("custom")) == "error"
 
+    def test_none_input(self):
+        assert error_to_code(None) == "error"  # type: ignore[arg-type]
+
 
 class TestErrorToHttpStatus:
     def test_rate_limited(self):
@@ -74,3 +77,6 @@ class TestErrorToHttpStatus:
 
     def test_unknown_code(self):
         assert error_to_http_status("unknown_code") == 500
+
+    def test_empty_string(self):
+        assert error_to_http_status("") == 500

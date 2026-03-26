@@ -6,15 +6,20 @@ import pytest
 from pydantic import ValidationError
 
 from schemas import (
+    AccountInfoResponse,
     CommentRequest,
+    CommentResponse,
     FeedRequest,
+    FeedResponse,
     FetchCommentRepliesRequest,
     FetchCommentsRequest,
     LoginRequest,
+    LoginResponse,
     MediaLikeRequest,
     SearchHashtagRequest,
     SearchLocationRequest,
     SearchLocationsRequest,
+    SearchResponse,
     SessionRequest,
     UserInfoByPkRequest,
 )
@@ -184,3 +189,38 @@ class TestUserInfoByPkRequest:
     def test_valid(self):
         req = UserInfoByPkRequest(session_data='{}', user_pk="123456")
         assert req.user_pk == "123456"
+
+
+class TestResponseSchemas:
+    def test_login_response_requires_success(self):
+        with pytest.raises(ValidationError):
+            LoginResponse()
+
+    def test_login_response_success(self):
+        resp = LoginResponse(success=True, session_data='{}', full_name="Test")
+        assert resp.success is True
+        assert resp.error is None
+
+    def test_login_response_error(self):
+        resp = LoginResponse(success=False, error="Bad password", error_code="login_required")
+        assert resp.success is False
+        assert resp.error_code == "login_required"
+
+    def test_feed_response_defaults(self):
+        resp = FeedResponse(success=True)
+        assert resp.posts == []
+        assert resp.more_available is False
+        assert resp.next_max_id is None
+
+    def test_account_info_response_optional_fields(self):
+        resp = AccountInfoResponse(success=True)
+        assert resp.user_pk is None
+        assert resp.followers_count is None
+
+    def test_search_response_items_default_empty(self):
+        resp = SearchResponse(success=True)
+        assert resp.items == []
+
+    def test_comment_response_success(self):
+        resp = CommentResponse(success=True, comment_pk="12345")
+        assert resp.comment_pk == "12345"

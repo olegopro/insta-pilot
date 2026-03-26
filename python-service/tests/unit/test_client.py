@@ -56,6 +56,12 @@ class TestSessionKey:
         assert len(key) == 32
         assert all(c in "0123456789abcdef" for c in key)
 
+    def test_key_depends_on_string_ordering(self):
+        # session_key хэширует строку дословно — порядок ключей JSON влияет на ключ кеша
+        key1 = session_key('{"a": 1, "b": 2}')
+        key2 = session_key('{"b": 2, "a": 1}')
+        assert key1 != key2
+
 
 class TestMakeClient:
     def test_creates_client_from_session_data(self):
@@ -109,3 +115,7 @@ class TestMakeClient:
 
     def test_cache_max_is_20(self):
         assert client_module._CLIENT_CACHE_MAX == 20
+
+    def test_invalid_session_data_raises(self):
+        with pytest.raises(json.JSONDecodeError):
+            _make_client("not-valid-json{")

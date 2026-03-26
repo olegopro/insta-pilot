@@ -33,6 +33,10 @@ class TestAccountLock:
         lock = account_lock(session_data)
         assert isinstance(lock, asyncio.Lock)
 
+    def test_empty_string_returns_lock(self):
+        lock = account_lock("")
+        assert isinstance(lock, asyncio.Lock)
+
     async def test_lock_serializes_requests_for_same_account(self, session_data):
         """Два корутина с одним аккаунтом не выполняются одновременно."""
         lock = account_lock(session_data)

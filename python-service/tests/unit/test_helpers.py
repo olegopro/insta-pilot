@@ -400,6 +400,10 @@ class TestSectionsCursor:
         assert "page" not in params
         assert "media_ids" not in params
 
+    def test_parse_cursor_invalid_json_raises(self):
+        with pytest.raises(json.JSONDecodeError):
+            _parse_sections_cursor("not-valid-json{")
+
 
 # ─── _paginate_feed ───────────────────────────────────────────────────────────
 
@@ -459,6 +463,29 @@ class TestPaginateFeed:
             _paginate_feed(cl, "cursor1", seen, all_posts, min_posts=9999, label="test")
 
         assert cl.private_request.call_count == MAX_PAGINATION_ITERATIONS
+
+    def test_seen_accumulates_between_iterations(self):
+        cl = make_client_mock()
+        cl.private_request.side_effect = [
+            {
+                "feed_items": [{"media_or_ad": make_media(pk="101", media_id="101_999")}],
+                "next_max_id": "cursor2",
+                "more_available": True,
+            },
+            {
+                "feed_items": [{"media_or_ad": make_media(pk="102", media_id="102_888")}],
+                "next_max_id": None,
+                "more_available": False,
+            },
+        ]
+        all_posts = []
+        seen = []
+
+        with patch("helpers.time.sleep"):
+            _paginate_feed(cl, "cursor1", seen, all_posts, min_posts=9999, label="test")
+
+        assert seen == ["101_999", "102_888"]
+        assert len(all_posts) == 2
 
 
 # ─── _fetch_sections ──────────────────────────────────────────────────────────
