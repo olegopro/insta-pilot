@@ -8,6 +8,7 @@ use App\Models\DeviceProfile;
 use App\Models\InstagramAccount;
 use App\Models\User;
 use App\Services\InstagramClientServiceInterface;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class InstagramAccountTest extends TestCase {
@@ -146,6 +147,42 @@ class InstagramAccountTest extends TestCase {
             ->assertJson(['success' => true]);
 
         $this->assertDatabaseMissing('instagram_accounts', ['id' => $account->id]);
+    }
+
+    public function test_inactive_user_gets_403(): void {
+        $inactive = User::factory()->inactive()->create();
+
+        $this->actingAs($inactive)
+            ->getJson('/api/accounts/')
+            ->assertStatus(403);
+    }
+
+    public function test_login_encrypts_password_in_database(): void {
+        $profile = DeviceProfile::factory()->create();
+
+        $plainPassword = 'my-plain-password-123';
+
+        $this->mock(InstagramClientServiceInterface::class, function ($mock) {
+            $mock->shouldReceive('login')->once()->andReturn([
+                'success'         => true,
+                'session_data'    => '{}',
+                'full_name'       => 'Test',
+                'profile_pic_url' => null,
+            ]);
+        });
+
+        $this->withToken($this->token)->postJson('/api/accounts/login', [
+            'instagram_login'    => 'encrypttest',
+            'instagram_password' => $plainPassword,
+            'device_profile_id'  => $profile->id
+        ])->assertStatus(200);
+
+        $raw = DB::table('instagram_accounts')
+            ->where('instagram_login', 'encrypttest')
+            ->value('instagram_password');
+
+        $this->assertNotNull($raw);
+        $this->assertNotEquals($plainPassword, $raw);
     }
 
     public function test_user_can_get_device_profiles(): void {

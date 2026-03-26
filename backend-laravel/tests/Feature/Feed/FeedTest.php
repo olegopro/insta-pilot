@@ -60,6 +60,17 @@ class FeedTest extends TestCase {
             ->assertStatus(200);
     }
 
+    public function test_index_pagination_passes_seen_posts(): void {
+        $mock = $this->mock(InstagramClientServiceInterface::class);
+        $mock->shouldReceive('getFeed')
+            ->withArgs(fn ($_s, $_id, $_maxId, $seenPosts) => $seenPosts === 'post1,post2,post3')
+            ->andReturn($this->feedResponse);
+
+        $this->actingAs($this->user)
+            ->getJson("/api/feed/{$this->account->id}?max_id=cursor-xyz&seen_posts=post1,post2,post3")
+            ->assertStatus(200);
+    }
+
     public function test_index_returns_404_for_nonexistent_account(): void {
         $this->actingAs($this->user)
             ->getJson('/api/feed/99999')

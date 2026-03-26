@@ -84,4 +84,16 @@ class InstagramUserTest extends TestCase {
         $this->getJson("/api/instagram-user/{$this->account->id}/12345678")
             ->assertStatus(401);
     }
+
+    public function test_inactive_user_gets_403(): void {
+        $inactive = User::factory()->inactive()->create();
+        $account  = InstagramAccount::factory()->create([
+            'user_id'      => $inactive->id,
+            'session_data' => $this->sessionData,
+        ]);
+
+        $this->actingAs($inactive)
+            ->getJson("/api/instagram-user/{$account->id}/12345678")
+            ->assertStatus(403);
+    }
 }

@@ -119,4 +119,28 @@ class AdminUserTest extends TestCase {
 
         $response->assertStatus(422);
     }
+
+    public function test_admin_cannot_toggle_active_on_self(): void {
+        $response = $this->withToken($this->adminToken)
+            ->patchJson("/api/admin/users/{$this->admin->id}/toggle-active");
+
+        $response->assertStatus(403)
+            ->assertJson(['success' => false]);
+    }
+
+    public function test_admin_cannot_change_own_role(): void {
+        $response = $this->withToken($this->adminToken)
+            ->patchJson("/api/admin/users/{$this->admin->id}/role", ['role' => 'user']);
+
+        $response->assertStatus(403)
+            ->assertJson(['success' => false]);
+    }
+
+    public function test_update_role_returns_404_for_unknown_user(): void {
+        $response = $this->withToken($this->adminToken)
+            ->patchJson('/api/admin/users/99999/role', ['role' => 'user']);
+
+        $response->assertStatus(404)
+            ->assertJson(['success' => false]);
+    }
 }

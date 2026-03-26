@@ -8,6 +8,7 @@ use App\Models\LlmSetting;
 use App\Models\LlmSystemPrompt;
 use App\Models\User;
 use App\Services\LlmServiceInterface;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class LlmSettingsTest extends TestCase {
@@ -77,6 +78,23 @@ class LlmSettingsTest extends TestCase {
             ->assertJsonPath('success', true);
 
         $this->assertDatabaseHas('llm_settings', ['provider' => 'openai']);
+    }
+
+    public function test_store_encrypts_api_key_in_database(): void {
+        $plainKey = 'sk-super-secret-key';
+
+        $this->actingAs($this->admin)
+            ->postJson('/api/llm-settings', [
+                'provider'   => 'openai',
+                'api_key'    => $plainKey,
+                'model_name' => 'gpt-4o-mini',
+            ])
+            ->assertStatus(200);
+
+        $raw = DB::table('llm_settings')->where('provider', 'openai')->value('api_key');
+
+        $this->assertNotNull($raw);
+        $this->assertNotEquals($plainKey, $raw);
     }
 
     public function test_store_requires_provider_api_key_model_name(): void {

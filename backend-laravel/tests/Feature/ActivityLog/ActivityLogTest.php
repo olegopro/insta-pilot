@@ -148,4 +148,28 @@ class ActivityLogTest extends TestCase {
             ->getJson("/api/accounts/{$account->id}/activity")
             ->assertStatus(403);
     }
+
+    public function test_index_cursor_pagination_with_before_id(): void {
+        $log1 = $this->makeLog(['action' => 'like']);
+        $this->makeLog(['action' => 'like']);
+        $log3 = $this->makeLog(['action' => 'like']);
+
+        // before_id возвращает записи с id < before_id
+        $this->actingAs($this->user)
+            ->getJson("/api/accounts/{$this->account->id}/activity?before_id={$log3->id}")
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data.items');
+    }
+
+    public function test_index_cursor_pagination_with_after_id(): void {
+        $log1 = $this->makeLog(['action' => 'like']);
+        $this->makeLog(['action' => 'like']);
+        $log3 = $this->makeLog(['action' => 'like']);
+
+        // after_id возвращает записи с id > after_id
+        $this->actingAs($this->user)
+            ->getJson("/api/accounts/{$this->account->id}/activity?after_id={$log1->id}")
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data.items');
+    }
 }

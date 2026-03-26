@@ -61,7 +61,7 @@ final class ProxyImageController extends Controller {
         }
 
         foreach (self::ALLOWED_DOMAINS as $domain) {
-            if (str_ends_with($host, $domain)) {
+            if ($host === $domain || str_ends_with($host, '.' . $domain)) {
                 return true;
             }
         }

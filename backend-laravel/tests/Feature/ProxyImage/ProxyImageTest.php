@@ -72,4 +72,25 @@ class ProxyImageTest extends TestCase {
         $this->call('GET', '/api/proxy/image', ['url' => 'https://scontent.fbcdn.net/img.png'])
             ->assertStatus(200);
     }
+
+    public static function allowedSubdomainProvider(): array {
+        return [
+            'cdninstagram' => ['cdninstagram.com/*', 'https://scontent.cdninstagram.com/photo.jpg'],
+            'fbcdn'        => ['fbcdn.net/*',        'https://scontent-ams4-1.fbcdn.net/photo.jpg'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('allowedSubdomainProvider')]
+    public function test_allows_subdomain(string $fakePattern, string $url): void {
+        Http::fake([$fakePattern => Http::response('img', 200, ['Content-Type' => 'image/jpeg'])]);
+
+        $this->call('GET', '/api/proxy/image', ['url' => $url])
+            ->assertStatus(200);
+    }
+
+    public function test_blocks_domain_that_ends_with_allowed_suffix_but_is_not_subdomain(): void {
+        // Домен вида "notcdninstagram.com" не должен проходить
+        $this->call('GET', '/api/proxy/image', ['url' => 'https://notcdninstagram.com/photo.jpg'])
+            ->assertStatus(403);
+    }
 }
