@@ -215,4 +215,31 @@ describe('activityLogStore', () => {
     const store = useActivityLogStore()
     expect(store.fetchSummaryLoading).toBe(false)
   })
+
+  it('fetchLogs при ошибке выбрасывает исключение и не изменяет logs', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+
+    const store = useActivityLogStore()
+
+    await expect(store.fetchLogs(10)).rejects.toThrow()
+    expect(store.logs).toHaveLength(0)
+  })
+
+  it('fetchStats при ошибке выбрасывает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Server error'))
+
+    const store = useActivityLogStore()
+
+    await expect(store.fetchStats(10)).rejects.toThrow()
+    expect(store.stats).toBeNull()
+  })
+
+  it('fetchSummary при ошибке выбрасывает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Server error'))
+
+    const store = useActivityLogStore()
+
+    await expect(store.fetchSummary()).rejects.toThrow()
+    expect(store.summary).toHaveLength(0)
+  })
 })

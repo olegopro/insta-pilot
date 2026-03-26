@@ -44,7 +44,8 @@ test.describe('Navigation — E2E', () => {
     await loginAsAdmin(page)
     await page.goto('/#/')
 
-    await page.waitForTimeout(500)
+    // Ожидаем любой контент страницы вместо sleep
+    await page.locator('.q-layout, main, #app').first().waitFor({ state: 'visible', timeout: 5000 })
     expect(jsErrors).toHaveLength(0)
   })
 })

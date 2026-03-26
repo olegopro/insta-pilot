@@ -103,6 +103,17 @@ describe('mediaPostDTO.toLocalPost', () => {
     expect(result.thumbnailUrl).toBeNull()
     expect(result.videoUrl).toBeNull()
   })
+
+  it('маппит viewCount из view_count', () => {
+    const result = mediaPostDTO.toLocalPost(makePostApi({ view_count: 9999 }))
+    expect(result.viewCount).toBe(9999)
+  })
+
+  it('location_name и location_pk null остаются null', () => {
+    const result = mediaPostDTO.toLocalPost(makePostApi({ location_name: null, location_pk: null }))
+    expect(result.locationName).toBeNull()
+    expect(result.locationPk).toBeNull()
+  })
 })
 
 describe('mediaPostDTO.toLocal', () => it('маппит массив постов', () => {

@@ -15,6 +15,8 @@ describe('checkEmail', () => {
     expect(checkEmail('missing@dot')).toBe('Некорректный email')
   })
 
+  it('возвращает сообщение об ошибке для пустой строки', () => expect(checkEmail('')).toBe('Некорректный email'))
+
   it('функция совместима с форматом Quasar rules (возвращает true | string)', () => {
     const validResult = checkEmail('test@test.com')
     const invalidResult = checkEmail('bad')

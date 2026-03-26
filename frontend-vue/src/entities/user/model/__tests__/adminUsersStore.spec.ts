@@ -77,4 +77,26 @@ describe('adminUsersStore', () => {
 
     expect(api.patch).toHaveBeenCalledWith('/admin/users/5/role', { role: 'admin' })
   })
+
+  it('fetchUsers при ошибке выбрасывает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Forbidden'))
+
+    const store = useAdminUsersStore()
+
+    await expect(store.fetchUsers()).rejects.toThrow()
+    expect(store.users).toHaveLength(0)
+  })
+
+  it('fetchUsersLoading изначально false', () => {
+    const store = useAdminUsersStore()
+    expect(store.fetchUsersLoading).toBe(false)
+  })
+
+  it('toggleActive при ошибке выбрасывает исключение', async () => {
+    vi.mocked(api.patch).mockRejectedValueOnce(new Error('Forbidden'))
+
+    const store = useAdminUsersStore()
+
+    await expect(store.toggleActive(1)).rejects.toThrow()
+  })
 })

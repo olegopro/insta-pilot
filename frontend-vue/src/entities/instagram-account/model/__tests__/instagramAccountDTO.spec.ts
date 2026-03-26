@@ -35,6 +35,16 @@ describe('instagramAccountDTO.toLocal', () => {
     expect(result.profilePicUrl).toBeNull()
   })
 
+  it('fullName = null если full_name = null', () => {
+    const result = instagramAccountDTO.toLocal(makeAccountApi({ full_name: null }))
+    expect(result.fullName).toBeNull()
+  })
+
+  it('deviceProfileId = null если device_profile_id = null', () => {
+    const result = instagramAccountDTO.toLocal(makeAccountApi({ device_profile_id: null }))
+    expect(result.deviceProfileId).toBeNull()
+  })
+
   it('profilePicUrl проксируется через /api/proxy/image', () => {
     const result = instagramAccountDTO.toLocal(makeAccountApi({
       profile_pic_url: 'https://cdninstagram.com/photo.jpg'

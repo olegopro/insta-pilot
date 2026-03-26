@@ -48,10 +48,9 @@ test.describe('Activity Logs — E2E', () => {
     const firstRow = page.locator('.q-table tbody tr').first()
     if (await firstRow.isVisible()) {
       await firstRow.click()
-      // После клика должна раскрыться строка с деталями
-      await page.waitForTimeout(300)
       const expandedContent = page.locator('[class*="expanded"], [class*="expand"], .q-tr--expand')
-      if (!await expandedContent.isVisible()) {
+      const appeared = await expandedContent.waitFor({ timeout: 2000, state: 'visible' }).then(() => true).catch(() => false)
+      if (!appeared) {
         // Некоторые реализации используют другой паттерн расширения
         await expect(page.locator('.q-table__container')).toBeVisible()
       }

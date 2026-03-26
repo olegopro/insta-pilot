@@ -50,6 +50,11 @@ describe('llmSettingsDTO.toLocal', () => {
     expect(result.provider).toBe('glm')
     expect(result.modelName).toBe('glm-4-flash')
   })
+
+  it.each(['friendly', 'professional', 'casual', 'humorous'] as const)(
+    'tone %s маппится без изменений',
+    (tone) => expect(llmSettingsDTO.toLocal(makeSettingApi({ tone })).tone).toBe(tone)
+  )
 })
 
 describe('llmSettingsDTO.toLocalList', () => {

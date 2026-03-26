@@ -137,4 +137,43 @@ describe('authStore', () => {
 
     expect(store.isAdmin).toBe(true)
   })
+
+  it('login при ошибке выбрасывает исключение и не сохраняет токен', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('Unauthorized'))
+
+    const store = useAuthStore()
+
+    await expect(store.login({ email: 'bad@example.com', password: 'wrong' })).rejects.toThrow()
+    expect(localStorage.getItem('token')).toBeNull()
+    expect(store.user).toBeNull()
+  })
+
+  it('loginError содержит сообщение после неудачного login', async () => {
+    vi.mocked(api.post).mockRejectedValueOnce(new Error('Неверный пароль'))
+
+    const store = useAuthStore()
+    await expect(store.login({ email: 'bad@example.com', password: 'wrong' })).rejects.toThrow()
+
+    expect(store.loginError).toBeTruthy()
+  })
+
+  it('fetchMe загружает пользователя из /auth/me', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: { success: true, data: mockUserApi, message: 'OK' }
+    })
+
+    const store = useAuthStore()
+    await store.fetchMe()
+
+    expect(store.user).toMatchObject({ id: 1, email: 'test@example.com' })
+  })
+
+  it('fetchMe при ошибке выбрасывает исключение', async () => {
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Unauthorized'))
+
+    const store = useAuthStore()
+
+    await expect(store.fetchMe()).rejects.toThrow()
+    expect(store.user).toBeNull()
+  })
 })
