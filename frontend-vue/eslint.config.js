@@ -5,7 +5,7 @@ import pluginQuasar from '@quasar/app-vite/eslint'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import stylisticPlugin from '@stylistic/eslint-plugin'
 import noRelativeImportPaths from 'eslint-plugin-no-relative-import-paths'
-import localPlugin from './eslint-local-rules/index.js'
+import localPlugin from './eslint/index.js'
 // import prettierSkipFormatting from '@vue/eslint-config-prettier/skip-formatting';
 
 export default defineConfigWithVueTs(
