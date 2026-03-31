@@ -51,6 +51,7 @@ class InstagramAccount extends Model {
         return $this->belongsTo(User::class);
     }
 
+    /** @api @used-by \Tests\Unit\Models\InstagramAccountTest */
     public function deviceProfile(): BelongsTo {
         return $this->belongsTo(DeviceProfile::class);
     }

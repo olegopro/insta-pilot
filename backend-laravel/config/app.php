@@ -4,7 +4,6 @@ use App\Facades\InstagramClient;
 use Illuminate\Support\Facades\Facade;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -123,7 +122,7 @@ return [
 
     'maintenance' => [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
-        'store' => env('APP_MAINTENANCE_STORE', 'database'),
+        'store'  => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
 
@@ -132,9 +131,7 @@ return [
     'instagram_salt' => env('INSTAGRAM_SALT'),
 
     // Aliases
-    
     'aliases' => Facade::defaultAliases()->merge([
         'InstagramClient' => InstagramClient::class
     ])->toArray()
-
 ];

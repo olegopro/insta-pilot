@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 final class ProxyImageController extends Controller {
-    private const ALLOWED_DOMAINS = [
+    private const array ALLOWED_DOMAINS = [
         'cdninstagram.com',
         'fbcdn.net'
     ];
