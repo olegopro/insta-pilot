@@ -22,6 +22,7 @@ class InstagramAccountRepository implements InstagramAccountRepositoryInterface 
 
     public function updateSessionData(int $id, string $sessionData): void {
         $account = InstagramAccount::findOrFail($id);
+
         $account->session_data = $sessionData;
         $account->save();
     }
@@ -31,7 +32,9 @@ class InstagramAccountRepository implements InstagramAccountRepositoryInterface 
     }
 
     public function findByIdAndUser(int $id, int $userId): InstagramAccount | null {
-        return InstagramAccount::where('id', $id)->where('user_id', $userId)->first();
+        return InstagramAccount::where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
     }
 
     public function findByLogin(string $login): InstagramAccount | null {

@@ -18,9 +18,11 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 // --- Broadcasting auth ---
-Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->post('/broadcasting/auth', function (\Illuminate\Http\Request $request) {
-    return Broadcast::auth($request);
-});
+Route::middleware(['auth:sanctum', EnsureUserIsActive::class])
+    ->post(
+        '/broadcasting/auth',
+        fn(\Illuminate\Http\Request $request) => Broadcast::auth($request)
+    );
 
 // --- Auth ---
 Route::prefix('auth')->group(function () {

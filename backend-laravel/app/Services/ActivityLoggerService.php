@@ -68,6 +68,7 @@ class ActivityLoggerService implements ActivityLoggerServiceInterface {
                 responseSummary: $entry['response_summary'] ?? null,
             );
         }
+
         return $logs;
     }
 
