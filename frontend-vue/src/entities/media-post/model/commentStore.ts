@@ -58,15 +58,15 @@ export const useCommentStore = defineStore('comments', () => {
   const canLoadMore = computed(() => commentsCursor.value !== null)
 
   const fetchReplies = async (accountId: number, mediaPk: string, commentPk: string) => {
-    const comment = comments.value.find((c) => c.pk === commentPk)
+    const comment = comments.value.find((foundComment) => foundComment.pk === commentPk)
     if (!comment) return
     comment.childCommentsLoading = true
     try {
       const { data } = await fetchRepliesApi.execute({ accountId, mediaPk, commentPk })
       comment.childComments = mediaPostDTO.toLocalComments(data.child_comments)
       comment.childCommentsCursor = data.next_min_id
-    } catch (e) {
-      if (!isCancel(e)) throw e
+    } catch (error) {
+      if (!isCancel(error)) throw error
     } finally {
       comment.childCommentsLoading = false
     }

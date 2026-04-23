@@ -12,13 +12,13 @@ export function useCommentGeneration() {
   const generatedComment = ref<Nullable<string>>(null)
   const error = ref<Nullable<string>>(null)
   const currentJobId = ref<Nullable<string>>(null)
-  let timeoutId: ReturnType<typeof setTimeout> | null = null
+  let timeoutHandle: ReturnType<typeof setTimeout> | null = null
 
   const loading = computed(() => !['idle', 'completed', 'failed'].includes(step.value))
 
   const clearTimeout_ = () => {
-    timeoutId && clearTimeout(timeoutId)
-    timeoutId = null
+    timeoutHandle && clearTimeout(timeoutHandle)
+    timeoutHandle = null
   }
 
   const leaveChannel = () => {
@@ -44,7 +44,7 @@ export function useCommentGeneration() {
       const jobId = response.data.data.job_id
       currentJobId.value = jobId
 
-      timeoutId = setTimeout(() => {
+      timeoutHandle = setTimeout(() => {
         step.value = 'failed'
         error.value = 'Превышено время ожидания генерации'
         leaveChannel()
