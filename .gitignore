@@ -6,7 +6,8 @@ backend-laravel/storage/framework/cache/*
 backend-laravel/storage/framework/sessions/*
 
 # Python
-python-service/__pycache__/
+__pycache__/
+*.pyc
 python-service/.env
 python-service/venv/
 
