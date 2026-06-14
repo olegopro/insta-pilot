@@ -52,22 +52,16 @@ describe('useCommentGeneration', () => {
     expect(echo.private).toHaveBeenCalledWith('comment-generation.job-123')
   })
 
-  it('событие downloading обновляет step', async () => {
+  it.each([
+    ['downloading'],
+    ['analyzing']
+  ])('событие %s обновляет step', async (eventStep) => {
     vi.mocked(api.post).mockResolvedValueOnce(makeJobResponse())
     const { step, generate } = useCommentGeneration()
     await generate('https://cdn.example.com/img.jpg')
 
-    listenHandler?.({ step: 'downloading' })
-    expect(step.value).toBe('downloading')
-  })
-
-  it('событие analyzing обновляет step', async () => {
-    vi.mocked(api.post).mockResolvedValueOnce(makeJobResponse())
-    const { step, generate } = useCommentGeneration()
-    await generate('https://cdn.example.com/img.jpg')
-
-    listenHandler?.({ step: 'analyzing' })
-    expect(step.value).toBe('analyzing')
+    listenHandler?.({ step: eventStep })
+    expect(step.value).toBe(eventStep)
   })
 
   it('событие completed обновляет step и generatedComment', async () => {

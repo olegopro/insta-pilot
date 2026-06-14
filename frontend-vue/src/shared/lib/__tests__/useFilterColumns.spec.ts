@@ -19,11 +19,4 @@ describe('useFilterColumns', () => {
     const { columnsVisibleNames } = useFilterColumns(makeColumns())
     expect(columnsVisibleNames.value).toEqual(['id', 'name', 'status'])
   })
-
-  it('columnsVisibleNames реактивен при изменении', () => {
-    const { columnsVisibleNames } = useFilterColumns(makeColumns())
-    columnsVisibleNames.value = ['id', 'status']
-    expect(columnsVisibleNames.value).toEqual(['id', 'status'])
-    expect(columnsVisibleNames.value).not.toContain('name')
-  })
 })

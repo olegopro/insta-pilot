@@ -6,6 +6,7 @@ import {
   previewTooltip,
   display
 } from '@/widgets/activity-log-table/lib/responseFormatters'
+import type { TabMode } from '@/widgets/activity-log-table/model/types'
 
 describe('extractKey', () => {
   it('извлекает вложенный объект по ключу', () => {
@@ -64,17 +65,11 @@ describe('previewTooltip', () => {
 })
 
 describe('display', () => {
-  it('compact → возвращает только скалярные поля', () => {
-    const obj = { id: 1, nested: { x: 2 } }
-    const result = display(obj, 'compact')
-    expect(result).toEqual({ id: 1 })
-  })
+  const obj = { id: 1, nested: { x: 2 } }
 
-  it('full → возвращает весь объект', () => {
-    const obj = { id: 1, nested: { x: 2 } }
-    const result = display(obj, 'full')
-    expect(result).toEqual(obj)
-  })
-
-  it('возвращает null для null', () => expect(display(null, 'compact')).toBeNull())
+  it.each([
+    ['compact', obj, { id: 1 }],
+    ['full', obj, obj],
+    ['full', null, null]
+  ])('режим %s диспетчеризует в нужную ветку', (tab, input, expected) => expect(display(input, tab as TabMode)).toEqual(expected))
 })

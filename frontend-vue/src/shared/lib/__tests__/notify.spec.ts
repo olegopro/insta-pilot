@@ -9,33 +9,18 @@ vi.mock('quasar', () => ({
 import { Notify } from 'quasar'
 import { notifySuccess, notifyError } from '@/shared/lib/notify'
 
-describe('notifySuccess', () => {
+describe('notify', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('вызывает Notify.create с type=positive', () => {
-    notifySuccess('Успешно сохранено')
+  it.each([
+    [notifySuccess, 'positive', 'Успешно сохранено'],
+    [notifyError, 'negative', 'Произошла ошибка']
+  ])('%o вызывает Notify.create с type=%s, сообщением и position=top-right', (fn, type, message) => {
+    fn(message)
     expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
-      type: 'positive',
-      message: 'Успешно сохранено'
-    }))
-  })
-
-  it('передаёт position=top-right', () => {
-    notifySuccess('OK')
-    expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
+      type,
+      message,
       position: 'top-right'
-    }))
-  })
-})
-
-describe('notifyError', () => {
-  beforeEach(() => vi.clearAllMocks())
-
-  it('вызывает Notify.create с type=negative и сообщением', () => {
-    notifyError('Произошла ошибка')
-    expect(Notify.create).toHaveBeenCalledWith(expect.objectContaining({
-      type: 'negative',
-      message: 'Произошла ошибка'
     }))
   })
 })

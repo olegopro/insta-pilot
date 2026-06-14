@@ -97,22 +97,23 @@ describe('mediaPostDTO.toLocalPost', () => {
     expect(result.user.fullName).toBe('Test User')
   })
 
-  it('null поля остаются null', () => {
-    const result = mediaPostDTO.toLocalPost(makePostApi({ thumbnail_url: null, video_url: null }))
+  it('null поля (thumbnail/video/location) остаются null', () => {
+    const result = mediaPostDTO.toLocalPost(makePostApi({
+      thumbnail_url: null,
+      video_url:     null,
+      location_name: null,
+      location_pk:   null
+    }))
 
     expect(result.thumbnailUrl).toBeNull()
     expect(result.videoUrl).toBeNull()
+    expect(result.locationName).toBeNull()
+    expect(result.locationPk).toBeNull()
   })
 
   it('маппит viewCount из view_count', () => {
     const result = mediaPostDTO.toLocalPost(makePostApi({ view_count: 9999 }))
     expect(result.viewCount).toBe(9999)
-  })
-
-  it('location_name и location_pk null остаются null', () => {
-    const result = mediaPostDTO.toLocalPost(makePostApi({ location_name: null, location_pk: null }))
-    expect(result.locationName).toBeNull()
-    expect(result.locationPk).toBeNull()
   })
 })
 

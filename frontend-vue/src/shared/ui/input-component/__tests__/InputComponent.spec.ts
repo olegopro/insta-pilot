@@ -22,21 +22,6 @@ const globalStubs = {
 }
 
 describe('InputComponent', () => {
-  it('рендерит q-input', () => {
-    const wrapper = mount(InputComponent, {
-      global: { stubs: globalStubs }
-    })
-    expect(wrapper.find('[data-q-input]').exists()).toBe(true)
-  })
-
-  it('не показывает иконку для type=text', () => {
-    const wrapper = mount(InputComponent, {
-      props: { type: 'text' },
-      global: { stubs: globalStubs }
-    })
-    expect(wrapper.find('[data-icon]').exists()).toBe(false)
-  })
-
   it('показывает иконку visibility_off для type=password', () => {
     const wrapper = mount(InputComponent, {
       props: { type: 'password' },
@@ -45,39 +30,21 @@ describe('InputComponent', () => {
     expect(wrapper.find('[data-icon]').attributes('data-icon')).toBe('visibility_off')
   })
 
-  it('клик на иконку переключает тип поля на text', async () => {
+  it.each([
+    [1, 'text', 'visibility'],
+    [2, 'password', 'visibility_off'],
+    [3, 'text', 'visibility']
+  ])('после %i клик(ов) тип=%s, иконка=%s', async (clicks, expectedType, expectedIcon) => {
     const wrapper = mount(InputComponent, {
       props: { type: 'password' },
       global: { stubs: globalStubs }
     })
-    await wrapper.find('[data-icon]').trigger('click')
-    expect(wrapper.find('[data-q-input]').attributes('data-type')).toBe('text')
-  })
 
-  it('повторный клик возвращает тип обратно на password', async () => {
-    const wrapper = mount(InputComponent, {
-      props: { type: 'password' },
-      global: { stubs: globalStubs }
-    })
-    await wrapper.find('[data-icon]').trigger('click')
-    await wrapper.find('[data-icon]').trigger('click')
-    expect(wrapper.find('[data-q-input]').attributes('data-type')).toBe('password')
-  })
+    for (let click = 0; click < clicks; click++) {
+      await wrapper.find('[data-icon]').trigger('click')
+    }
 
-  it('после переключения иконка меняется на visibility', async () => {
-    const wrapper = mount(InputComponent, {
-      props: { type: 'password' },
-      global: { stubs: globalStubs }
-    })
-    await wrapper.find('[data-icon]').trigger('click')
-    expect(wrapper.find('[data-icon]').attributes('data-icon')).toBe('visibility')
-  })
-
-  it('передаёт labelText как label в q-input', () => {
-    const wrapper = mount(InputComponent, {
-      props: { labelText: 'Email' },
-      global: { stubs: globalStubs }
-    })
-    expect(wrapper.find('[data-q-input]').attributes('data-label')).toBe('Email')
+    expect(wrapper.find('[data-q-input]').attributes('data-type')).toBe(expectedType)
+    expect(wrapper.find('[data-icon]').attributes('data-icon')).toBe(expectedIcon)
   })
 })

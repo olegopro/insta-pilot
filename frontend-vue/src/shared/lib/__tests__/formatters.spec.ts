@@ -9,23 +9,15 @@ import {
   formatDateRu
 } from '@/shared/lib/formatters'
 
-describe('formatCount', () => {
-  it('возвращает число как строку если < 1000', () => {
-    expect(formatCount(999)).toBe('999')
-    expect(formatCount(0)).toBe('0')
-  })
-
-  it('форматирует тысячи как K', () => {
-    expect(formatCount(1000)).toBe('1.0K')
-    expect(formatCount(1500)).toBe('1.5K')
-    expect(formatCount(999999)).toBe('1000.0K')
-  })
-
-  it('форматирует миллионы как M', () => {
-    expect(formatCount(1_000_000)).toBe('1.0M')
-    expect(formatCount(2_500_000)).toBe('2.5M')
-  })
-})
+describe('formatCount', () => it.each([
+  [0, '0'],
+  [999, '999'],
+  [1000, '1.0K'],
+  [1500, '1.5K'],
+  [999999, '1000.0K'],
+  [1_000_000, '1.0M'],
+  [2_500_000, '2.5M']
+])('formatCount(%i) === %s', (input, expected) => expect(formatCount(input)).toBe(expected)))
 
 describe('formatDate', () => {
   it('возвращает пустую строку для пустого значения', () => expect(formatDate('')).toBe(''))
@@ -43,10 +35,8 @@ describe('formatTimeHMS', () => {
     expect(result).toMatch(/\d{2}:\d{2}:\d{2}/)
   })
 
-  it('возвращает оригинальную строку при ошибке парсинга', () => {
-    const result = formatTimeHMS('invalid-date')
-    expect(result).toBeDefined()
-  })
+  it('возвращает "Invalid Date" на невалидном входе (Intl не бросает)', () =>
+    expect(formatTimeHMS('invalid-date')).toBe('Invalid Date'))
 })
 
 describe('formatTimeHM', () => {
@@ -58,43 +48,32 @@ describe('formatTimeHM', () => {
   })
 })
 
-describe('formatDuration', () => {
-  it('возвращает тире для null', () => expect(formatDuration(null)).toEqual({ text: '—', color: '' }))
-
-  it('возвращает мс для значений < 1000', () => expect(formatDuration(500)).toEqual({ text: '500ms', color: '' }))
-
-  it('возвращает секунды с color=warning для 1000-2999', () => {
-    const result = formatDuration(1500)
-    expect(result.text).toBe('1.5s')
-    expect(result.color).toBe('warning')
-  })
-
-  it('возвращает секунды с color=negative для >= 3000', () => {
-    const result = formatDuration(3000)
-    expect(result.text).toBe('3.0s')
-    expect(result.color).toBe('negative')
-  })
-})
+describe('formatDuration', () => it.each([
+  [null, { text: '—', color: '' }],
+  [500, { text: '500ms', color: '' }],
+  [1500, { text: '1.5s', color: 'warning' }],
+  [3000, { text: '3.0s', color: 'negative' }]
+])('formatDuration(%s)', (input, expected) => expect(formatDuration(input)).toEqual(expected)))
 
 describe('formatRelativeTime', () => {
   afterEach(() => vi.useRealTimers())
 
-  it('возвращает "только что" для < 1 минуты', () => {
+  it.each([
+    ['2026-01-15T10:00:30Z', '2026-01-15T10:00:00Z', 'только что'],
+    ['2026-01-15T10:05:00Z', '2026-01-15T10:00:00Z', '5 мин.'],
+    ['2026-01-15T12:00:00Z', '2026-01-15T10:00:00Z', '2 ч.'],
+    ['2026-01-18T10:00:00Z', '2026-01-15T10:00:00Z', '3 д.'],
+    ['2026-01-29T10:00:00Z', '2026-01-15T10:00:00Z', '2 нед.']
+  ])('now=%s iso=%s → %s', (now, iso, expected) => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-01-15T10:00:30Z'))
-    expect(formatRelativeTime('2026-01-15T10:00:00Z')).toBe('только что')
+    vi.setSystemTime(new Date(now))
+    expect(formatRelativeTime(iso)).toBe(expected)
   })
 
-  it('возвращает минуты для < 1 часа', () => {
+  it('возвращает дату для >= 5 недель', () => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-01-15T10:05:00Z'))
-    expect(formatRelativeTime('2026-01-15T10:00:00Z')).toBe('5 мин.')
-  })
-
-  it('возвращает часы для < 24 часов', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-01-15T12:00:00Z'))
-    expect(formatRelativeTime('2026-01-15T10:00:00Z')).toBe('2 ч.')
+    vi.setSystemTime(new Date('2026-03-15T10:00:00Z'))
+    expect(formatRelativeTime('2026-01-15T10:00:00Z')).toBe(formatDate('2026-01-15T10:00:00Z'))
   })
 })
 

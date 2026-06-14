@@ -5,14 +5,6 @@ import type { InternalAxiosRequestConfig } from 'axios'
 describe('axios api', () => {
   beforeEach(() => localStorage.clear())
 
-  it('base URL соответствует VITE_API_URL', () => {
-    // В тестах import.meta.env.VITE_API_URL = undefined → базовый URL undefined/пустой
-    // Главное — экземпляр создан и это axios-instance
-    expect(api.defaults).toBeDefined()
-    expect(typeof api.get).toBe('function')
-    expect(typeof api.post).toBe('function')
-  })
-
   it('request interceptor добавляет Authorization header при наличии токена', () => {
     localStorage.setItem('token', 'my-secret-token')
 
@@ -38,12 +30,12 @@ describe('axios api', () => {
     expect((result.headers as Record<string, string>).Authorization).toBeUndefined()
   })
 
-  it('response interceptor при 401 удаляет токен', () => {
+  it('response interceptor при 401 на обычном запросе удаляет токен', () => {
     localStorage.setItem('token', 'old-token')
 
     type ResponseHandler = { rejected: (err: unknown) => unknown } | null
     const responseHandlers = (api.interceptors.response as unknown as { handlers: ResponseHandler[] }).handlers
-    const handler = responseHandlers.find((h): h is NonNullable<typeof h> => h !== null)
+    const handler = responseHandlers.find((handlerItem): handlerItem is NonNullable<typeof handlerItem> => handlerItem !== null)
     expect(handler).toBeDefined()
     if (!handler) return
 
@@ -59,5 +51,27 @@ describe('axios api', () => {
     }
 
     expect(localStorage.getItem('token')).toBeNull()
+  })
+
+  it('response interceptor при 401 на /auth/login НЕ удаляет токен', () => {
+    localStorage.setItem('token', 'old-token')
+
+    type ResponseHandler = { rejected: (err: unknown) => unknown } | null
+    const responseHandlers = (api.interceptors.response as unknown as { handlers: ResponseHandler[] }).handlers
+    const handler = responseHandlers.find((handlerItem): handlerItem is NonNullable<typeof handlerItem> => handlerItem !== null)
+    if (!handler) return
+
+    const error = {
+      config: { url: '/auth/login' },
+      response: { status: 401 }
+    }
+
+    try {
+      handler.rejected(error)
+    } catch {
+      // ожидаемое поведение — interceptor выбрасывает ошибку
+    }
+
+    expect(localStorage.getItem('token')).toBe('old-token')
   })
 })

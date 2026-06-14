@@ -20,32 +20,26 @@ describe('useApi', () => {
     const mockData = { id: 1, name: 'Test' }
     const { execute, response } = useApi(() => Promise.resolve(mockData))
 
-    await execute()
+    const result = await execute()
     expect(response.value).toEqual(mockData)
+    expect(result).toEqual(mockData)
   })
 
-  it('error содержит сообщение при AxiosError', async () => {
-    const axiosError = new AxiosError('Request failed')
-    axiosError.response = { data: { error: 'Неверный пароль' } } as NonNullable<typeof axiosError.response>
+  const axiosErrorWithData = new AxiosError('Request failed')
+  axiosErrorWithData.response = { data: { error: 'Неверный пароль' } } as NonNullable<typeof axiosErrorWithData.response>
 
-    const { execute, error } = useApi(() => Promise.reject(axiosError))
+  const axiosErrorNoData = new AxiosError('Сетевой сбой')
 
-    await expect(execute()).rejects.toThrow()
-    expect(error.value).toBe('Неверный пароль')
-  })
-
-  it('error содержит message при обычной Error', async () => {
-    const { execute, error } = useApi(() => Promise.reject(new Error('Ошибка сети')))
-
-    await expect(execute()).rejects.toThrow()
-    expect(error.value).toBe('Ошибка сети')
-  })
-
-  it('error = "Неизвестная ошибка" при нестандартном исключении', async () => {
-    const { execute, error } = useApi(() => Promise.reject('строка'))
+  it.each([
+    [axiosErrorWithData, 'Неверный пароль'],
+    [axiosErrorNoData, 'Сетевой сбой'],
+    [new Error('Ошибка сети'), 'Ошибка сети'],
+    ['строка', 'Неизвестная ошибка']
+  ])('error маппит исключение %#: %o → текст', async (exception, expectedError) => {
+    const { execute, error } = useApi(() => Promise.reject(exception))
 
     await expect(execute()).rejects.toThrow()
-    expect(error.value).toBe('Неизвестная ошибка')
+    expect(error.value).toBe(expectedError)
   })
 
   it('loading становится false после ошибки', async () => {
@@ -53,14 +47,6 @@ describe('useApi', () => {
 
     await expect(execute()).rejects.toThrow()
     expect(loading.value).toBe(false)
-  })
-
-  it('execute() возвращает данные напрямую', async () => {
-    const mockData = { id: 42 }
-    const { execute } = useApi(() => Promise.resolve(mockData))
-
-    const result = await execute()
-    expect(result).toEqual(mockData)
   })
 
   it('повторный execute сбрасывает response и error перед запросом', async () => {

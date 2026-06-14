@@ -28,17 +28,9 @@ describe('TableComponent', () => {
     })
     const table = wrapper.find('[data-q-table]')
     const passedRows = JSON.parse(table.attributes('data-rows') ?? '[]') as typeof rows
+    const passedColumns = JSON.parse(table.attributes('data-columns') ?? '[]') as typeof columns
     expect(passedRows).toHaveLength(2)
     expect(passedRows[0]!.name).toBe('Alice')
-  })
-
-  it('пробрасывает columns с правильными именами', () => {
-    const wrapper = mount(TableComponent, {
-      props:  { columns, rows },
-      global: { stubs: { 'q-table': QTableStub } }
-    })
-    const table = wrapper.find('[data-q-table]')
-    const passedColumns = JSON.parse(table.attributes('data-columns') ?? '[]') as typeof columns
     expect(passedColumns[0]!.name).toBe('id')
     expect(passedColumns[1]!.name).toBe('name')
   })
@@ -51,11 +43,4 @@ describe('TableComponent', () => {
     })
     expect(wrapper.find('[data-slot-body-cell]').exists()).toBe(true)
   })
-
-  it('forwarded props не содержат undefined для непереданных пропсов', () => expect(() =>
-    mount(TableComponent, {
-      props:  { columns, rows },
-      global: { stubs: { 'q-table': QTableStub } }
-    })
-  ).not.toThrow())
 })

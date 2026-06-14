@@ -30,19 +30,13 @@ describe('instagramAccountDTO.toLocal', () => {
     })
   })
 
-  it('profilePicUrl = null если profile_pic_url = null', () => {
-    const result = instagramAccountDTO.toLocal(makeAccountApi({ profile_pic_url: null }))
-    expect(result.profilePicUrl).toBeNull()
-  })
-
-  it('fullName = null если full_name = null', () => {
-    const result = instagramAccountDTO.toLocal(makeAccountApi({ full_name: null }))
-    expect(result.fullName).toBeNull()
-  })
-
-  it('deviceProfileId = null если device_profile_id = null', () => {
-    const result = instagramAccountDTO.toLocal(makeAccountApi({ device_profile_id: null }))
-    expect(result.deviceProfileId).toBeNull()
+  it.each([
+    ['profile_pic_url', 'profilePicUrl'],
+    ['full_name', 'fullName'],
+    ['device_profile_id', 'deviceProfileId']
+  ] as const)('%s = null проксируется в %s = null', (apiField, localField) => {
+    const result = instagramAccountDTO.toLocal(makeAccountApi({ [apiField]: null }))
+    expect(result[localField]).toBeNull()
   })
 
   it('profilePicUrl проксируется через /api/proxy/image', () => {
