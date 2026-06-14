@@ -233,7 +233,7 @@ class TestFeed:
 
     def test_pagination_with_max_id(self, client):
         mock_cl = make_mock_client()
-        mock_cl.private_request.return_value = {
+        mock_cl.get_timeline_feed.return_value = {
             "feed_items": [{"media_or_ad": make_media_raw("201", "201_999")}],
             "next_max_id": "cursor_next",
             "more_available": True,

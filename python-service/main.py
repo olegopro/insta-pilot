@@ -179,8 +179,9 @@ async def get_feed(data: FeedRequest):
        Если постов меньше min_posts — делает дополнительные запросы пагинации.
 
     2. Пагинация (max_id передан):
-       Продолжает с места остановки через POST feed/timeline/ с seen_posts
-       и feed_view_info. Без seen_posts Instagram возвращает дубли.
+       Продолжает с места остановки через get_timeline_feed(max_id, seen_posts).
+       seen_posts передаётся явно — instagrapi сам соберёт feed_view_info;
+       без seen_posts Instagram возвращает дубли.
 
     В обоих режимах возвращает next_max_id и more_available для следующего запроса.
     """
@@ -201,7 +202,7 @@ async def get_feed(data: FeedRequest):
 
                 debug_info = {
                     "instagram_request": {
-                        "method": "feed/timeline/ (pagination)",
+                        "method": "get_timeline_feed (pagination)",
                         "max_id": data.max_id,
                         "seen_posts_count": len(seen),
                     },

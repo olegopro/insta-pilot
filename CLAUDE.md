@@ -43,6 +43,10 @@ Laravel: `INSTAGRAM_PYTHON_URL=http://python:8001` (внутренний Docker 
 ## Python service — instagrapi
 Документация: https://subzeroid.github.io/instagrapi/
 Context7 library ID: `/subzeroid/instagrapi`
+Версия: `instagrapi==2.10.5` (требует Python ≥3.10; Docker-образ `python:3.12-slim`). Локальный `venv` (3.9) для запуска не подходит — тесты гонять в контейнере.
+
+### Пагинация ленты (timeline feed)
+Пагинация идёт через штатный `cl.get_timeline_feed(max_id=..., seen_posts=...)` (instagrapi ≥2.10.5, фикс бага #1789). `seen_posts` передаётся ЯВНО (накапливается на фронте + в `_paginate_feed`), т.к. клиент пересоздаётся из сессии и на внутренний `self._timeline_seen_posts` полагаться нельзя. `feed_view_info` метод генерирует сам. Остаточный повтор постов между страницами — свойство ранжированной домашней ленты Instagram, гасится дедупом на фронте. Прежняя ручная реализация (`_build_pagination_params`/`_build_view_info` + `private_request`) сохранена в git-теге `feed-manual-pagination-v1`.
 
 ### Правила работы (по проекту)
 - Основной клиент: `instagrapi.Client` внутри `python-service` слоя, без прямых вызовов из Laravel/Vue.

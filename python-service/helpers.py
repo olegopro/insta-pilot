@@ -7,57 +7,6 @@ from typing import Optional
 from instagrapi import Client
 
 
-# ─── Feed pagination helpers ───────────────────────────────────────────────────
-
-def _build_view_info(media_id: str) -> dict:
-    """
-    Формирует элемент feed_view_info для одного поста.
-    Имитирует случайное время просмотра — требуется Instagram при пагинации ленты.
-    """
-    view_ms = random.randint(5000, 15000)
-    return {
-        "media_id": media_id,
-        "version": 23,
-        "media_pct": 1.0,
-        # Одно значение на все пороговые проценты просмотра
-        "time_info": {"10": view_ms, "25": view_ms, "50": view_ms, "75": view_ms},
-        "latest_timestamp": int(time.time() * 1000),
-    }
-
-
-def _build_pagination_params(cl: Client, max_id: str, seen_posts: list[str]) -> dict:
-    """
-    Собирает тело запроса для POST feed/timeline/ при пагинации.
-    seen_posts и feed_view_info — ключевые поля, без них Instagram
-    не знает контекст и возвращает дублирующиеся посты.
-    """
-    return {
-        "max_id": max_id,
-        "reason": "pagination",
-        "is_pull_to_refresh": "0",
-        "is_prefetch": "0",
-        # Накопленные данные о просмотре предыдущих постов
-        "feed_view_info": json.dumps([_build_view_info(media_id) for media_id in seen_posts]),
-        "seen_posts": ",".join(seen_posts),
-        # Идентификаторы устройства и сессии клиента
-        "phone_id": cl.phone_id,
-        "device_id": cl.uuid,
-        "_uuid": cl.uuid,
-        "_csrftoken": cl.token,
-        "client_session_id": cl.client_session_id,
-        # Состояние устройства (для аутентичности запроса)
-        "battery_level": 100,
-        "timezone_offset": cl.timezone_offset,
-        "is_charging": "1",
-        "will_sound_on": "0",
-        # Параметры рекламного движка — отключены
-        "is_async_ads_in_headload_enabled": "0",
-        "is_async_ads_double_request": "0",
-        "is_async_ads_rti": "0",
-        "rti_delivery_backend": "0",
-    }
-
-
 # ─── Media serialization ──────────────────────────────────────────────────────
 
 def _serialize_media(media_dict: dict) -> Optional[dict]:
@@ -287,7 +236,7 @@ def _paginate_feed(
     label: str,
 ) -> tuple[Optional[str], bool]:
     """
-    Последовательно запрашивает страницы ленты через POST feed/timeline/.
+    Последовательно запрашивает страницы ленты через get_timeline_feed (instagrapi).
 
     Останавливается при первом из условий:
       - достигнут min_posts
@@ -305,8 +254,10 @@ def _paginate_feed(
     while more_available and iterations < MAX_PAGINATION_ITERATIONS:
         iterations += 1
 
-        params = _build_pagination_params(cl, current_max_id, seen)
-        raw = cl.private_request("feed/timeline/", data=params, with_signature=False)
+        # seen передаём явно: instagrapi сам соберёт seen_posts + feed_view_info
+        # и форсит reason="pagination". На внутренний self._timeline_seen_posts
+        # не полагаемся — клиент пересоздаётся из сессии между запросами.
+        raw = cl.get_timeline_feed(max_id=current_max_id, seen_posts=seen)
 
         batch = _extract_posts(raw)
         all_posts.extend(batch)
