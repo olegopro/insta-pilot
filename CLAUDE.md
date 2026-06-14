@@ -245,6 +245,8 @@ const rows = computed(() => *ListDTO.toLocal(store.someApi.data?.data ?? []))
 boot/                    # Quasar boot (не трогать расположение)
   axios.ts               # axios instance + globalProperties
 router/                  # Quasar router (не трогать расположение)
+  index.ts               # createRouter + Router.beforeEach(authGuard)
+  guard.ts               # authGuard — навигационный guard (вынесен из index.ts ради unit-тестов)
 layouts/                 # MainLayout
 
 shared/
@@ -358,6 +360,14 @@ return { accounts, fetchAccounts, fetchAccountsLoading, ... }
 - Секции Vue↔Laravel и Python↔Instagram имеют вкладки Кратко/Подробно — только если данные содержат объекты/массивы (`hasNestedData`)
 - Секция Laravel↔Python — всегда без вкладок (данные скалярные)
 - Поля `*_preview` в response отображаются с иконкой ⓘ и tooltip о том, что это сокращённые данные
+
+## Тесты (конвенции)
+Запуск (в контейнерах): FE unit — `docker compose exec vue npx vitest run`; FE integration — `... vitest run --config vitest.integration.config.ts` (нужен живой laravel; иначе авто-skip); FE e2e — `... npx playwright test`; BE — `docker compose exec laravel php artisan test` (sqlite `:memory:`).
+- **Авторитет покрытия по слоям, без дублей**: маппинг snake↔camel — только в `*DTO.spec` (store-тесты доказывают лишь запись в `ref`); дефолт `loading`/throw/`error.value` — только в `useApi.spec` (не повторять в каждом сторе); границы авторизации (401/403/404/ownership) — в Laravel Feature/e2e; шифрование — один авторитетный Model-unit на сущность
+- **Параметризация однотипных кейсов**: FE — `it.each([...])`, BE — `#[\PHPUnit\Framework\Attributes\DataProvider('name')]` (БД-stateful кейсы только через DataProvider — даёт изоляцию `RefreshDatabase`, не через `foreach`). При слиянии сохранять каждый уникальный state-инвариант
+- **Не писать тавтологии**: не тестировать `$fillable`/штатные касты Eloquent/Spatie-трейты/литералы конфига (`tries`, имя события), реактивность голого `ref`, `toBeDefined`/`toBeTruthy` без поведенческой проверки
+- **Навигационный guard** тестируется через `authGuard` из `router/guard.ts` (реальная функция), а не через копию логики в тестовом роутере
+- Ручные проверки с живым Instagram-аккаунтом (бывшие `@group instagram`-заглушки) вынесены в чек-лист `DEBUG_PROTOCOL.md`, а не висят пустыми `markTestSkipped`
 
 ## Отладка ошибок
 
