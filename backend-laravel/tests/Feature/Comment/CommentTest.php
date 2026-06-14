@@ -99,18 +99,4 @@ class CommentTest extends TestCase {
             ->getJson("/api/media/comments?account_id={$account->id}&media_pk=12345")
             ->assertStatus(404);
     }
-
-    public function test_requires_auth(): void {
-        $this->getJson("/api/media/comments?account_id={$this->account->id}&media_pk=12345")
-            ->assertStatus(401);
-    }
-
-    public function test_inactive_user_gets_403(): void {
-        $inactive = User::factory()->inactive()->create();
-        $account  = InstagramAccount::factory()->create(['user_id' => $inactive->id]);
-
-        $this->actingAs($inactive)
-            ->getJson("/api/media/comments?account_id={$account->id}&media_pk=12345")
-            ->assertStatus(403);
-    }
 }

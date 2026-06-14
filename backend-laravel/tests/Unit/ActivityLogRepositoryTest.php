@@ -86,31 +86,28 @@ class ActivityLogRepositoryTest extends TestCase {
         $this->assertCount(2, $result['items']);
     }
 
-    public function test_get_by_account_before_id_loads_older(): void {
+    public static function cursorDirectionProvider(): array {
+        return [
+            'before_id loads older' => ['before', 'assertLessThan'],
+            'after_id loads newer'  => ['after', 'assertGreaterThan']
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('cursorDirectionProvider')]
+    public function test_get_by_account_cursor_direction(string $direction, string $comparator): void {
         $logs = collect();
         for ($i = 0; $i < 5; $i++) {
             $logs->push($this->makeLog());
         }
         $middleId = $logs->get(2)->id;
 
-        $result = $this->repository->getByAccount($this->account->id, beforeId: $middleId);
+        $result = $direction === 'before'
+            ? $this->repository->getByAccount($this->account->id, beforeId: $middleId)
+            : $this->repository->getByAccount($this->account->id, afterId: $middleId);
 
+        $this->assertNotEmpty($result['items']);
         foreach ($result['items'] as $item) {
-            $this->assertLessThan($middleId, $item['id']);
-        }
-    }
-
-    public function test_get_by_account_after_id_loads_newer(): void {
-        $logs = collect();
-        for ($i = 0; $i < 5; $i++) {
-            $logs->push($this->makeLog());
-        }
-        $middleId = $logs->get(1)->id;
-
-        $result = $this->repository->getByAccount($this->account->id, afterId: $middleId);
-
-        foreach ($result['items'] as $item) {
-            $this->assertGreaterThan($middleId, $item['id']);
+            $this->{$comparator}($middleId, $item['id']);
         }
     }
 

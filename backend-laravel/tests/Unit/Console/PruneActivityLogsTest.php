@@ -21,28 +21,23 @@ class PruneActivityLogsTest extends TestCase {
         ]);
     }
 
-    public function test_prune_deletes_old_logs(): void {
-        $this->makeLog(now()->subDays(100)->toDateTimeString());
-
-        $this->artisan('activity:prune')->assertSuccessful();
-
-        $this->assertEquals(0, AccountActivityLog::count());
+    public static function pruneThresholdProvider(): array {
+        return [
+            // [возраст лога в днях, опция --days (null = дефолт 30), ожидаемый count после prune]
+            'old log deleted at default threshold' => [100, null, 0],
+            'fresh log kept at default threshold'  => [10, null, 1],
+            'days option lowers threshold'         => [5, 3, 0]
+        ];
     }
 
-    public function test_prune_keeps_fresh_logs(): void {
-        $this->makeLog(now()->subDays(10)->toDateTimeString());
+    #[\PHPUnit\Framework\Attributes\DataProvider('pruneThresholdProvider')]
+    public function test_prune_threshold(int $ageDays, ?int $daysOption, int $expectedCount): void {
+        $this->makeLog(now()->subDays($ageDays)->toDateTimeString());
 
-        $this->artisan('activity:prune')->assertSuccessful();
+        $args = $daysOption === null ? [] : ['--days' => $daysOption];
+        $this->artisan('activity:prune', $args)->assertSuccessful();
 
-        $this->assertEquals(1, AccountActivityLog::count());
-    }
-
-    public function test_prune_days_option_changes_threshold(): void {
-        $this->makeLog(now()->subDays(5)->toDateTimeString());
-
-        $this->artisan('activity:prune', ['--days' => 3])->assertSuccessful();
-
-        $this->assertEquals(0, AccountActivityLog::count());
+        $this->assertEquals($expectedCount, AccountActivityLog::count());
     }
 
     public function test_prune_output_contains_count(): void {

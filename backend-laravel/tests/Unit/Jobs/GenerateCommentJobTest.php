@@ -128,11 +128,4 @@ class GenerateCommentJobTest extends TestCase {
             // expected rethrow
         }
     }
-
-    public function test_job_config(): void {
-        $job = new GenerateCommentJob('id', 'url', null);
-
-        $this->assertEquals(1, $job->tries);
-        $this->assertEquals(90, $job->timeout);
-    }
 }

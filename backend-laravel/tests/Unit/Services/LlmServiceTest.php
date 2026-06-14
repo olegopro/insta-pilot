@@ -67,15 +67,6 @@ class LlmServiceTest extends TestCase {
         $result = $this->service->generateComment('https://example.com/image.jpg');
 
         $this->assertEquals('Great photo!', $result['comment']);
-    }
-
-    public function test_generate_comment_result_has_expected_keys(): void {
-        $this->settingsRepo->method('getDefault')->willReturn($this->makeOpenAiSetting());
-        $this->promptRepo->method('findByKey')->willReturn($this->makeBasePrompt());
-        $this->fakeImageAndLlm();
-
-        $result = $this->service->generateComment('https://example.com/image.jpg');
-
         $this->assertArrayHasKey('comment', $result);
         $this->assertArrayHasKey('llm_request', $result);
         $this->assertArrayHasKey('llm_response', $result);

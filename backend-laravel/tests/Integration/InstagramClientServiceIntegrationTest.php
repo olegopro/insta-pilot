@@ -8,6 +8,7 @@ use App\Models\AccountActivityLog;
 use App\Models\InstagramAccount;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -17,8 +18,10 @@ use Tests\TestCase;
  * Требования: Docker-контейнер python запущен.
  * Запуск: php artisan test --testsuite=Integration
  *
- * Тесты с @group instagram дополнительно требуют реального
- * Instagram-аккаунта — см. DEBUG_PROTOCOL.md и _TEST/fixtures/.
+ * Проверки, требующие реального Instagram-аккаунта (login → session_data,
+ * feed → posts, add_like, media_comments, search_hashtag), выполняются
+ * вручную — чек-лист в DEBUG_PROTOCOL.md (раздел «Ручные проверки с живым
+ * аккаунтом»), фикстуры — в _TEST/fixtures/session.json.
  */
 class InstagramClientServiceIntegrationTest extends TestCase {
     private string $pythonUrl;
@@ -110,27 +113,30 @@ class InstagramClientServiceIntegrationTest extends TestCase {
 
     // ─── Pydantic validation (нет обращения к Instagram) ─────────────────────
 
-    public function test_python_returns_422_for_missing_session_data(): void {
-        $response = Http::post("{$this->pythonUrl}/account/feed", []);
+    #[DataProvider('pydanticInvalidSessionProvider')]
+    public function test_python_returns_422_for_invalid_session_data(array $payload, string $endpoint): void {
+        $response = Http::post("{$this->pythonUrl}{$endpoint}", $payload);
 
         $this->assertEquals(422, $response->status());
     }
 
-    public function test_python_returns_error_for_null_session_data(): void {
-        // null не проходит Pydantic-валидацию → 422
-        $response = Http::post("{$this->pythonUrl}/account/info", [
-            'session_data' => null,
-        ]);
-
-        $this->assertEquals(422, $response->status());
+    public static function pydanticInvalidSessionProvider(): array {
+        return [
+            'missing session_data' => [[], '/account/feed'],
+            // null не проходит Pydantic-валидацию → 422
+            'null session_data'    => [['session_data' => null], '/account/info'],
+        ];
     }
 
     // ─── Laravel → Python ошибка (без реального Instagram) ───────────────────
 
-    public function test_feed_endpoint_records_activity_log_on_error(): void {
+    #[DataProvider('activityLogOnErrorProvider')]
+    public function test_endpoint_records_activity_log_on_error(string $endpointTemplate, string $action): void {
         $this->actingAs($this->user, 'sanctum');
 
-        $response = $this->getJson("/api/feed/{$this->account->id}");
+        // account->id известен только в рантайме (создаётся в setUp), поэтому в DataProvider — шаблон
+        $endpoint = str_replace('{accountId}', (string) $this->account->id, $endpointTemplate);
+        $response = $this->getJson($endpoint);
 
         // Python вернёт ошибку (невалидная сессия), Laravel должен вернуть не 500
         $this->assertNotEquals(500, $response->status());
@@ -138,11 +144,11 @@ class InstagramClientServiceIntegrationTest extends TestCase {
         // ActivityLog должен быть записан
         $this->assertDatabaseHas('account_activity_logs', [
             'instagram_account_id' => $this->account->id,
-            'action'               => 'fetch_feed',
+            'action'               => $action,
         ]);
 
         $log = AccountActivityLog::where('instagram_account_id', $this->account->id)
-            ->where('action', 'fetch_feed')
+            ->where('action', $action)
             ->first();
 
         $this->assertNotNull($log);
@@ -150,19 +156,11 @@ class InstagramClientServiceIntegrationTest extends TestCase {
         $this->assertNotEquals('success', $log->status);
     }
 
-    public function test_search_hashtag_records_activity_log_on_error(): void {
-        $this->actingAs($this->user, 'sanctum');
-
-        $response = $this->getJson("/api/search/hashtag?account_id={$this->account->id}&tag=nature");
-
-        $this->assertNotEquals(500, $response->status());
-
-        $log = AccountActivityLog::where('instagram_account_id', $this->account->id)
-            ->where('action', 'search_hashtag')
-            ->first();
-
-        $this->assertNotNull($log);
-        $this->assertNotEquals('success', $log->status);
+    public static function activityLogOnErrorProvider(): array {
+        return [
+            'feed'           => ['/api/feed/{accountId}', 'fetch_feed'],
+            'search_hashtag' => ['/api/search/hashtag?account_id={accountId}&tag=nature', 'search_hashtag'],
+        ];
     }
 
     public function test_python_error_response_does_not_expose_traceback(): void {
@@ -188,54 +186,5 @@ class InstagramClientServiceIntegrationTest extends TestCase {
         if (!$json['success']) {
             $this->assertArrayHasKey('error_code', $json);
         }
-    }
-
-    // ─── Требуют реального Instagram-аккаунта ────────────────────────────────
-
-    /**
-     * @group instagram
-     * Требует: _TEST/fixtures/session.json (см. DEBUG_PROTOCOL.md)
-     */
-    public function test_login_updates_session_data(): void {
-        $this->markTestSkipped(
-            'Требует реального Instagram-аккаунта. ' .
-            'Подготовьте fixtures согласно DEBUG_PROTOCOL.md.'
-        );
-    }
-
-    /**
-     * @group instagram
-     */
-    public function test_get_feed_returns_posts(): void {
-        $this->markTestSkipped(
-            'Требует реального Instagram-аккаунта с session_data в _TEST/fixtures/.'
-        );
-    }
-
-    /**
-     * @group instagram
-     */
-    public function test_add_like_returns_success(): void {
-        $this->markTestSkipped(
-            'Требует реального Instagram-аккаунта с session_data в _TEST/fixtures/.'
-        );
-    }
-
-    /**
-     * @group instagram
-     */
-    public function test_fetch_media_comments_returns_comments(): void {
-        $this->markTestSkipped(
-            'Требует реального Instagram-аккаунта с session_data в _TEST/fixtures/.'
-        );
-    }
-
-    /**
-     * @group instagram
-     */
-    public function test_search_hashtag_returns_results(): void {
-        $this->markTestSkipped(
-            'Требует реального Instagram-аккаунта с session_data в _TEST/fixtures/.'
-        );
     }
 }

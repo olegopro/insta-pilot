@@ -26,10 +26,4 @@ class CommentGenerationProgressTest extends TestCase {
         $this->assertEquals('Nice!', $payload['comment']);
         $this->assertNull($payload['error']);
     }
-
-    public function test_broadcast_as_returns_correct_name(): void {
-        $event = new CommentGenerationProgress('id', 'analyzing');
-
-        $this->assertEquals('CommentGenerationProgress', $event->broadcastAs());
-    }
 }

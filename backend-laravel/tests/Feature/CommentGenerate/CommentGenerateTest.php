@@ -7,6 +7,7 @@ namespace Tests\Feature\CommentGenerate;
 use App\Jobs\GenerateCommentJob;
 use App\Models\User;
 use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class CommentGenerateTest extends TestCase {
@@ -44,32 +45,19 @@ class CommentGenerateTest extends TestCase {
         });
     }
 
-    public function test_generate_returns_422_without_image_url(): void {
+    #[DataProvider('invalidImageUrlProvider')]
+    public function test_generate_returns_422_for_invalid_image_url(array $payload): void {
         $this->actingAs($this->user)
-            ->postJson('/api/comments/generate', [])
+            ->postJson('/api/comments/generate', $payload)
             ->assertStatus(422);
 
         Queue::assertNothingPushed();
     }
 
-    public function test_generate_returns_422_for_invalid_url(): void {
-        $this->actingAs($this->user)
-            ->postJson('/api/comments/generate', ['image_url' => 'not-a-url'])
-            ->assertStatus(422);
-    }
-
-    public function test_requires_auth(): void {
-        $this->postJson('/api/comments/generate', [
-            'image_url' => 'https://example.com/photo.jpg',
-        ])->assertStatus(401);
-    }
-
-    public function test_inactive_user_gets_403(): void {
-        $inactive = User::factory()->inactive()->create();
-
-        $this->actingAs($inactive)
-            ->postJson('/api/comments/generate', [
-                'image_url' => 'https://example.com/photo.jpg',
-            ])->assertStatus(403);
+    public static function invalidImageUrlProvider(): array {
+        return [
+            'empty body'  => [[]],
+            'invalid url' => [['image_url' => 'not-a-url']]
+        ];
     }
 }

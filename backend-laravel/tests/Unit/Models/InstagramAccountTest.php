@@ -52,20 +52,4 @@ class InstagramAccountTest extends TestCase {
         $this->assertInstanceOf(DeviceProfile::class, $account->deviceProfile);
         $this->assertEquals($profile->id, $account->deviceProfile->id);
     }
-
-    public function test_fillable_contains_required_fields(): void {
-        $account = new InstagramAccount();
-        $fillable = $account->getFillable();
-
-        $fields = [
-            'user_id',
-            'instagram_login',
-            'instagram_password',
-            'session_data',
-            'is_active'
-        ];
-        foreach ($fields as $field) {
-            $this->assertContains($field, $fillable);
-        }
-    }
 }

@@ -7,29 +7,52 @@ namespace Tests\Unit\Models;
 use App\Models\AccountActivityLog;
 use App\Models\InstagramAccount;
 use App\Models\User;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class AccountActivityLogTest extends TestCase {
-    public function test_request_payload_is_cast_to_array(): void {
-        $log = AccountActivityLog::factory()->create([
-            'request_payload' => ['media_id' => '12345_67890', 'text' => 'hi'],
-        ]);
+    #[DataProvider('jsonArrayCastProvider')]
+    public function test_json_fields_are_cast_to_array(
+        string $field,
+        ?array $value,
+        ?string $assertKey,
+        mixed $assertExpected
+    ): void {
+        $log = AccountActivityLog::factory()->create([$field => $value]);
 
         $fresh = AccountActivityLog::find($log->id);
 
-        $this->assertIsArray($fresh->request_payload);
-        $this->assertEquals('12345_67890', $fresh->request_payload['media_id']);
+        if ($value === null) {
+            $this->assertNull($fresh->{$field});
+
+            return;
+        }
+
+        $this->assertIsArray($fresh->{$field});
+        $this->assertEquals($assertExpected, $fresh->{$field}[$assertKey]);
     }
 
-    public function test_response_summary_is_cast_to_array(): void {
-        $log = AccountActivityLog::factory()->create([
-            'response_summary' => ['success' => true, 'items_count' => 5],
-        ]);
-
-        $fresh = AccountActivityLog::find($log->id);
-
-        $this->assertIsArray($fresh->response_summary);
-        $this->assertEquals(5, $fresh->response_summary['items_count']);
+    public static function jsonArrayCastProvider(): array {
+        return [
+            'request_payload cast to array' => [
+                'request_payload',
+                ['media_id' => '12345_67890', 'text' => 'hi'],
+                'media_id',
+                '12345_67890'
+            ],
+            'response_summary cast to array' => [
+                'response_summary',
+                ['success' => true, 'items_count' => 5],
+                'items_count',
+                5
+            ],
+            'request_payload nullable stays null' => [
+                'request_payload',
+                null,
+                null,
+                null
+            ]
+        ];
     }
 
     public function test_timestamps_disabled(): void {
@@ -52,11 +75,5 @@ class AccountActivityLogTest extends TestCase {
 
         $this->assertInstanceOf(User::class, $log->user);
         $this->assertEquals($user->id, $log->user->id);
-    }
-
-    public function test_request_payload_nullable_stays_null(): void {
-        $log = AccountActivityLog::factory()->create(['request_payload' => null]);
-
-        $this->assertNull(AccountActivityLog::find($log->id)->request_payload);
     }
 }

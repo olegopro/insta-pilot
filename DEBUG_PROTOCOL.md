@@ -173,6 +173,38 @@ python-service/venv/bin/python python-service/test_feed_pagination.py \
 
 ---
 
+## 9. Ручные проверки с живым аккаунтом (вместо `@group instagram`-тестов)
+
+Раньше в `tests/Integration/InstagramClientServiceIntegrationTest.php` лежали пять
+тестов с `@group instagram`, тела которых состояли только из `markTestSkipped` —
+они никогда не запускались автоматически (нет живого Instagram-аккаунта и фикстур
+в CI). Заглушки удалены, но **намерение их покрытия сохраняется здесь как чек-лист**:
+это ручные проверки реальных данных, прогоняемые человеком против настоящего
+аккаунта с использованием `_TEST/fixtures/session.json` (см. шаг 1 — извлечение
+`session_data`).
+
+Прогонять по шаблонам из разделов 2–4 (raw Python / Tinker / HTTP+Bearer), сверяя
+ответ с ожиданием из колонки «Что проверяем».
+
+| # | Сценарий (бывший тест) | Endpoint / метод | Что проверяем |
+|---|---|---|---|
+| 1 | `login_updates_session_data` | `login` (раздел 3/4) | после успешного логина `session_data` в БД обновился/непустой |
+| 2 | `get_feed_returns_posts` | `/account/feed` → `getFeed` | в ответе непустой `posts[]`, есть `next_max_id` |
+| 3 | `add_like_returns_success` | `/media/like` → `addLike` | `success: true` на реальном `media_id` |
+| 4 | `fetch_media_comments_returns_comments` | `/media/comment` (fetch) → `fetchMediaComments` | непустой список комментариев реального поста |
+| 5 | `search_hashtag_returns_results` | `/search/hashtag` → `searchHashtag` | непустой результат поиска по тегу |
+
+Предусловия для всех пунктов:
+1. [ ] Живой Instagram-аккаунт добавлен в систему, `is_active = true`
+2. [ ] Актуальная `_TEST/fixtures/session.json` извлечена (шаг 1), сессия не протухла
+3. [ ] Python-сервис запущен (`/health` → 200)
+
+Автоматическая часть (Pydantic-422, ActivityLog-on-error, traceback-leak,
+consistent-structure, health-gate) осталась в integration-тестах и гоняется без
+живого аккаунта.
+
+---
+
 ## Важно
 
 - `_TEST/` — в `.gitignore`, не коммитить

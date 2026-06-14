@@ -44,36 +44,43 @@ class ActivityLogTest extends TestCase {
             ->assertJsonPath('data.total', 2);
     }
 
-    public function test_index_filters_by_action(): void {
-        $this->makeLog(['action' => 'like']);
-        $this->makeLog(['action' => 'comment']);
-
-        $this->actingAs($this->user)
-            ->getJson("/api/accounts/{$this->account->id}/activity?action=like")
-            ->assertStatus(200)
-            ->assertJsonCount(1, 'data.items');
-    }
-
-    public function test_index_filters_by_status(): void {
-        $this->makeLog(['status' => 'success']);
-        $this->makeLog(['status' => 'fail']);
-
-        $this->actingAs($this->user)
-            ->getJson("/api/accounts/{$this->account->id}/activity?status=fail")
-            ->assertStatus(200)
-            ->assertJsonCount(1, 'data.items');
-    }
-
-    public function test_index_filters_by_date(): void {
-        $this->makeLog(['created_at' => now()->subDays(10)]);
-        $this->makeLog(['created_at' => now()->subDays(1)]);
+    public function test_index_filters_pass_through_to_repository(): void {
+        // Cross-layer смоук: контроллер валидирует query (action/status/date_from)
+        // и маппит в repo. Один набор данных, в котором каждый фильтр оставляет
+        // ровно одну из двух записей — проверяет проброс всех трёх фильтров.
+        $this->makeLog([
+            'action'     => 'like',
+            'status'     => 'success',
+            'created_at' => now()->subDays(1)
+        ]);
+        $this->makeLog([
+            'action'     => 'comment',
+            'status'     => 'fail',
+            'created_at' => now()->subDays(10)
+        ]);
 
         $dateFrom = now()->subDays(3)->format('Y-m-d');
 
+        // action=like
+        $this->actingAs($this->user)
+            ->getJson("/api/accounts/{$this->account->id}/activity?action=like")
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data.items')
+            ->assertJsonPath('data.items.0.action', 'like');
+
+        // status=fail
+        $this->actingAs($this->user)
+            ->getJson("/api/accounts/{$this->account->id}/activity?status=fail")
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data.items')
+            ->assertJsonPath('data.items.0.status', 'fail');
+
+        // date_from
         $this->actingAs($this->user)
             ->getJson("/api/accounts/{$this->account->id}/activity?date_from={$dateFrom}")
             ->assertStatus(200)
-            ->assertJsonCount(1, 'data.items');
+            ->assertJsonCount(1, 'data.items')
+            ->assertJsonPath('data.items.0.action', 'like');
     }
 
     public function test_index_returns_empty_array_when_no_logs(): void {

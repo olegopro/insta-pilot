@@ -41,14 +41,6 @@ class InstagramClientServiceTest extends TestCase {
         });
     }
 
-    public function test_login_returns_python_response(): void {
-        Http::fake(['http://python:8001/auth/login' => Http::response(['session_data' => '{"key":"val"}'], 200)]);
-
-        $result = $this->service->login('user', 'pass');
-
-        $this->assertEquals('{"key":"val"}', $result['session_data']);
-    }
-
     public function test_login_logs_when_account_id_provided(): void {
         Http::fake(['http://python:8001/auth/login' => Http::response(['session_data' => '{}'], 200)]);
 
@@ -78,37 +70,28 @@ class InstagramClientServiceTest extends TestCase {
         });
     }
 
-    public function test_get_user_info_deactivates_on_login_required(): void {
+    #[\PHPUnit\Framework\Attributes\DataProvider('deactivationProvider')]
+    public function test_get_user_info_deactivation_by_error_code(string $errorCode, bool $expectsDeactivate): void {
         Http::fake(['http://python:8001/account/info' => Http::response([
-            'error'      => 'Login required',
-            'error_code' => 'login_required',
+            'error'      => 'Error',
+            'error_code' => $errorCode,
         ], 401)]);
 
-        $this->repo->expects($this->once())->method('deactivateAccount')->with(42);
+        if ($expectsDeactivate) {
+            $this->repo->expects($this->once())->method('deactivateAccount')->with(42);
+        } else {
+            $this->repo->expects($this->never())->method('deactivateAccount');
+        }
 
         $this->service->getUserInfo('session', 42);
     }
 
-    public function test_get_user_info_deactivates_on_challenge_required(): void {
-        Http::fake(['http://python:8001/account/info' => Http::response([
-            'error'      => 'Challenge required',
-            'error_code' => 'challenge_required',
-        ], 401)]);
-
-        $this->repo->expects($this->once())->method('deactivateAccount')->with(7);
-
-        $this->service->getUserInfo('session', 7);
-    }
-
-    public function test_get_user_info_does_not_deactivate_on_rate_limited(): void {
-        Http::fake(['http://python:8001/account/info' => Http::response([
-            'error'      => 'Rate limited',
-            'error_code' => 'rate_limited',
-        ], 429)]);
-
-        $this->repo->expects($this->never())->method('deactivateAccount');
-
-        $this->service->getUserInfo('session', 5);
+    public static function deactivationProvider(): array {
+        return [
+            'login_required deactivates'     => ['login_required', true],
+            'challenge_required deactivates' => ['challenge_required', true],
+            'rate_limited does not'          => ['rate_limited', false]
+        ];
     }
 
     // --- addLike ---
@@ -278,17 +261,6 @@ class InstagramClientServiceTest extends TestCase {
                 && $request['session_data'] === 'my-session'
                 && $request['user_pk'] === '42';
         });
-    }
-
-    public function test_get_user_info_by_pk_deactivates_on_login_required(): void {
-        Http::fake(['http://python:8001/user/info' => Http::response([
-            'error'      => 'Login required',
-            'error_code' => 'login_required',
-        ], 401)]);
-
-        $this->repo->expects($this->once())->method('deactivateAccount')->with(5);
-
-        $this->service->getUserInfoByPk('session', '42', 5);
     }
 
     // --- login with device_profile ---

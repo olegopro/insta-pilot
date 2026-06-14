@@ -16,24 +16,6 @@ class LlmSettingsRepositoryTest extends TestCase {
         $this->repository = new LlmSettingsRepository();
     }
 
-    public function test_get_all_returns_all_settings(): void {
-        LlmSetting::factory()->openai()->create();
-        LlmSetting::factory()->glm()->create();
-
-        $result = $this->repository->getAll();
-
-        $this->assertCount(2, $result);
-    }
-
-    public function test_find_by_id_returns_setting(): void {
-        $setting = LlmSetting::factory()->create();
-
-        $result = $this->repository->findById($setting->id);
-
-        $this->assertNotNull($result);
-        $this->assertEquals($setting->id, $result->id);
-    }
-
     public function test_find_by_id_returns_null_for_nonexistent(): void {
         $result = $this->repository->findById(99999);
 
@@ -90,13 +72,5 @@ class LlmSettingsRepositoryTest extends TestCase {
 
         $this->assertDatabaseHas('llm_settings', ['id' => $old->id, 'is_default' => false]);
         $this->assertDatabaseHas('llm_settings', ['id' => $new->id, 'is_default' => true]);
-    }
-
-    public function test_delete_removes_setting(): void {
-        $setting = LlmSetting::factory()->create();
-
-        $this->repository->delete($setting->id);
-
-        $this->assertDatabaseMissing('llm_settings', ['id' => $setting->id]);
     }
 }

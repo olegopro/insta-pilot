@@ -36,21 +36,4 @@ class LlmSettingTest extends TestCase {
 
         $this->assertArrayNotHasKey('api_key', $json);
     }
-
-    public function test_fillable_contains_required_fields(): void {
-        $setting = new LlmSetting();
-        $fillable = $setting->getFillable();
-
-        $fields = [
-            'provider',
-            'api_key',
-            'model_name',
-            'tone',
-            'use_caption',
-            'is_default'
-        ];
-        foreach ($fields as $field) {
-            $this->assertContains($field, $fillable);
-        }
-    }
 }

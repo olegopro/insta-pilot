@@ -49,21 +49,10 @@ class FeedTest extends TestCase {
             ->assertJsonPath('data.more_available', true);
     }
 
-    public function test_index_pagination_passes_max_id(): void {
+    public function test_index_pagination_passes_max_id_and_seen_posts(): void {
         $mock = $this->mock(InstagramClientServiceInterface::class);
         $mock->shouldReceive('getFeed')
-            ->withArgs(fn ($session, $id, $maxId) => $maxId === 'cursor-xyz')
-            ->andReturn($this->feedResponse);
-
-        $this->actingAs($this->user)
-            ->getJson("/api/feed/{$this->account->id}?max_id=cursor-xyz")
-            ->assertStatus(200);
-    }
-
-    public function test_index_pagination_passes_seen_posts(): void {
-        $mock = $this->mock(InstagramClientServiceInterface::class);
-        $mock->shouldReceive('getFeed')
-            ->withArgs(fn ($_s, $_id, $_maxId, $seenPosts) => $seenPosts === 'post1,post2,post3')
+            ->withArgs(fn ($session, $id, $maxId, $seenPosts) => $maxId === 'cursor-xyz' && $seenPosts === 'post1,post2,post3')
             ->andReturn($this->feedResponse);
 
         $this->actingAs($this->user)
