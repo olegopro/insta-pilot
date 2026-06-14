@@ -459,6 +459,38 @@ class TestPaginateFeed:
         assert seen == ["101_999", "102_888"]
         assert len(all_posts) == 2
 
+    def test_drops_duplicate_posts(self):
+        # Instagram повторно отдаёт уже виденные посты на следующей странице —
+        # _paginate_feed должен отбрасывать дубли, а не копить их.
+        cl = make_client_mock()
+        cl.get_timeline_feed.side_effect = [
+            {
+                "feed_items": [
+                    {"media_or_ad": make_media(pk="101", media_id="101_999")},
+                    {"media_or_ad": make_media(pk="102", media_id="102_999")},
+                ],
+                "next_max_id": "cursor2",
+                "more_available": True,
+            },
+            {
+                "feed_items": [
+                    {"media_or_ad": make_media(pk="102", media_id="102_999")},
+                    {"media_or_ad": make_media(pk="103", media_id="103_999")},
+                ],
+                "next_max_id": None,
+                "more_available": False,
+            },
+        ]
+        all_posts = []
+        seen = []
+
+        with patch("helpers.time.sleep"):
+            _paginate_feed(cl, "cursor1", seen, all_posts, min_posts=9999, label="test")
+
+        ids = [post["id"] for post in all_posts]
+        assert ids == ["101_999", "102_999", "103_999"]
+        assert seen == ["101_999", "102_999", "103_999"]
+
 
 # ─── _fetch_sections ──────────────────────────────────────────────────────────
 

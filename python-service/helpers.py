@@ -259,9 +259,12 @@ def _paginate_feed(
         # не полагаемся — клиент пересоздаётся из сессии между запросами.
         raw = cl.get_timeline_feed(max_id=current_max_id, seen_posts=seen)
 
-        batch = _extract_posts(raw)
+        # Ранжированная домашняя лента Instagram повторно отдаёт уже виденные
+        # посты — отбрасываем дубли, иначе при min_posts они копятся в выдаче.
+        seen_set = set(seen)
+        batch = [post for post in _extract_posts(raw) if post["id"] not in seen_set]
         all_posts.extend(batch)
-        seen.extend([p["id"] for p in batch])
+        seen.extend([post["id"] for post in batch])
 
         next_max_id = raw.get("next_max_id")
         more_available = bool(raw.get("more_available", False)) and bool(next_max_id)
