@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { CanceledError } from 'axios'
 import type { CommentApi, FetchCommentsResponseApi, FetchCommentRepliesResponseApi } from '@/entities/media-post/model/apiTypes'
 
 vi.mock('@/boot/axios', () => ({
@@ -106,41 +107,58 @@ describe('commentStore', () => {
     expect(comment.childComments[0]!.pk).toBe('r1')
   })
 
-  it('commentsLoading изначально false', () => {
+  it('геттеры в начальном состоянии: commentsLoading=false', () => {
     const store = useCommentStore()
     expect(store.commentsLoading).toBe(false)
   })
 
-  it('fetchComments при ошибке бросает исключение', async () => {
+  it.each([
+    {
+      name:           'fetchComments',
+      act:            (store: ReturnType<typeof useCommentStore>) => store.fetchComments(1, 'media123'),
+      expectedLength: 0
+    },
+    {
+      name: 'loadMoreComments',
+      setup: async (store: ReturnType<typeof useCommentStore>) => {
+        vi.mocked(api.get).mockResolvedValueOnce(wrapResponse({ comments: [makeCommentApi()], next_min_id: 'cursor-2', comment_count: 2 }))
+        await store.fetchComments(1, 'media123')
+      },
+      act:            (store: ReturnType<typeof useCommentStore>) => store.loadMoreComments(1, 'media123'),
+      expectedLength: 1
+    },
+    {
+      name: 'fetchReplies',
+      setup: async (store: ReturnType<typeof useCommentStore>) => {
+        vi.mocked(api.get).mockResolvedValueOnce(wrapResponse({ comments: [makeCommentApi('c1')], next_min_id: null, comment_count: 1 }))
+        await store.fetchComments(1, 'media123')
+      },
+      act:            (store: ReturnType<typeof useCommentStore>) => store.fetchReplies(1, 'media123', 'c1'),
+      expectedLength: 1
+    }
+  ])('$name при ошибке бросает исключение и сохраняет инвариант state', async ({ setup, act, expectedLength }) => {
+    const store = useCommentStore()
+    await setup?.(store)
+
     vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
 
-    const store = useCommentStore()
-
-    await expect(store.fetchComments(1, 'media123')).rejects.toThrow()
-    expect(store.comments).toHaveLength(0)
+    await expect(act(store)).rejects.toThrow()
+    expect(store.comments).toHaveLength(expectedLength)
   })
 
-  it('loadMoreComments при ошибке бросает исключение', async () => {
-    vi.mocked(api.get)
-      .mockResolvedValueOnce(wrapResponse({ comments: [makeCommentApi()], next_min_id: 'cursor-2', comment_count: 2 }))
-      .mockRejectedValueOnce(new Error('Network error'))
-
-    const store = useCommentStore()
-    await store.fetchComments(1, 'media123')
-
-    await expect(store.loadMoreComments(1, 'media123')).rejects.toThrow()
-    expect(store.comments).toHaveLength(1)
-  })
-
-  it('fetchReplies при ошибке бросает исключение', async () => {
+  it('fetchReplies при отмене запроса не бросает исключение', async () => {
     vi.mocked(api.get)
       .mockResolvedValueOnce(wrapResponse({ comments: [makeCommentApi('c1')], next_min_id: null, comment_count: 1 }))
-      .mockRejectedValueOnce(new Error('Network error'))
+      .mockRejectedValueOnce(new CanceledError('canceled'))
 
     const store = useCommentStore()
     await store.fetchComments(1, 'media123')
 
-    await expect(store.fetchReplies(1, 'media123', 'c1')).rejects.toThrow()
+    await expect(store.fetchReplies(1, 'media123', 'c1')).resolves.toBeUndefined()
+
+    const comment = store.comments[0]!
+    expect(comment.childComments).toHaveLength(0)
+    expect(comment.childCommentsLoading).toBe(false)
   })
 
   it('canLoadMore false при null cursor', async () => {

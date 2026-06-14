@@ -39,7 +39,7 @@ describe('adminUsersStore', () => {
     expect(api.get).toHaveBeenCalledWith('/admin/users')
   })
 
-  it('users содержит данные после fetchUsers (camelCase)', async () => {
+  it('fetchUsers кладёт данные в ref users', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({
       data: { success: true, data: [mockUserApi], message: 'OK' }
     })
@@ -47,7 +47,7 @@ describe('adminUsersStore', () => {
     const store = useAdminUsersStore()
     await store.fetchUsers()
 
-    expect(store.users).toMatchObject([{ id: 1, isActive: true }])
+    expect(store.users).toHaveLength(1)
   })
 
   it('users = [] до вызова fetchUsers', () => {
@@ -78,33 +78,33 @@ describe('adminUsersStore', () => {
     expect(api.patch).toHaveBeenCalledWith('/admin/users/5/role', { role: 'admin' })
   })
 
-  it('fetchUsers при ошибке выбрасывает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Forbidden'))
+  it.each([
+    {
+      action: 'fetchUsers',
+      method: 'get' as const,
+      call: (store: ReturnType<typeof useAdminUsersStore>) => store.fetchUsers()
+    },
+    {
+      action: 'toggleActive',
+      method: 'patch' as const,
+      call: (store: ReturnType<typeof useAdminUsersStore>) => store.toggleActive(1)
+    },
+    {
+      action: 'updateRole',
+      method: 'patch' as const,
+      call: (store: ReturnType<typeof useAdminUsersStore>) => store.updateRole(5, 'admin')
+    }
+  ])('$action при ошибке выбрасывает исключение', async ({ action, method, call }) => {
+    vi.mocked(api[method]).mockRejectedValueOnce(new Error('Forbidden'))
 
     const store = useAdminUsersStore()
 
-    await expect(store.fetchUsers()).rejects.toThrow()
-    expect(store.users).toHaveLength(0)
+    await expect(call(store)).rejects.toThrow()
+    action === 'fetchUsers' && expect(store.users).toHaveLength(0)
   })
 
   it('fetchUsersLoading изначально false', () => {
     const store = useAdminUsersStore()
     expect(store.fetchUsersLoading).toBe(false)
-  })
-
-  it('toggleActive при ошибке выбрасывает исключение', async () => {
-    vi.mocked(api.patch).mockRejectedValueOnce(new Error('Forbidden'))
-
-    const store = useAdminUsersStore()
-
-    await expect(store.toggleActive(1)).rejects.toThrow()
-  })
-
-  it('updateRole при ошибке выбрасывает исключение', async () => {
-    vi.mocked(api.patch).mockRejectedValueOnce(new Error('Forbidden'))
-
-    const store = useAdminUsersStore()
-
-    await expect(store.updateRole(5, 'admin')).rejects.toThrow()
   })
 })

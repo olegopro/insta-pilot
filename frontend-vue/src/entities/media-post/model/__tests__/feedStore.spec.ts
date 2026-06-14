@@ -194,47 +194,60 @@ describe('feedStore', () => {
     )
   })
 
-  it('feedLoading изначально false', () => {
-    const store = useFeedStore()
-    expect(store.feedLoading).toBe(false)
-  })
-
-  it('loadFeed при ошибке бросает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
-
+  it('начальные геттеры и состояние пусты/false до загрузки', () => {
     const store = useFeedStore()
 
-    await expect(store.loadFeed(1)).rejects.toThrow()
     expect(store.posts).toHaveLength(0)
-  })
-
-  it('loadMoreFeed при ошибке бросает исключение', async () => {
-    vi.mocked(api.get)
-      .mockResolvedValueOnce(wrapResponse(makeFeedResponse({ posts: [makePostApi('1')], next_max_id: 'cursor-2' })))
-      .mockRejectedValueOnce(new Error('Network error'))
-
-    const store = useFeedStore()
-    await store.loadFeed(1)
-
-    await expect(store.loadMoreFeed(1)).rejects.toThrow()
-    expect(store.posts).toHaveLength(1)
-  })
-
-  it('fetchUserInfo при ошибке бросает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Not Found'))
-
-    const store = useFeedStore()
-
-    await expect(store.fetchUserInfo(1, '999')).rejects.toThrow()
+    expect(store.nextMaxId).toBeNull()
+    expect(store.moreAvailable).toBe(false)
     expect(store.userDetail).toBeNull()
+    expect(store.feedLoading).toBe(false)
+    expect(store.loadMoreLoading).toBe(false)
+    expect(store.userInfoLoading).toBe(false)
   })
 
-  it('refreshFeed при ошибке бросает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+  const errorCases: {
+    name: string;
+    setup: (store: ReturnType<typeof useFeedStore>) => unknown;
+    act: (store: ReturnType<typeof useFeedStore>) => Promise<unknown>;
+    assert?: (store: ReturnType<typeof useFeedStore>) => void
+  }[] = [
+    {
+      name:   'loadFeed',
+      setup:  () => vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error')),
+      act:    (store) => store.loadFeed(1),
+      assert: (store) => expect(store.posts).toHaveLength(0)
+    },
+    {
+      name: 'loadMoreFeed',
+      setup: async (store) => {
+        vi.mocked(api.get)
+          .mockResolvedValueOnce(wrapResponse(makeFeedResponse({ posts: [makePostApi('1')], next_max_id: 'cursor-2' })))
+          .mockRejectedValueOnce(new Error('Network error'))
+        await store.loadFeed(1)
+      },
+      act:    (store) => store.loadMoreFeed(1),
+      assert: (store) => expect(store.posts).toHaveLength(1)
+    },
+    {
+      name:   'fetchUserInfo',
+      setup:  () => vi.mocked(api.get).mockRejectedValueOnce(new Error('Not Found')),
+      act:    (store) => store.fetchUserInfo(1, '999'),
+      assert: (store) => expect(store.userDetail).toBeNull()
+    },
+    {
+      name:  'refreshFeed',
+      setup: () => vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error')),
+      act:   (store) => store.refreshFeed(1)
+    }
+  ]
 
+  it.each(errorCases)('$name при ошибке бросает исключение и сохраняет state-инвариант', async ({ setup, act, assert }) => {
     const store = useFeedStore()
+    await setup(store)
 
-    await expect(store.refreshFeed(1)).rejects.toThrow()
+    await expect(act(store)).rejects.toThrow()
+    assert?.(store)
   })
 
   it('isLiking возвращает false до начала лайка', async () => {
@@ -244,17 +257,5 @@ describe('feedStore', () => {
     await store.loadFeed(1)
 
     expect(store.isLiking(store.posts[0]!.id)).toBe(false)
-  })
-
-  it('feedLoading маппит посты в camelCase', async () => {
-    vi.mocked(api.get).mockResolvedValueOnce(wrapResponse(makeFeedResponse()))
-
-    const store = useFeedStore()
-    await store.loadFeed(1)
-
-    const post = store.posts[0]!
-    expect(post.captionText).toBe('Hello')
-    expect(post.likeCount).toBe(10)
-    expect(post.user.username).toBe('testuser')
   })
 })

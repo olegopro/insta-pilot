@@ -201,19 +201,13 @@ describe('activityLogStore', () => {
     expect(store.summary[0]!.successRate).toBe(0.95)
   })
 
-  it('fetchLogsLoading изначально false', () => {
+  it.each([
+    'fetchLogsLoading',
+    'fetchStatsLoading',
+    'fetchSummaryLoading'
+  ] as const)('%s изначально false', (getter) => {
     const store = useActivityLogStore()
-    expect(store.fetchLogsLoading).toBe(false)
-  })
-
-  it('fetchStatsLoading изначально false', () => {
-    const store = useActivityLogStore()
-    expect(store.fetchStatsLoading).toBe(false)
-  })
-
-  it('fetchSummaryLoading изначально false', () => {
-    const store = useActivityLogStore()
-    expect(store.fetchSummaryLoading).toBe(false)
+    expect(store[getter]).toBe(false)
   })
 
   it('fetchLogs при ошибке выбрасывает исключение и не изменяет logs', async () => {

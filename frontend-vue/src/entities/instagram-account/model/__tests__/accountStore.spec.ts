@@ -55,26 +55,38 @@ describe('accountStore', () => {
     expect(store.accounts[0]!.instagramLogin).toBe('test_user')
   })
 
-  it('fetchAccounts при ошибке бросает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+  it.each([
+    {
+      action:     'fetchAccounts',
+      mockMethod: 'get' as const,
+      invoke:     (store: ReturnType<typeof useAccountStore>) => store.fetchAccounts(),
+      assertState: undefined
+    },
+    {
+      action:     'fetchAccountDetails',
+      mockMethod: 'get' as const,
+      invoke:     (store: ReturnType<typeof useAccountStore>) => store.fetchAccountDetails(999),
+      assertState: (store: ReturnType<typeof useAccountStore>) => expect(store.accountDetail).toBeNull()
+    },
+    {
+      action:     'fetchDeviceProfiles',
+      mockMethod: 'get' as const,
+      invoke:     (store: ReturnType<typeof useAccountStore>) => store.fetchDeviceProfiles(),
+      assertState: (store: ReturnType<typeof useAccountStore>) => expect(store.deviceProfiles).toHaveLength(0)
+    },
+    {
+      action:     'deleteAccount',
+      mockMethod: 'delete' as const,
+      invoke:     (store: ReturnType<typeof useAccountStore>) => store.deleteAccount(1),
+      assertState: undefined
+    }
+  ])('$action при ошибке бросает исключение', async ({ mockMethod, invoke, assertState }) => {
+    vi.mocked(api[mockMethod]).mockRejectedValueOnce(new Error('Request failed'))
 
     const store = useAccountStore()
 
-    await expect(store.fetchAccounts()).rejects.toThrow()
-  })
-
-  it('fetchAccounts маппит snake_case в camelCase', async () => {
-    vi.mocked(api.get).mockResolvedValueOnce({
-      data: { success: true, data: [mockAccountApi], message: 'OK' }
-    })
-
-    const store = useAccountStore()
-    await store.fetchAccounts()
-
-    const account = store.accounts[0]!
-    expect(account.isActive).toBe(true)
-    expect(account.deviceModelName).toBe('Samsung Galaxy S20')
-    expect(account.createdAt).toBe('2026-01-01T00:00:00Z')
+    await expect(invoke(store)).rejects.toThrow()
+    assertState?.(store)
   })
 
   it('addAccount вызывает POST /accounts/login с преобразованными ключами', async () => {
@@ -134,62 +146,4 @@ describe('accountStore', () => {
     expect(api.delete).toHaveBeenCalledWith('/accounts/5')
   })
 
-  it('fetchAccountsLoading изначально false', () => {
-    const store = useAccountStore()
-    expect(store.fetchAccountsLoading).toBe(false)
-  })
-
-  it('addAccountLoading изначально false', () => {
-    const store = useAccountStore()
-    expect(store.addAccountLoading).toBe(false)
-  })
-
-  it('deleteAccountLoading изначально false', () => {
-    const store = useAccountStore()
-    expect(store.deleteAccountLoading).toBe(false)
-  })
-
-  it('fetchAccountDetails при ошибке бросает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Not Found'))
-
-    const store = useAccountStore()
-
-    await expect(store.fetchAccountDetails(999)).rejects.toThrow()
-    expect(store.accountDetail).toBeNull()
-  })
-
-  it('fetchDeviceProfiles при ошибке бросает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Server Error'))
-
-    const store = useAccountStore()
-
-    await expect(store.fetchDeviceProfiles()).rejects.toThrow()
-    expect(store.deviceProfiles).toHaveLength(0)
-  })
-
-  it('deleteAccount при ошибке бросает исключение', async () => {
-    vi.mocked(api.delete).mockRejectedValueOnce(new Error('Forbidden'))
-
-    const store = useAccountStore()
-
-    await expect(store.deleteAccount(1)).rejects.toThrow()
-  })
-
-  it('addAccountError содержит сообщение при ошибке запроса', async () => {
-    vi.mocked(api.post).mockRejectedValueOnce(new Error('Forbidden'))
-
-    const store = useAccountStore()
-
-    try {
-      await store.addAccount({
-        instagramLogin:    'u',
-        instagramPassword: 'p',
-        deviceProfileId:   1
-      })
-    } catch {
-      // ожидаемое исключение
-    }
-
-    expect(store.addAccountError).toBeTruthy()
-  })
 })

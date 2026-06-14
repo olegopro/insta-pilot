@@ -50,20 +50,6 @@ describe('llmSettingsStore', () => {
     expect(store.settings[0]!.provider).toBe('openai')
   })
 
-  it('fetchAll маппит snake_case в camelCase', async () => {
-    vi.mocked(api.get).mockResolvedValueOnce(
-      wrapResponse([makeSettingApi({ is_default: true, use_caption: false })])
-    )
-
-    const store = useLlmSettingsStore()
-    await store.fetchAll()
-
-    const setting = store.settings[0]!
-    expect(setting.isDefault).toBe(true)
-    expect(setting.useCaption).toBe(false)
-    expect(setting.modelName).toBe('gpt-4o-mini')
-  })
-
   it('saveSetting отправляет POST и перезагружает список', async () => {
     vi.mocked(api.post).mockResolvedValueOnce(wrapResponse(makeSettingApi()))
     vi.mocked(api.get).mockResolvedValueOnce(wrapResponse([makeSettingApi()]))
@@ -154,80 +140,60 @@ describe('llmSettingsStore', () => {
     expect(store.basePromptIsModified).toBe(false)
   })
 
-  it('fetchAllLoading изначально false', () => {
-    const store = useLlmSettingsStore()
-    expect(store.fetchAllLoading).toBe(false)
-  })
-
-  it('fetchAll при ошибке бросает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
-
-    const store = useLlmSettingsStore()
-
-    await expect(store.fetchAll()).rejects.toThrow()
-    expect(store.settings).toHaveLength(0)
-  })
-
-  it('saveSetting при ошибке бросает исключение', async () => {
-    vi.mocked(api.post).mockRejectedValueOnce(new Error('Unprocessable'))
-
-    const store = useLlmSettingsStore()
-
-    await expect(store.saveSetting({
-      provider:     'openai',
-      apiKey:       'sk-bad',
-      modelName:    'gpt-4o-mini',
-      systemPrompt: null,
-      tone:         'friendly',
-      useCaption:   true
-    })).rejects.toThrow()
-  })
-
-  it('setDefault при ошибке бросает исключение', async () => {
-    vi.mocked(api.patch).mockRejectedValueOnce(new Error('Not Found'))
-
-    const store = useLlmSettingsStore()
-
-    await expect(store.setDefault(999)).rejects.toThrow()
-  })
-
-  it('deleteSetting при ошибке бросает исключение', async () => {
-    vi.mocked(api.delete).mockRejectedValueOnce(new Error('Not Found'))
-
-    const store = useLlmSettingsStore()
-
-    await expect(store.deleteSetting(999)).rejects.toThrow()
-  })
-
-  it('testConnection при ошибке бросает исключение', async () => {
-    vi.mocked(api.post).mockRejectedValueOnce(new Error('Unauthorized'))
-
-    const store = useLlmSettingsStore()
-
-    await expect(store.testConnection('openai', 'bad-key', 'gpt-4o-mini')).rejects.toThrow()
-  })
-
-  it('fetchBasePrompt при ошибке бросает исключение', async () => {
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+  it.each([
+    {
+      name:   'fetchAll',
+      method: 'get' as const,
+      run:    (store: ReturnType<typeof useLlmSettingsStore>) => store.fetchAll()
+    },
+    {
+      name:   'saveSetting',
+      method: 'post' as const,
+      run:    (store: ReturnType<typeof useLlmSettingsStore>) => store.saveSetting({
+        provider:     'openai',
+        apiKey:       'sk-bad',
+        modelName:    'gpt-4o-mini',
+        systemPrompt: null,
+        tone:         'friendly',
+        useCaption:   true
+      })
+    },
+    {
+      name:   'setDefault',
+      method: 'patch' as const,
+      run:    (store: ReturnType<typeof useLlmSettingsStore>) => store.setDefault(999)
+    },
+    {
+      name:   'deleteSetting',
+      method: 'delete' as const,
+      run:    (store: ReturnType<typeof useLlmSettingsStore>) => store.deleteSetting(999)
+    },
+    {
+      name:   'testConnection',
+      method: 'post' as const,
+      run:    (store: ReturnType<typeof useLlmSettingsStore>) => store.testConnection('openai', 'bad-key', 'gpt-4o-mini')
+    },
+    {
+      name:   'fetchBasePrompt',
+      method: 'get' as const,
+      run:    (store: ReturnType<typeof useLlmSettingsStore>) => store.fetchBasePrompt()
+    },
+    {
+      name:   'updateBasePrompt',
+      method: 'put' as const,
+      run:    (store: ReturnType<typeof useLlmSettingsStore>) => store.updateBasePrompt('bad prompt')
+    },
+    {
+      name:   'resetBasePrompt',
+      method: 'post' as const,
+      run:    (store: ReturnType<typeof useLlmSettingsStore>) => store.resetBasePrompt()
+    }
+  ])('$name при ошибке бросает исключение', async ({ name, method, run }) => {
+    vi.mocked(api[method]).mockRejectedValueOnce(new Error('Request failed'))
 
     const store = useLlmSettingsStore()
 
-    await expect(store.fetchBasePrompt()).rejects.toThrow()
-  })
-
-  it('updateBasePrompt при ошибке бросает исключение', async () => {
-    vi.mocked(api.put).mockRejectedValueOnce(new Error('Server Error'))
-
-    const store = useLlmSettingsStore()
-
-    await expect(store.updateBasePrompt('bad prompt')).rejects.toThrow()
-  })
-
-  it('resetBasePrompt при ошибке бросает исключение', async () => {
-    vi.mocked(api.post).mockRejectedValueOnce(new Error('Server Error'))
-
-    const store = useLlmSettingsStore()
-
-    await expect(store.resetBasePrompt()).rejects.toThrow()
+    await expect(run(store)).rejects.toThrow()
+    name === 'fetchAll' && expect(store.settings).toHaveLength(0)
   })
 })

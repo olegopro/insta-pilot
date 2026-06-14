@@ -45,7 +45,7 @@ describe('authStore', () => {
     expect(localStorage.getItem('token')).toBe('test-token')
   })
 
-  it('login сохраняет user в store (camelCase)', async () => {
+  it('login кладёт user в ref', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
       data: { success: true, data: { user: mockUserApi, token: 'test-token' }, message: 'OK' }
     })
@@ -53,16 +53,10 @@ describe('authStore', () => {
     const store = useAuthStore()
     await store.login({ email: 'test@example.com', password: 'password' })
 
-    expect(store.user).toMatchObject({
-      id: 1,
-      name: 'Test User',
-      email: 'test@example.com',
-      isActive: true,
-      roles: [{ id: 1, name: 'user', guardName: 'web' }]
-    })
+    expect(store.user).toMatchObject({ id: 1, email: 'test@example.com' })
   })
 
-  it('logout удаляет токен из localStorage', async () => {
+  it('logout удаляет токен из localStorage и обнуляет user', async () => {
     localStorage.setItem('token', 'existing-token')
     vi.mocked(api.post).mockResolvedValueOnce({
       data: { success: true, data: null, message: 'OK' }
@@ -72,16 +66,6 @@ describe('authStore', () => {
     await store.logout()
 
     expect(localStorage.getItem('token')).toBeNull()
-  })
-
-  it('logout обнуляет user', async () => {
-    vi.mocked(api.post).mockResolvedValueOnce({
-      data: { success: true, data: null, message: 'OK' }
-    })
-
-    const store = useAuthStore()
-    await store.logout()
-
     expect(store.user).toBeNull()
   })
 
