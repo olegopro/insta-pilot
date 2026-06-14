@@ -43,10 +43,14 @@ Laravel: `INSTAGRAM_PYTHON_URL=http://python:8001` (внутренний Docker 
 ## Python service — instagrapi
 Документация: https://subzeroid.github.io/instagrapi/
 Context7 library ID: `/subzeroid/instagrapi`
-Версия: `instagrapi==2.10.5` (требует Python ≥3.10; Docker-образ `python:3.12-slim`). Локальный `venv` (3.9) для запуска не подходит — тесты гонять в контейнере.
+Версия: `instagrapi==2.10.6` (требует Python ≥3.10; Docker-образ `python:3.12-slim`). Локальный `venv` (3.9) для запуска не подходит — тесты гонять в контейнере. Пакеты держим на последних версиях (`requirements.txt` / `requirements-dev.txt`).
 
-### Пагинация ленты (timeline feed)
-Пагинация идёт через штатный `cl.get_timeline_feed(max_id=..., seen_posts=...)` (instagrapi ≥2.10.5, фикс бага #1789). `seen_posts` передаётся ЯВНО (накапливается на фронте + в `_paginate_feed`), т.к. клиент пересоздаётся из сессии и на внутренний `self._timeline_seen_posts` полагаться нельзя. `feed_view_info` метод генерирует сам. Остаточный повтор постов между страницами — свойство ранжированной домашней ленты Instagram, гасится дедупом на фронте. Прежняя ручная реализация (`_build_pagination_params`/`_build_view_info` + `private_request`) сохранена в git-теге `feed-manual-pagination-v1`.
+### Пагинация ленты (timeline feed) — РУЧНАЯ, не штатная
+Пагинация идёт через РУЧНОЙ `cl.private_request("feed/timeline/", data=_build_pagination_params(...), with_signature=False)` — тело передаётся как **dict (form-поля)**: `max_id` + `seen_posts` (csv виденных) + `feed_view_info` (`_build_view_info`) + поля устройства.
+
+ВАЖНО: штатный `cl.get_timeline_feed(max_id, seen_posts)` (instagrapi ≥2.10.5, PR #2497 для бага #1789) для ленты НЕ годится — он шлёт тело как `json.dumps` (строка), и Instagram `feed/timeline/` так почти не пагинируется. Замер на одном аккаунте: ручной способ дал 14 уникальных постов за 6 страниц, штатный — 4. Поэтому ленту оставляем на ручной реализации, апгрейд instagrapi её не меняет.
+
+`_paginate_feed` дедуплицирует батч по уже собранным id (ранжированная лента может повторять посты). Старый снимок ленты — git-тег `feed-manual-pagination-v1`. Будущее (отдельный этап): рассмотреть забор ленты через headless-браузер или Android-эмулятор — private API даёт ограниченную/повторяющуюся домашнюю ленту.
 
 ### Правила работы (по проекту)
 - Основной клиент: `instagrapi.Client` внутри `python-service` слоя, без прямых вызовов из Laravel/Vue.

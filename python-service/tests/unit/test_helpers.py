@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from helpers import (
+    _build_pagination_params,
     _build_sections_cursor,
     _extract_posts,
     _extract_sections_posts,
@@ -279,6 +280,37 @@ class TestExtractSectionsPosts:
         assert len(posts) == 2
 
 
+# ─── _build_pagination_params ─────────────────────────────────────────────────
+
+class TestBuildPaginationParams:
+    def test_contains_required_fields(self):
+        cl = make_client_mock()
+        params = _build_pagination_params(cl, "cursor123", ["111_999", "222_999"])
+
+        assert params["max_id"] == "cursor123"
+        assert params["reason"] == "pagination"
+        assert params["seen_posts"] == "111_999,222_999"
+        assert params["phone_id"] == cl.phone_id
+        assert params["device_id"] == cl.uuid
+        assert "_uuid" in params
+        assert "feed_view_info" in params
+
+    def test_feed_view_info_is_valid_json(self):
+        cl = make_client_mock()
+        params = _build_pagination_params(cl, "cursor", ["111_999"])
+        view_info = json.loads(params["feed_view_info"])
+        assert isinstance(view_info, list)
+        assert len(view_info) == 1
+        assert view_info[0]["media_id"] == "111_999"
+
+    def test_empty_seen_posts(self):
+        cl = make_client_mock()
+        params = _build_pagination_params(cl, "cursor", [])
+        assert params["seen_posts"] == ""
+        view_info = json.loads(params["feed_view_info"])
+        assert view_info == []
+
+
 # ─── _instagram_response_debug ────────────────────────────────────────────────
 
 class TestInstagramResponseDebug:
@@ -378,7 +410,7 @@ class TestSectionsCursor:
 class TestPaginateFeed:
     def test_single_page(self):
         cl = make_client_mock()
-        cl.get_timeline_feed.return_value = {
+        cl.private_request.return_value = {
             "feed_items": [{"media_or_ad": make_media(pk="101", media_id="101_999")}],
             "next_max_id": None,
             "more_available": False,
@@ -390,14 +422,10 @@ class TestPaginateFeed:
         assert len(all_posts) == 1
         assert next_max_id is None
         assert more is False
-        # Новый контракт: пагинация идёт через get_timeline_feed с max_id и seen_posts
-        call_kwargs = cl.get_timeline_feed.call_args.kwargs
-        assert call_kwargs["max_id"] == "start_cursor"
-        assert "seen_posts" in call_kwargs
 
     def test_stops_when_min_posts_reached(self):
         cl = make_client_mock()
-        cl.get_timeline_feed.side_effect = [
+        cl.private_request.side_effect = [
             {
                 "feed_items": [{"media_or_ad": make_media(pk="101", media_id="101_999")}],
                 "next_max_id": "cursor2",
@@ -415,14 +443,14 @@ class TestPaginateFeed:
 
         # Должен остановиться после первой итерации (min_posts=1 достигнут)
         assert len(all_posts) == 1
-        assert cl.get_timeline_feed.call_count == 1
+        assert cl.private_request.call_count == 1
 
     def test_stops_at_max_iterations(self):
         from helpers import MAX_PAGINATION_ITERATIONS
 
         cl = make_client_mock()
         # Всегда возвращает more_available=True — симулируем бесконечную ленту
-        cl.get_timeline_feed.return_value = {
+        cl.private_request.return_value = {
             "feed_items": [{"media_or_ad": make_media(pk="101", media_id="101_999")}],
             "next_max_id": "next_cursor",
             "more_available": True,
@@ -434,11 +462,11 @@ class TestPaginateFeed:
         with patch("helpers.time.sleep"):  # не ждём реально
             _paginate_feed(cl, "cursor1", seen, all_posts, min_posts=9999, label="test")
 
-        assert cl.get_timeline_feed.call_count == MAX_PAGINATION_ITERATIONS
+        assert cl.private_request.call_count == MAX_PAGINATION_ITERATIONS
 
     def test_seen_accumulates_between_iterations(self):
         cl = make_client_mock()
-        cl.get_timeline_feed.side_effect = [
+        cl.private_request.side_effect = [
             {
                 "feed_items": [{"media_or_ad": make_media(pk="101", media_id="101_999")}],
                 "next_max_id": "cursor2",
@@ -463,7 +491,7 @@ class TestPaginateFeed:
         # Instagram повторно отдаёт уже виденные посты на следующей странице —
         # _paginate_feed должен отбрасывать дубли, а не копить их.
         cl = make_client_mock()
-        cl.get_timeline_feed.side_effect = [
+        cl.private_request.side_effect = [
             {
                 "feed_items": [
                     {"media_or_ad": make_media(pk="101", media_id="101_999")},

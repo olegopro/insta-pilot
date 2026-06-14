@@ -30,7 +30,7 @@ final class FeedController extends Controller {
      * Схема:
      *   Vue (feedStore) → GET /api/feed/{id}?max_id=...&seen_posts=id1,id2,...
      *     → FeedController → InstagramClientService
-     *       → Python /account/feed → get_timeline_feed (instagrapi)
+     *       → Python /account/feed → private_request feed/timeline/
      *
      * @param int     $accountId  ID аккаунта в системе (не Instagram ID)
      * @param Request $request    Параметры: max_id (курсор), seen_posts (через запятую)

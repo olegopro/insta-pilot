@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Тест пагинации Instagram Timeline Feed (через штатный instagrapi >= 2.10.5).
+Тест пагинации Instagram Timeline Feed.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  ШАГ 0 — Получить session JSON из БД через artisan tinker
@@ -11,37 +11,42 @@
 Внутри tinker (замени ID на нужный):
 
     $id = 3;
-    $a = \\App\\Models\\InstagramAccount::find($id);
+    $a = \App\Models\InstagramAccount::find($id);
     file_put_contents(
-        base_path("../python-service/session_{$id}.json"),
+        base_path("session_{$id}.json"),
         json_encode(json_decode($a->session_data, true), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
     );
 
-Файл окажется в python-service/session_{id}.json (он же /app внутри контейнера python).
+Файл окажется в backend-laravel/session_{id}.json (base_path → /var/www/html,
+смонтирован в ./backend-laravel).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  ШАГ 1 — Запустить тест
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ВАЖНО: instagrapi 2.10.5 требует Python >= 3.10. Локальный venv (3.9) не подходит —
-запускай внутри контейнера python (там Python 3.12):
+Из корня проекта (venv внутри python-service):
 
-    docker compose run --rm python python test_feed_pagination.py session_3.json --pages 3
+    python-service/venv/bin/python python-service/test_feed_pagination.py \
+        backend-laravel/session_3.json --pages 3
+
+Или из папки python-service (если venv активирован):
+
+    python test_feed_pagination.py ../backend-laravel/session_3.json --pages 3
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- Алгоритм
+ Алгоритм (из instagram-timeline-feed-guide.md)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   1. Первый запрос — cold_start_fetch через get_timeline_feed()
-  2. Накопить seen_posts (media_id вида {pk}_{user_pk}) из ответа
-  3. Следующие страницы — get_timeline_feed(max_id=..., seen_posts=...).
-     Метод сам форсит reason="pagination" и собирает feed_view_info из seen_posts.
-  4. Проверить, что посты не повторяются между страницами.
+  2. Собрать seen_posts и feed_view_info из ответа
+  3. Следующие страницы — private_request с reason="pagination",
+     передавая max_id + seen_posts + feed_view_info
+  4. Проверить, что посты не повторяются между страницами
 
-2.10.5 (фикс #1789) добавил параметры seen_posts/feed_view_info в get_timeline_feed.
-Без seen_posts сервер не знает, что уже показано, и возвращает те же посты. Передаём
-seen_posts явно, потому что клиент в сервисе пересоздаётся из сессии между запросами
-и на внутренний self._timeline_seen_posts полагаться нельзя.
+Почему get_timeline_feed(max_id=...) не работает для пагинации:
+  Instagram игнорирует max_id без seen_posts/feed_view_info —
+  сервер не знает, что уже было показано, и возвращает те же посты.
+  Подробнее: instagram-timeline-feed-guide.md в корне проекта.
 """
 
 import argparse
@@ -80,6 +85,48 @@ def get_media_id(media: dict) -> str:
     return media_id
 
 
+def build_view_info(media: dict) -> dict:
+    """Сформировать feed_view_info элемент для одного поста (имитация просмотра)."""
+    view_ms = random.randint(5000, 15000)
+    return {
+        "media_id": get_media_id(media),
+        "version": 23,
+        "media_pct": 1.0,
+        "time_info": {"10": view_ms, "25": view_ms, "50": view_ms, "75": view_ms},
+        "latest_timestamp": int(time.time() * 1000),
+    }
+
+
+def build_pagination_params(cl: Client, max_id: str, seen_posts: list, view_info: list) -> dict:
+    """Сформировать параметры запроса для pagination (по аналогии с реальным приложением)."""
+    return {
+        # Пагинация
+        "max_id": max_id,
+        "reason": "pagination",
+        "is_pull_to_refresh": "0",
+        "is_prefetch": "0",
+        # Данные о просмотре — ключевое отличие от стандартного вызова
+        "feed_view_info": json.dumps(view_info),
+        "seen_posts": ",".join(seen_posts),
+        # Идентификаторы устройства и сессии
+        "phone_id": cl.phone_id,
+        "device_id": cl.uuid,
+        "_uuid": cl.uuid,
+        "_csrftoken": cl.token,
+        "client_session_id": cl.client_session_id,
+        # Состояние устройства
+        "battery_level": 100,
+        "timezone_offset": cl.timezone_offset,
+        "is_charging": "1",
+        "will_sound_on": "0",
+        # Параметры рекламы
+        "is_async_ads_in_headload_enabled": "0",
+        "is_async_ads_double_request": "0",
+        "is_async_ads_rti": "0",
+        "rti_delivery_backend": "0",
+    }
+
+
 def print_medias(medias: list) -> None:
     for media in medias:
         user = media.get("user", {}).get("username", "?")
@@ -107,6 +154,7 @@ print(f"Клиент: uuid={cl.uuid[:8]}... phone_id={cl.phone_id[:8]}...")
 # Накопленное состояние
 all_pks: set[str] = set()
 seen_posts: list[str] = []
+view_info: list[dict] = []
 next_max_id: str | None = None
 
 # ── Страница 1: cold_start_fetch ──────────────────────────────────────────────
@@ -125,6 +173,7 @@ for media in page_medias:
         print(f"  ⚠️  ДУБЛЬ на странице 1: pk={pk}")
     all_pks.add(pk)
     seen_posts.append(get_media_id(media))
+    view_info.append(build_view_info(media))
 
 next_max_id = resp.get("next_max_id")
 
@@ -140,9 +189,8 @@ for page in range(2, args.pages + 1):
     print("="*60)
     time.sleep(delay)
 
-    # seen_posts передаём явно — instagrapi сам форсит reason="pagination"
-    # и генерирует feed_view_info из этого списка.
-    resp = cl.get_timeline_feed(max_id=next_max_id, seen_posts=seen_posts)
+    params = build_pagination_params(cl, next_max_id, seen_posts, view_info)
+    resp = cl.private_request("feed/timeline/", data=params, with_signature=False)
 
     page_medias = extract_medias(resp.get("feed_items", []))
     print(f"Получено постов: {len(page_medias)}, next_max_id длина: {len(str(resp.get('next_max_id', '')))}")
@@ -157,6 +205,7 @@ for page in range(2, args.pages + 1):
             new_count += 1
             all_pks.add(pk)
         seen_posts.append(get_media_id(media))
+        view_info.append(build_view_info(media))
 
     print_medias(page_medias)
 
