@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsAdmin, loginAs, USER_EMAIL } from './helpers'
+import { loginAsAdmin, loginAs, USER_EMAIL } from '@/../e2e/helpers'
 
 test.describe('Instagram Accounts — E2E', () => {
   test('отображение списка аккаунтов (таблица)', async ({ page }) => {
@@ -41,18 +41,11 @@ test.describe('Instagram Accounts — E2E', () => {
 
     // Вводим невозможный поисковый запрос
     const searchInput = page.locator('input[type="search"], input[placeholder*="поис" i], input[placeholder*="search" i]').first()
-    if (await searchInput.isVisible()) {
-      await searchInput.fill('xyzxyz_nonexistent_query')
-      await expect(page.locator('.q-table tbody tr')).toHaveCount(0)
-    }
+    await searchInput.fill('xyzxyz_nonexistent_query')
+    await expect(page.locator('.q-table tbody tr')).toHaveCount(0)
   })
 
-  test('страница доступна только аутентифицированному', async ({ page }) => {
-    await page.goto('/#/')
-    await expect(page).toHaveURL(/\/#\/login/)
-  })
-
-  test('не-admin пользователь видит только свои аккаунты', async ({ page }) => {
+  test('не-admin пользователь видит таблицу аккаунтов', async ({ page }) => {
     await loginAs(page, USER_EMAIL)
 
     await expect(page.locator('.q-table__container')).toBeVisible()

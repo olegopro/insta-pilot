@@ -1,9 +1,16 @@
 import { test, expect } from '@playwright/test'
-import { loginAsAdmin } from './helpers'
+import { loginAsAdmin } from '@/../e2e/helpers'
 
 test.describe('Navigation — E2E', () => {
   test('навигация по основным маршрутам через меню', async ({ page }) => {
+    const jsErrors: string[] = []
+    page.on('pageerror', (error) => jsErrors.push(error.message))
+
     await loginAsAdmin(page)
+
+    // Главная — ждём рендер layout без runtime-ошибок
+    await page.goto('/#/')
+    await page.locator('.q-layout, main, #app').first().waitFor({ state: 'visible', timeout: 5000 })
 
     // Переходим по маршрутам через прямой goto
     await page.goto('/#/feed')
@@ -14,6 +21,8 @@ test.describe('Navigation — E2E', () => {
 
     await page.goto('/#/logs')
     await expect(page).toHaveURL(/\/#\/logs/)
+
+    expect(jsErrors).toHaveLength(0)
   })
 
   test('несуществующий маршрут показывает страницу 404', async ({ page }) => {
@@ -25,17 +34,5 @@ test.describe('Navigation — E2E', () => {
     await expect(page.locator('body')).toBeVisible()
     // Проверяем что нет редиректа на /login
     await expect(page).not.toHaveURL(/\/#\/login/)
-  })
-
-  test('главная навигация рендерится без ошибок', async ({ page }) => {
-    const jsErrors: string[] = []
-    page.on('pageerror', (err) => jsErrors.push(err.message))
-
-    await loginAsAdmin(page)
-    await page.goto('/#/')
-
-    // Ожидаем любой контент страницы вместо sleep
-    await page.locator('.q-layout, main, #app').first().waitFor({ state: 'visible', timeout: 5000 })
-    expect(jsErrors).toHaveLength(0)
   })
 })

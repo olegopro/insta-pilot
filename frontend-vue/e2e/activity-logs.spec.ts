@@ -1,15 +1,7 @@
 import { test, expect } from '@playwright/test'
-import { loginAsAdmin } from './helpers'
+import { loginAsAdmin } from '@/../e2e/helpers'
 
 test.describe('Activity Logs — E2E', () => {
-  test('страница логов загружается', async ({ page }) => {
-    await loginAsAdmin(page)
-    await page.goto('/#/logs')
-
-    await expect(page).toHaveURL(/\/#\/logs/)
-    await expect(page.locator('body')).not.toContainText('Error')
-  })
-
   test('таблица логов отображается', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/#/logs')
@@ -45,10 +37,5 @@ test.describe('Activity Logs — E2E', () => {
         await expect(page.locator('.q-table__container')).toBeVisible()
       }
     }
-  })
-
-  test('страница логов недоступна без авторизации', async ({ page }) => {
-    await page.goto('/#/logs')
-    await expect(page).toHaveURL(/\/#\/login/)
   })
 })

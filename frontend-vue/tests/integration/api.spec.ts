@@ -83,19 +83,6 @@ describe.skipIf(!(await checkApiAvailable()))('Vue ↔ Laravel API Integration',
     expect(resp.data.data.token.length).toBeGreaterThan(0)
   }, 15000)
 
-  it('POST /auth/login с невалидными данными → 422', async () => {
-    try {
-      await axios.post(
-        `${API_URL}/api/auth/login`,
-        { email: 'not-an-email', password: '' },
-        { headers: { Accept: 'application/json' } }
-      )
-      expect.fail('Ожидался 422')
-    } catch (error: unknown) {
-      expect(getStatusCode(error)).toBe(422)
-    }
-  }, 15000)
-
   // ─── 7.2.2 Request with token → 200 ──────────────────────────────────────
 
   it('GET /me с токеном → 200 + данные пользователя', async () => {
@@ -108,71 +95,48 @@ describe.skipIf(!(await checkApiAvailable()))('Vue ↔ Laravel API Integration',
     expect(resp.data.data.email).toBe(SEEDED_EMAIL)
   }, 15000)
 
-  // ─── 7.2.3 Request without token → 401 ───────────────────────────────────
+  // ─── 7.2.3 Auth-guard /me — без токена и с невалидным токеном → 401 ──────
 
-  it('GET /me без токена → 401', async () => {
+  it.each([
+    ['без токена', { Accept: 'application/json' }],
+    [
+      'с невалидным токеном',
+      { Authorization: 'Bearer invalid-token-xyz', Accept: 'application/json' }
+    ]
+  ])('GET /me %s → 401', async (_label, headers) => {
     try {
-      await axios.get(`${API_URL}/api/auth/me`, {
-        headers: { Accept: 'application/json' }
-      })
+      await axios.get(`${API_URL}/api/auth/me`, { headers })
       expect.fail('Ожидался 401')
     } catch (error: unknown) {
       expect(getStatusCode(error)).toBe(401)
     }
   }, 15000)
 
-  // ─── 7.2.4 Invalid token → 401 ───────────────────────────────────────────
+  // ─── 7.2.4 Happy-GET endpoints → 200 + структура { success, data } ───────
 
-  it('GET /me с невалидным токеном → 401', async () => {
+  it.each([
+    ['/api/accounts', () => authToken],
+    ['/api/activity/summary', () => authToken],
+    ['/api/llm-settings', () => adminToken],
+    ['/api/admin/users', () => adminToken]
+  ])('GET %s → 200 + структура { success, data }', async (path, getToken) => {
+    const resp = await axios.get(`${API_URL}${path}`, {
+      headers: authHeaders(getToken())
+    })
+
+    expect(resp.status).toBe(200)
+    expect(resp.data.success).toBe(true)
+    expect(Array.isArray(resp.data.data)).toBe(true)
+  }, 15000)
+
+  // ─── 7.2.5 Admin endpoints без admin-прав → 403 ─────────────────────────
+
+  it.each([
+    ['/api/llm-settings'],
+    ['/api/admin/users']
+  ])('GET %s без admin-прав → 403', async (path) => {
     try {
-      await axios.get(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: 'Bearer invalid-token-xyz', Accept: 'application/json' }
-      })
-      expect.fail('Ожидался 401')
-    } catch (error: unknown) {
-      expect(getStatusCode(error)).toBe(401)
-    }
-  }, 15000)
-
-  // ─── 7.2.5 Instagram accounts ─────────────────────────────────────────────
-
-  it('GET /accounts → 200 + структура { success, data }', async () => {
-    const resp = await axios.get(`${API_URL}/api/accounts`, {
-      headers: authHeaders(authToken)
-    })
-
-    expect(resp.status).toBe(200)
-    expect(resp.data.success).toBe(true)
-    expect(Array.isArray(resp.data.data)).toBe(true)
-  }, 15000)
-
-  // ─── 7.2.6 Activity summary ───────────────────────────────────────────────
-
-  it('GET /activity/summary → 200 + структура { success, data }', async () => {
-    const resp = await axios.get(`${API_URL}/api/activity/summary`, {
-      headers: authHeaders(authToken)
-    })
-
-    expect(resp.status).toBe(200)
-    expect(resp.data.success).toBe(true)
-    expect(Array.isArray(resp.data.data)).toBe(true)
-  }, 15000)
-
-  // ─── 7.2.7 Admin endpoints — LLM settings ────────────────────────────────
-
-  it('GET /llm-settings (admin) → 200 + структура { success, data }', async () => {
-    const resp = await axios.get(`${API_URL}/api/llm-settings`, {
-      headers: authHeaders(adminToken)
-    })
-
-    expect(resp.status).toBe(200)
-    expect(resp.data.success).toBe(true)
-    expect(Array.isArray(resp.data.data)).toBe(true)
-  }, 15000)
-
-  it('GET /llm-settings без admin-прав → 403', async () => {
-    try {
-      await axios.get(`${API_URL}/api/llm-settings`, {
+      await axios.get(`${API_URL}${path}`, {
         headers: authHeaders(authToken)
       })
       expect.fail('Ожидался 403')
@@ -181,30 +145,7 @@ describe.skipIf(!(await checkApiAvailable()))('Vue ↔ Laravel API Integration',
     }
   }, 15000)
 
-  // ─── 7.2.8 Admin endpoints — Users ───────────────────────────────────────
-
-  it('GET /admin/users (admin) → 200 + структура { success, data }', async () => {
-    const resp = await axios.get(`${API_URL}/api/admin/users`, {
-      headers: authHeaders(adminToken)
-    })
-
-    expect(resp.status).toBe(200)
-    expect(resp.data.success).toBe(true)
-    expect(Array.isArray(resp.data.data)).toBe(true)
-  }, 15000)
-
-  it('GET /admin/users без admin-прав → 403', async () => {
-    try {
-      await axios.get(`${API_URL}/api/admin/users`, {
-        headers: authHeaders(authToken)
-      })
-      expect.fail('Ожидался 403')
-    } catch (error: unknown) {
-      expect(getStatusCode(error)).toBe(403)
-    }
-  }, 15000)
-
-  // ─── 7.2.9 CORS headers ──────────────────────────────────────────────────
+  // ─── 7.2.6 CORS headers ──────────────────────────────────────────────────
 
   it('CORS — ответ содержит access-control-allow-origin', async () => {
     const resp = await axios.get(`${API_URL}/api/auth/me`, {
@@ -213,7 +154,7 @@ describe.skipIf(!(await checkApiAvailable()))('Vue ↔ Laravel API Integration',
     expect(resp.headers['access-control-allow-origin']).toBeTruthy()
   }, 15000)
 
-  // ─── 7.2.10 WebSocket auth без токена → 401 или 403 ──────────────────────
+  // ─── 7.2.7 WebSocket auth без токена → 401 или 403 ──────────────────────
 
   it('POST /broadcasting/auth без токена → 401 или 403', async () => {
     // Laravel Sanctum возвращает 403 для broadcasting/auth без токена
@@ -229,7 +170,7 @@ describe.skipIf(!(await checkApiAvailable()))('Vue ↔ Laravel API Integration',
     }
   }, 15000)
 
-  // ─── 7.2.11 WebSocket auth с токеном ─────────────────────────────────────
+  // ─── 7.2.8 WebSocket auth с токеном ─────────────────────────────────────
 
   it('POST /broadcasting/auth с токеном — не 500', async () => {
     try {

@@ -3,6 +3,14 @@ import { test, expect, type Page } from '@playwright/test'
 const ADMIN_EMAIL = 'admin@insta-pilot.local'
 const ADMIN_PASSWORD = 'password'
 
+const PROTECTED_ROUTES = [
+  '/#/feed',
+  '/#/search',
+  '/#/',
+  '/#/logs',
+  '/#/admin/users'
+]
+
 async function fillLoginForm(page: Page, email: string, password: string) {
   await page.fill('input[type="email"]', email)
   await page.fill('input[type="password"]', password)
@@ -27,16 +35,12 @@ test.describe('Auth — E2E', () => {
     await expect(page.locator('.q-notification')).toBeVisible()
   })
 
-  test('редирект на /login без токена', async ({ page }) => {
-    // У каждого теста свой браузерный контекст → localStorage пуст
-    await page.goto('/#/')
+  for (const route of PROTECTED_ROUTES) {
+    test(`${route} недоступна без авторизации → /login`, async ({ page }) => {
+      // У каждого теста свой браузерный контекст → localStorage пуст
+      await page.goto(route)
 
-    await expect(page).toHaveURL(/\/#\/login/)
-  })
-
-  test('гость не может зайти на /admin/users', async ({ page }) => {
-    await page.goto('/#/admin/users')
-
-    await expect(page).toHaveURL(/\/#\/login/)
-  })
+      await expect(page).toHaveURL(/\/#\/login/)
+    })
+  }
 })
