@@ -362,9 +362,17 @@ return { accounts, fetchAccounts, fetchAccountsLoading, ... }
 ## Отладка ошибок
 
 ### Где смотреть ошибки
-- Overlay в браузере (vue-tsc/ESLint) = те же ошибки, что в логах Docker vue-контейнера
+- Ошибки видны в IDE (Volar + ESLint), при сборке `quasar build`, и вручную.
 - Логи контейнера: `docker compose logs vue` или `docker compose logs -f vue`
 - Ручная проверка TS: `docker compose exec vue npx vue-tsc --noEmit`
+
+### Красный overlay ошибок в браузере (dev) — ВЫКЛЮЧЕН по умолчанию
+Это «оверлей Vue с красными ошибками» = `vite-plugin-checker` (vueTsc + typed ESLint).
+Он держит TS-программу в памяти (~1 ГБ на dev-контейнер), поэтому в dev отключён.
+- **Включить overlay обратно**: запустить dev с `CHECK=1`, напр. внутри контейнера
+  `CHECK=1 npx quasar dev --hostname 0.0.0.0` (или поменять command vue в docker-compose на `CHECK=1 ...`).
+- Гейт в `frontend-vue/quasar.config.ts`: `ctx.prod || process.env.CHECK`. При сборке всегда включён.
+- Если пользователь просит «включи оверлей с ошибками Vue / красные ошибки в браузере» — речь про это (`CHECK=1`).
 
 ### Workflow после реализации задачи
 1. Сначала запустить ESLint autofix: `docker compose exec vue npx eslint --fix ./src`
