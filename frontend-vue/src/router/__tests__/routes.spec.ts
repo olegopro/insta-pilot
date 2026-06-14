@@ -1,52 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
-import { createMemoryHistory, createRouter } from 'vue-router'
-import type { RouteRecordRaw } from 'vue-router'
-
-vi.mock('@/boot/axios', () => ({
-  api: { get: vi.fn(), post: vi.fn() }
-}))
+import type { RouteLocationNormalized } from 'vue-router'
 
 vi.mock('@/entities/user', () => ({
   useAuthStore: vi.fn()
 }))
 
-// Замокаем routes, чтобы обойти динамические импорты Quasar-компонентов
-vi.mock('@/router/routes', () => {
-  const stub = { template: '<div />' }
-  const routes: RouteRecordRaw[] = [
-    {
-      path: '/login',
-      component: stub,
-      meta: { requiresGuest: true },
-      children: [{ path: '', component: stub }]
-    },
-    {
-      path: '/',
-      component: stub,
-      meta: { requiresAuth: true },
-      children: [
-        { path: '', component: stub },
-        { path: 'feed', component: stub },
-        { path: 'search', component: stub },
-        { path: 'logs', component: stub },
-        {
-          path: 'settings/llm',
-          component: stub,
-          meta: { requiresAdmin: true }
-        },
-        {
-          path: 'admin/users',
-          component: stub,
-          meta: { requiresAdmin: true }
-        }
-      ]
-    },
-    { path: '/:catchAll(.*)*', component: stub }
-  ]
-  return { default: routes }
-})
-
+import { authGuard } from '@/router/guard'
 import routes from '@/router/routes'
 import { useAuthStore } from '@/entities/user'
 
@@ -61,88 +20,92 @@ const makeAuthStore = (overrides: Record<string, unknown> = {}) => ({
   ...overrides
 })
 
-const createTestRouter = () => {
-  const router = createRouter({ history: createMemoryHistory(), routes })
+// guard читает только to.meta — остальное навигационному guard'у не нужно
+const toWithMeta = (meta: Record<string, unknown>) => ({ meta }) as unknown as RouteLocationNormalized
 
-  router.beforeEach(async (to) => {
-    const authStore = useAuthStore() as unknown as ReturnType<typeof makeAuthStore>
-    const token = localStorage.getItem('token')
+const setAuthStore = (overrides: Record<string, unknown> = {}) =>
+  vi.mocked(useAuthStore).mockReturnValue(makeAuthStore(overrides) as unknown as ReturnType<typeof useAuthStore>)
 
-    if (to.meta.requiresAuth) {
-      if (!token) return { path: '/login' }
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!authStore.user) {
-        try {
-          await authStore.fetchMe()
-        } catch {
-          authStore.clearAuth()
-          return { path: '/login' }
-        }
-      }
-      if (to.meta.requiresAdmin && !authStore.isAdmin) return { path: '/' }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (to.meta.requiresGuest && token && authStore.user) return { path: '/' }
-  })
-
-  return router
-}
-
-describe('router guard', () => {
+describe('authGuard', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
     vi.clearAllMocks()
     localStorage.clear()
   })
 
   it('неаутентифицированный → redirect на /login для requiresAuth маршрута', async () => {
-    vi.mocked(useAuthStore).mockReturnValue(makeAuthStore() as unknown as ReturnType<typeof useAuthStore>)
-    const router = createTestRouter()
-    await router.push('/feed')
-    expect(router.currentRoute.value.path).toBe('/login')
+    setAuthStore()
+
+    const result = await authGuard(toWithMeta({ requiresAuth: true }))
+
+    expect(result).toEqual({ path: '/login' })
   })
 
   it('аутентифицированный + requiresGuest → redirect на /', async () => {
     localStorage.setItem('token', 'valid-token')
-    vi.mocked(useAuthStore).mockReturnValue(
-      makeAuthStore({ user: { id: 1 } }) as unknown as ReturnType<typeof useAuthStore>
-    )
-    const router = createTestRouter()
-    await router.push('/login')
-    expect(router.currentRoute.value.path).toBe('/')
+    setAuthStore({ user: { id: 1 } })
+
+    const result = await authGuard(toWithMeta({ requiresGuest: true }))
+
+    expect(result).toEqual({ path: '/' })
   })
 
   it('не-admin + requiresAdmin → redirect на /', async () => {
     localStorage.setItem('token', 'valid-token')
-    vi.mocked(useAuthStore).mockReturnValue(
-      makeAuthStore({ user: { id: 1 }, isAdmin: false }) as unknown as ReturnType<typeof useAuthStore>
-    )
-    const router = createTestRouter()
-    await router.push('/settings/llm')
-    expect(router.currentRoute.value.path).toBe('/')
+    setAuthStore({ user: { id: 1 }, isAdmin: false })
+
+    const result = await authGuard(toWithMeta({ requiresAuth: true, requiresAdmin: true }))
+
+    expect(result).toEqual({ path: '/' })
   })
 
-  it('admin + requiresAdmin → пропускает', async () => {
+  it('admin + requiresAdmin → пропускает без redirect', async () => {
     localStorage.setItem('token', 'valid-token')
-    vi.mocked(useAuthStore).mockReturnValue(
-      makeAuthStore({ user: { id: 1 }, isAdmin: true }) as unknown as ReturnType<typeof useAuthStore>
-    )
-    const router = createTestRouter()
-    await router.push('/settings/llm')
-    expect(router.currentRoute.value.path).toBe('/settings/llm')
+    setAuthStore({ user: { id: 1 }, isAdmin: true })
+
+    const result = await authGuard(toWithMeta({ requiresAuth: true, requiresAdmin: true }))
+
+    expect(result).toBeUndefined()
+  })
+
+  it('токен есть, user не загружен → вызывает fetchMe и пропускает', async () => {
+    localStorage.setItem('token', 'valid-token')
+    mockFetchMe.mockResolvedValueOnce(undefined)
+    setAuthStore({ user: null })
+
+    const result = await authGuard(toWithMeta({ requiresAuth: true }))
+
+    expect(mockFetchMe).toHaveBeenCalledOnce()
+    expect(result).toBeUndefined()
+  })
+
+  it('fetchMe падает → clearAuth и redirect на /login', async () => {
+    localStorage.setItem('token', 'invalid-token')
+    mockFetchMe.mockRejectedValueOnce(new Error('401'))
+    setAuthStore({ user: null })
+
+    const result = await authGuard(toWithMeta({ requiresAuth: true }))
+
+    expect(mockClearAuth).toHaveBeenCalledOnce()
+    expect(result).toEqual({ path: '/login' })
   })
 })
 
 describe('routes структура', () => {
-  it('маршрут / имеет meta.requiresAuth', () => {
+  it('маршрут / требует авторизации (requiresAuth)', () => {
     const mainRoute = routes.find((route) => route.path === '/')
     expect(mainRoute?.meta?.requiresAuth).toBe(true)
   })
 
-  it('маршрут /login имеет meta.requiresGuest', () => {
+  it('маршрут /login требует гостя (requiresGuest)', () => {
     const loginRoute = routes.find((route) => route.path === '/login')
     expect(loginRoute?.meta?.requiresGuest).toBe(true)
+  })
+
+  it('admin-маршруты помечены requiresAdmin', () => {
+    const mainRoute = routes.find((route) => route.path === '/')
+    const adminPaths = (mainRoute?.children ?? []).filter((child) => child.meta?.requiresAdmin).map((child) => child.path)
+    expect(adminPaths).toContain('settings/llm')
+    expect(adminPaths).toContain('admin/users')
   })
 
   it('catchAll маршрут существует для 404', () => {

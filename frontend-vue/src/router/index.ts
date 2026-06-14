@@ -6,7 +6,7 @@ import {
   createWebHistory
 } from 'vue-router'
 import routes from '@/router/routes'
-import { useAuthStore } from '@/entities/user'
+import { authGuard } from '@/router/guard'
 
 /*
  * If not building with SSR mode, you can
@@ -34,25 +34,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
 
-  Router.beforeEach(async (to) => {
-    const authStore = useAuthStore()
-    const token = localStorage.getItem('token')
-
-    if (to.meta.requiresAuth) {
-      if (!token) return { path: '/login' }
-      if (!authStore.user) {
-        try {
-          await authStore.fetchMe()
-        } catch {
-          authStore.clearAuth()
-          return { path: '/login' }
-        }
-      }
-      if (to.meta.requiresAdmin && !authStore.isAdmin) return { path: '/' }
-    }
-
-    if (to.meta.requiresGuest && token && authStore.user) return { path: '/' }
-  })
+  Router.beforeEach(authGuard)
 
   return Router
 })
