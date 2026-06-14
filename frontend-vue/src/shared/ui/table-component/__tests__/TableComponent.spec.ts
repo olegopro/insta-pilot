@@ -46,7 +46,6 @@ describe('TableComponent', () => {
   it('проксирует слот body-cell', () => {
     const wrapper = mount(TableComponent, {
       props:    { columns, rows },
-      // @ts-expect-error partial slots object — QTable slot typing requires all slots
       slots:    { 'body-cell': '<span data-slot-body-cell>cell</span>' },
       global:   { stubs: { 'q-table': QTableStub } }
     })
