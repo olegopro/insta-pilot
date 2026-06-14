@@ -4,7 +4,7 @@
 import { defineConfig } from '#q-app/wrappers'
 import path from 'node:path'
 
-export default defineConfig((/* ctx */) => {
+export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -75,17 +75,23 @@ export default defineConfig((/* ctx */) => {
       // viteVuePluginOptions: {},
 
       vitePlugins: [
-        [
-          'vite-plugin-checker',
-          {
-            vueTsc: true,
-            eslint: {
-              lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
-              useFlatConfig: true
-            }
-          },
-          { server: false }
-        ]
+        // vite-plugin-checker (vueTsc + typed eslint) держит TS-программу в памяти
+        // (~1 ГБ → тяжёлый dev-контейнер). В dev по умолчанию ВЫКЛЮЧЕН ради лёгкости;
+        // включить overlay в dev: CHECK=1 quasar dev. При сборке (ctx.prod) всегда включён.
+        // Тайпчек/линт также доступны в IDE, через `npm run lint` и `vue-tsc --noEmit`.
+        ...(ctx.prod || process.env.CHECK
+          ? [[
+              'vite-plugin-checker',
+              {
+                vueTsc: true,
+                eslint: {
+                  lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
+                  useFlatConfig: true
+                }
+              },
+              { server: false }
+            ]]
+          : [])
       ]
     },
 
