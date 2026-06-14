@@ -7,7 +7,7 @@ const makeWrapper = (propsDefinition: Record<string, unknown>, passedProps: Reco
   const Inner = defineComponent({
     props: Object.fromEntries(
       Object.keys(propsDefinition).map((key) => [key, { default: undefined }])
-    ) as Record<string, { default: undefined }>,
+    ),
     setup(props) {
       const forwarded = useForwardProps(props as Record<string, unknown>)
       return { forwarded }

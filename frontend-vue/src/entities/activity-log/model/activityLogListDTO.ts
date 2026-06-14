@@ -4,14 +4,19 @@ import type { Nullable } from '@/shared/lib'
 import { ACTION_LABELS, ACTION_COLORS, STATUS_CONFIG, HTTP_CODE_COLOR } from '@/entities/activity-log/model/constants'
 import { formatTimeHMS, formatDuration } from '@/shared/lib'
 
+// Значения summary приходят как unknown (динамический JSON) — безопасно приводим
+// к строке только примитивы, иначе пустая строка (избегаем '[object Object]').
+const toText = (value: unknown): string =>
+  typeof value === 'string' || typeof value === 'number' ? String(value) : ''
+
 export function summarizeResponse(summary: Nullable<Record<string, unknown>>): string {
   if (!summary) return ''
 
-  if (summary.items_count !== undefined) return `${String(summary.items_count as string | number)} записей`
-  if (summary.results_count !== undefined) return `${String(summary.results_count as string | number)} результатов`
-  if (summary.comment_length !== undefined) return `${String(summary.comment_length as string | number)} символов`
-  if (summary.media_pk !== undefined) return `media: ${String(summary.media_pk as string | number)}`
-  if (summary.user_pk !== undefined) return `@${String((summary.username ?? summary.user_pk) as string | number)}`
+  if (summary.items_count !== undefined) return `${toText(summary.items_count)} записей`
+  if (summary.results_count !== undefined) return `${toText(summary.results_count)} результатов`
+  if (summary.comment_length !== undefined) return `${toText(summary.comment_length)} символов`
+  if (summary.media_pk !== undefined) return `media: ${toText(summary.media_pk)}`
+  if (summary.user_pk !== undefined) return `@${toText(summary.username ?? summary.user_pk)}`
 
   return ''
 }
