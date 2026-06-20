@@ -39,17 +39,6 @@
       <div class="text-caption text-grey">
         @{{ store.accountDetail.instagramLogin }}
       </div>
-
-      <div class="row q-gutter-lg q-mt-md">
-        <div class="column items-center">
-          <div class="text-h6">{{ store.accountDetail.followersCount ?? '—' }}</div>
-          <div class="text-caption">Подписчики</div>
-        </div>
-        <div class="column items-center">
-          <div class="text-h6">{{ store.accountDetail.followingCount ?? '—' }}</div>
-          <div class="text-caption">Подписки</div>
-        </div>
-      </div>
     </div>
   </ModalComponent>
 </template>

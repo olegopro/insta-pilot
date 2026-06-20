@@ -147,10 +147,10 @@ async def login(data: LoginRequest):
 @app.post("/account/info")
 async def account_info(data: SessionRequest):
     """
-    Возвращает базовую статистику аккаунта: число подписчиков и подписок.
+    Возвращает user_pk аккаунта.
 
-    Используется для актуализации данных в Laravel после долгого простоя
-    или для проверки валидности сессии (невалидная сессия → LoginRequired → 401).
+    Используется для актуализации user_pk в Laravel после долгого простоя
+    и для проверки валидности сессии (невалидная сессия → LoginRequired → 401).
     """
     def _run():
         cl = _make_client(data.session_data)

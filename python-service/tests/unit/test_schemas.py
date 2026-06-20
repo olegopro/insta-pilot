@@ -212,10 +212,9 @@ class TestResponseSchemas:
         assert resp.more_available is False
         assert resp.next_max_id is None
 
-    def test_account_info_response_optional_fields(self):
+    def test_account_info_response_optional_user_pk(self):
         resp = AccountInfoResponse(success=True)
         assert resp.user_pk is None
-        assert resp.followers_count is None
 
     def test_search_response_items_default_empty(self):
         resp = SearchResponse(success=True)

@@ -33,8 +33,6 @@ class LoginResponse(BaseModel):
 class AccountInfoResponse(BaseModel):
     success: bool
     user_pk: Optional[int] = None
-    followers_count: Optional[int] = None
-    following_count: Optional[int] = None
     error: Optional[str] = None
     error_code: Optional[str] = None
 

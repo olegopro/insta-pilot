@@ -62,20 +62,16 @@ describe('instagramAccountDTO.toLocalList', () => {
   it('возвращает пустой массив при пустом входе', () => expect(instagramAccountDTO.toLocalList([])).toEqual([]))
 })
 
-describe('instagramAccountDTO.toLocalDetailed', () => it('включает базовые поля и дополнительные (userPk, followers, following)', () => {
+describe('instagramAccountDTO.toLocalDetailed', () => it('включает базовые поля и userPk', () => {
   const api: InstagramAccountDetailedApi = {
     ...makeAccountApi(),
-    user_pk:          12345,
-    followers_count:  1000,
-    following_count:  500
+    user_pk: 12345
   }
 
   const result = instagramAccountDTO.toLocalDetailed(api)
 
   expect(result.instagramLogin).toBe('test_user')
   expect(result.userPk).toBe(12345)
-  expect(result.followersCount).toBe(1000)
-  expect(result.followingCount).toBe(500)
 }))
 
 describe('instagramAccountDTO.toLocalDeviceProfiles', () => it('маппит массив профилей устройств', () => {

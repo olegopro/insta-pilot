@@ -13,8 +13,6 @@ export interface InstagramAccountApi {
 
 export interface InstagramAccountDetailedApi extends InstagramAccountApi {
   user_pk: Nullable<number>
-  followers_count: Nullable<number>
-  following_count: Nullable<number>
 }
 
 export interface AddAccountRequestApi {

@@ -82,12 +82,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
                     'python_request' => ['endpoint' => $endpoint],
                 ],
                 responseSummary: $isSuccess ? [
-                    'followers_count' => $result['followers_count'] ?? null,
-                    'following_count' => $result['following_count'] ?? null,
                     'python_response' => [
-                        'http_code'       => $response->status(),
-                        'followers_count' => $result['followers_count'] ?? null,
-                        'following_count' => $result['following_count'] ?? null,
+                        'http_code' => $response->status(),
                     ],
                 ] : null,
                 errorMessage:    $isSuccess ? null : ($result['error'] ?? null),

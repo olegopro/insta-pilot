@@ -13,8 +13,6 @@ export interface InstagramAccount {
 
 export interface InstagramAccountDetailed extends InstagramAccount {
   userPk: Nullable<number>
-  followersCount: Nullable<number>
-  followingCount: Nullable<number>
 }
 
 export interface AddAccountRequest {

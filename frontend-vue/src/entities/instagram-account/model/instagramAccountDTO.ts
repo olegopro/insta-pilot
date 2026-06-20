@@ -28,9 +28,7 @@ class InstagramAccountDTO {
   toLocalDetailed(data: InstagramAccountDetailedApi): InstagramAccountDetailed {
     return {
       ...this.toLocal(data),
-      userPk: data.user_pk,
-      followersCount: data.followers_count,
-      followingCount: data.following_count
+      userPk: data.user_pk
     }
   }
 

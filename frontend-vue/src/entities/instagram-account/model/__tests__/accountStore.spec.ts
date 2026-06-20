@@ -26,9 +26,7 @@ const mockAccountApi: InstagramAccountApi = {
 
 const mockDetailedApi: InstagramAccountDetailedApi = {
   ...mockAccountApi,
-  user_pk:          12345,
-  followers_count:  500,
-  following_count:  200
+  user_pk: 12345
 }
 
 const mockDeviceProfile: DeviceProfileApi = {
@@ -118,8 +116,6 @@ describe('accountStore', () => {
 
     expect(store.accountDetail).not.toBeNull()
     expect(store.accountDetail?.userPk).toBe(12345)
-    expect(store.accountDetail?.followersCount).toBe(500)
-    expect(store.accountDetail?.followingCount).toBe(200)
   })
 
   it('fetchDeviceProfiles загружает профили устройств', async () => {
