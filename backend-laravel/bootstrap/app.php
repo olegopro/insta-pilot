@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+        // Phase 1D: $schedule->command('automation:dispatch')->everyMinute();
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,

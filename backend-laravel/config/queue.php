@@ -13,7 +13,10 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    // Фоновый воркер в docker-compose запущен как `queue:work redis`, поэтому
+    // dispatch и listen должны идти на один драйвер: default выровнен на `redis`
+    // (раньше fallback был `database` и расходился с воркером, если .env не задан).
+    'default' => env('QUEUE_CONNECTION', 'redis'),
 
     /*
     |--------------------------------------------------------------------------

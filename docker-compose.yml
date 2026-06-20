@@ -105,6 +105,38 @@ services:
       redis:
         condition: service_healthy
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/laravel/Dockerfile
+    command: php artisan schedule:work
+    volumes:
+      - ./backend-laravel:/var/www/html
+    env_file:
+      - ./backend-laravel/.env
+    depends_on:
+      laravel:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  # Выделенный воркер очереди `automation` — бот не конкурирует с GenerateCommentJob
+  # на default-воркере (queue-worker слушает только default).
+  automation-worker:
+    build:
+      context: .
+      dockerfile: docker/laravel/Dockerfile
+    command: php artisan queue:work redis --queue=automation --sleep=3 --tries=3 --timeout=90
+    volumes:
+      - ./backend-laravel:/var/www/html
+    env_file:
+      - ./backend-laravel/.env
+    depends_on:
+      laravel:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
   redis:
     image: redis:7-alpine
     ports:

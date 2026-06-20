@@ -19,7 +19,9 @@ class InstagramClientService implements InstagramClientServiceInterface {
         string $password,
         ?array $deviceProfile = null,
         ?int $accountId = null,
+        ?int $userId = null
     ): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/auth/login';
         $payload  = compact('login', 'password');
@@ -36,7 +38,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
         if ($accountId !== null) {
             $this->activityLogger->log(
                 accountId:       $accountId,
-                userId:          (int) auth()->id(),
+                userId:          $userId,
                 action:          'login',
                 status:          $isSuccess ? 'success' : $this->detectStatus($result),
                 httpCode:        $response->status(),
@@ -61,7 +63,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function getUserInfo(string $sessionData, ?int $accountId = null): array {
+    public function getUserInfo(string $sessionData, ?int $accountId = null, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/account/info';
 
@@ -73,7 +76,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
         if ($accountId !== null) {
             $this->activityLogger->log(
                 accountId:       $accountId,
-                userId:          (int) auth()->id(),
+                userId:          $userId,
                 action:          'fetch_user_info',
                 status:          $isSuccess ? 'success' : $this->detectStatus($result),
                 httpCode:        $response->status(),
@@ -97,7 +100,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function addLike(string $sessionData, string $mediaId, int $accountId): array {
+    public function addLike(string $sessionData, string $mediaId, int $accountId, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/media/like';
 
@@ -111,7 +115,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'like',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),
@@ -165,8 +169,10 @@ class InstagramClientService implements InstagramClientServiceInterface {
         ?string $maxId = null,
         ?string $seenPosts = null,
         ?string $reason = null,
-        ?int $minPosts = null
+        ?int $minPosts = null,
+        ?int $userId = null
     ): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/account/feed';
         $payload  = ['session_data' => $sessionData];
@@ -186,7 +192,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'fetch_feed',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),
@@ -234,7 +240,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function getUserInfoByPk(string $sessionData, string $userPk, int $accountId): array {
+    public function getUserInfoByPk(string $sessionData, string $userPk, int $accountId, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/user/info';
 
@@ -248,7 +255,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'fetch_user_info',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),
@@ -275,7 +282,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function searchHashtag(string $sessionData, int $accountId, string $hashtag, int $amount = 30, ?string $nextMaxId = null): array {
+    public function searchHashtag(string $sessionData, int $accountId, string $hashtag, int $amount = 30, ?string $nextMaxId = null, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/search/hashtag';
         $payload  = [
@@ -293,7 +301,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'search_hashtag',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),
@@ -341,7 +349,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function searchLocations(string $sessionData, int $accountId, string $query): array {
+    public function searchLocations(string $sessionData, int $accountId, string $query, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/search/locations';
 
@@ -355,7 +364,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'search_locations',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),
@@ -394,7 +403,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function searchLocationMedias(string $sessionData, int $accountId, int $locationPk, int $amount = 30, ?string $nextMaxId = null): array {
+    public function searchLocationMedias(string $sessionData, int $accountId, int $locationPk, int $amount = 30, ?string $nextMaxId = null, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/search/location';
         $payload  = [
@@ -412,7 +422,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'search_location_medias',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),
@@ -460,7 +470,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function commentMedia(string $sessionData, int $accountId, string $mediaId, string $text): array {
+    public function commentMedia(string $sessionData, int $accountId, string $mediaId, string $text, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/media/comment';
 
@@ -475,7 +486,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'comment',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),
@@ -510,7 +521,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function fetchMediaComments(string $sessionData, int $accountId, string $mediaPk, ?string $minId = null): array {
+    public function fetchMediaComments(string $sessionData, int $accountId, string $mediaPk, ?string $minId = null, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/media/comments';
         $payload  = ['session_data' => $sessionData, 'media_pk' => $mediaPk];
@@ -523,7 +535,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'fetch_comments',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),
@@ -549,7 +561,8 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
-    public function fetchCommentReplies(string $sessionData, int $accountId, string $mediaPk, string $commentPk, ?string $minId = null): array {
+    public function fetchCommentReplies(string $sessionData, int $accountId, string $mediaPk, string $commentPk, ?string $minId = null, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
         $start    = microtime(true);
         $endpoint = '/media/comments/replies';
         $payload  = ['session_data' => $sessionData, 'media_pk' => $mediaPk, 'comment_pk' => $commentPk];
@@ -562,7 +575,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
 
         $this->activityLogger->log(
             accountId:       $accountId,
-            userId:          (int) auth()->id(),
+            userId:          $userId,
             action:          'fetch_comment_replies',
             status:          $isSuccess ? 'success' : $this->detectStatus($result),
             httpCode:        $response->status(),

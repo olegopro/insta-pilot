@@ -4,16 +4,28 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Repositories\AccountLimitRepository;
+use App\Repositories\AccountLimitRepositoryInterface;
 use App\Repositories\ActivityLogRepository;
 use App\Repositories\ActivityLogRepositoryInterface;
+use App\Repositories\AutomationActionItemRepository;
+use App\Repositories\AutomationActionItemRepositoryInterface;
+use App\Repositories\AutomationTaskRepository;
+use App\Repositories\AutomationTaskRepositoryInterface;
 use App\Repositories\InstagramAccountRepository;
 use App\Repositories\InstagramAccountRepositoryInterface;
 use App\Repositories\LlmSettingsRepository;
 use App\Repositories\LlmSettingsRepositoryInterface;
 use App\Repositories\LlmSystemPromptRepository;
 use App\Repositories\LlmSystemPromptRepositoryInterface;
+use App\Repositories\ParsedTargetRepository;
+use App\Repositories\ParsedTargetRepositoryInterface;
+use App\Repositories\ParseRunRepository;
+use App\Repositories\ParseRunRepositoryInterface;
 use App\Repositories\UserRepository;
 use App\Repositories\UserRepositoryInterface;
+use App\Repositories\WorkingHoursRepository;
+use App\Repositories\WorkingHoursRepositoryInterface;
 use App\Services\ActivityLoggerService;
 use App\Services\ActivityLoggerServiceInterface;
 use App\Services\InstagramClientService;
@@ -72,6 +84,36 @@ class AppServiceProvider extends ServiceProvider {
         $this->app->bind(
             ActivityLogRepositoryInterface::class,
             ActivityLogRepository::class
+        );
+
+        $this->app->bind(
+            AutomationTaskRepositoryInterface::class,
+            AutomationTaskRepository::class
+        );
+
+        $this->app->bind(
+            ParseRunRepositoryInterface::class,
+            ParseRunRepository::class
+        );
+
+        $this->app->bind(
+            ParsedTargetRepositoryInterface::class,
+            ParsedTargetRepository::class
+        );
+
+        $this->app->bind(
+            AutomationActionItemRepositoryInterface::class,
+            AutomationActionItemRepository::class
+        );
+
+        $this->app->bind(
+            AccountLimitRepositoryInterface::class,
+            AccountLimitRepository::class
+        );
+
+        $this->app->bind(
+            WorkingHoursRepositoryInterface::class,
+            WorkingHoursRepository::class
         );
     }
 

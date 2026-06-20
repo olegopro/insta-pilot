@@ -105,6 +105,34 @@ spacing Kiro (на одном аккаунте вызовы сериализую
 
 ---
 
+# Блок «Автоматизация/Бот» (в разработке)
+
+Парсер целей (хэштег/гео + комбо-фильтры аккаунта и контента) + переиспользуемый движок действий
+(комментарий — MVP; лайк/подписка/отписка — позже) с распределением во времени, дневными лимитами и
+рабочими часами на аккаунт. Два режима: полу-ручной (парсинг → корзина → старт) и полностью авто.
+
+Источник истины по архитектуре — проектные документы в корне:
+- `AUTOMATION-ARCHITECTURE.md` — все слои, 9 таблиц, контракты, разрешённые конфликты, дефолты.
+- `AUTOMATION-PLAN.md` — поэтапный план (Phase 0 → MVP «комментарии хэштег/гео полу-ручной» → …).
+- `ORCHESTRATION-RETROSPECTIVE.md` — ретро мультиагентных прогонов (аналитика для настройки VibeProxy).
+
+Канонические решения (НЕ нарушать при доработке): учёт дневных лимитов — таблица-счётчик
+`account_action_counters` + `SELECT … FOR UPDATE` (НЕ COUNT по логам); распределение — БД-строки
+`automation_action_items.run_at` + диспетчер `schedule()->everyMinute()` (НЕ delay()-jobs);
+идемпотентность — UNIQUE(`instagram_account_id`,`action_type`,`media_pk`) + CAS-claim + reconcile;
+единый TZ на аккаунт (`account_working_hours.timezone`) для окна и границы суток лимита; методы
+`InstagramClientService` — auth-context-free (явный `?int $userId`).
+
+Статус сборки: **Wave 1 (фундамент) готов** — 9 таблиц (`parse_filter_presets`, `parse_runs`,
+`parsed_targets`, `automation_tasks`, `automation_action_items`, `account_action_limits`,
+`account_action_counters`, `account_working_hours`, `account_target_interactions`) + модели +
+репозитории; Phase 0 инфра (контейнеры `scheduler` и `automation-worker`, очередь `automation`,
+auth-context-free `InstagramClientService`). Дальше: Wave 2 — логика парсинга/движка (Python +
+Laravel); Wave 3 — фронтенд (FSD-слайсы). TODO Phase 1D: `retry_after` очереди `automation` >
+timeout `ExecuteActionItemJob` (сейчас дефолт `90==90`).
+
+---
+
 # Backend — Laravel 13
 
 ## Документация
