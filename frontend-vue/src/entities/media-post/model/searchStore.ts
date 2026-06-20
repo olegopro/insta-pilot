@@ -4,7 +4,7 @@ import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { Nullable } from '@/shared/lib'
 import type { MediaPost, Location } from '@/entities/media-post/model/types'
-import type { SearchResponseApi, SearchLocationsResponseApi, SendCommentResponseApi } from '@/entities/media-post/model/apiTypes'
+import type { SearchResponseApi, SearchLocationsResponseApi } from '@/entities/media-post/model/apiTypes'
 import mediaPostDTO from '@/entities/media-post/model/mediaPostDTO'
 
 export const useSearchStore = defineStore('search', () => {
@@ -54,11 +54,6 @@ export const useSearchStore = defineStore('search', () => {
       }).then((response) => response.data)
   )
 
-  const sendCommentApi = useApi<ApiResponseWrapper<SendCommentResponseApi>, { mediaId: string; accountId: number; text: string }>(
-    ({ mediaId, accountId, text }) =>
-      api.post(`/media/${mediaId}/comment`, { account_id: accountId, text }).then((response) => response.data)
-  )
-
   const clearResults = () => {
     searchResults.value = []
     searchCursor.value = null
@@ -106,14 +101,10 @@ export const useSearchStore = defineStore('search', () => {
     searchCursor.value = data.next_max_id ?? null
   }
 
-  const sendComment = (mediaId: string, accountId: number, text: string) =>
-    sendCommentApi.execute({ mediaId, accountId, text })
-
   const canLoadMore = computed(() => searchResults.value.length > 0 && searchCursor.value !== null)
   const searchLoading = computed(() => searchHashtagApi.loading.value || fetchLocationMediasApi.loading.value)
   const loadMoreLoading = computed(() => loadMoreHashtagApi.loading.value || loadMoreLocationMediasApi.loading.value)
   const locationsLoading = computed(() => fetchLocationsApi.loading.value)
-  const sendCommentLoading = computed(() => sendCommentApi.loading.value)
 
   const cancelSearch = () => searchHashtagApi.abort()
   const cancelSearchLoadMore = () => loadMoreHashtagApi.abort()
@@ -134,11 +125,9 @@ export const useSearchStore = defineStore('search', () => {
     fetchLocations,
     fetchLocationMedias,
     loadMoreLocationMedias,
-    sendComment,
     searchLoading,
     loadMoreLoading,
     locationsLoading,
-    sendCommentLoading,
     cancelSearch,
     cancelSearchLoadMore,
     cancelLocationSearch,

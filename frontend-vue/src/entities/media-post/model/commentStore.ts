@@ -5,7 +5,7 @@ import { api } from '@/boot/axios'
 import { useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { Nullable } from '@/shared/lib'
 import type { PostComment } from '@/entities/media-post/model/types'
-import type { FetchCommentsResponseApi, FetchCommentRepliesResponseApi } from '@/entities/media-post/model/apiTypes'
+import type { FetchCommentsResponseApi, FetchCommentRepliesResponseApi, SendCommentResponseApi } from '@/entities/media-post/model/apiTypes'
 import mediaPostDTO from '@/entities/media-post/model/mediaPostDTO'
 
 export const useCommentStore = defineStore('comments', () => {
@@ -37,6 +37,11 @@ export const useCommentStore = defineStore('comments', () => {
       }).then((response) => response.data)
   )
 
+  const sendCommentApi = useApi<ApiResponseWrapper<SendCommentResponseApi>, { mediaId: string; accountId: number; text: string }>(
+    ({ mediaId, accountId, text }) =>
+      api.post(`/media/${mediaId}/comment`, { account_id: accountId, text }).then((response) => response.data)
+  )
+
   const fetchComments = async (accountId: number, mediaPk: string) => {
     comments.value = []
     commentsCursor.value = null
@@ -56,6 +61,10 @@ export const useCommentStore = defineStore('comments', () => {
   }
   const loadMoreLoading = computed(() => loadMoreCommentsApi.loading.value)
   const canLoadMore = computed(() => commentsCursor.value !== null)
+
+  const sendComment = (mediaId: string, accountId: number, text: string) =>
+    sendCommentApi.execute({ mediaId, accountId, text })
+  const sendCommentLoading = computed(() => sendCommentApi.loading.value)
 
   const fetchReplies = async (accountId: number, mediaPk: string, commentPk: string) => {
     const comment = comments.value.find((foundComment) => foundComment.pk === commentPk)
@@ -88,6 +97,8 @@ export const useCommentStore = defineStore('comments', () => {
     loadMoreComments,
     loadMoreLoading,
     canLoadMore,
+    sendComment,
+    sendCommentLoading,
     fetchReplies,
     cancelFetch,
     clearComments

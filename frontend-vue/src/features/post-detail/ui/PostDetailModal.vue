@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
   import type { MediaPost } from '@/entities/media-post'
-  import { useSearchStore, useCommentStore, MEDIA_TYPE } from '@/entities/media-post'
+  import { useCommentStore, MEDIA_TYPE } from '@/entities/media-post'
   import CommentList from '@/features/post-detail/ui/CommentList.vue'
   import { formatCount, formatDate, notifyError, notifySuccess } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
@@ -26,7 +26,6 @@
 
   const isOpen = defineModel<boolean>({ default: false })
 
-  const searchStore = useSearchStore()
   const commentStore = useCommentStore()
   const commentText = ref('')
   const carouselSlide = ref(0)
@@ -61,7 +60,7 @@
   const sendCommentHandler = async () => {
     if (!commentText.value.trim() || !props.accountId) return
     try {
-      await searchStore.sendComment(props.post.id, props.accountId, commentText.value.trim())
+      await commentStore.sendComment(props.post.id, props.accountId, commentText.value.trim())
       notifySuccess('Комментарий отправлен')
       commentText.value = ''
     } catch {
@@ -206,7 +205,7 @@
                 label="Отправить"
                 icon="send"
                 color="primary"
-                :loading="searchStore.sendCommentLoading"
+                :loading="commentStore.sendCommentLoading"
                 :disable="!commentText.trim()"
                 @click="sendCommentHandler"
               />

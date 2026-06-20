@@ -4,8 +4,7 @@ import type { MediaPostApi, SearchResponseApi, SearchLocationsResponseApi, Locat
 
 vi.mock('@/boot/axios', () => ({
   api: {
-    get:  vi.fn(),
-    post: vi.fn()
+    get: vi.fn()
   }
 }))
 
@@ -139,18 +138,6 @@ describe('searchStore', () => {
     expect(store.searchResults).toHaveLength(2)
   })
 
-  it('sendComment вызывает POST /media/{mediaId}/comment', async () => {
-    vi.mocked(api.post).mockResolvedValueOnce(wrapResponse({ comment_pk: 'pk-1' }))
-
-    const store = useSearchStore()
-    await store.sendComment('media123', 1, 'Hello!')
-
-    expect(api.post).toHaveBeenCalledWith(
-      '/media/media123/comment',
-      expect.objectContaining({ text: 'Hello!' })
-    )
-  })
-
   it('геттеры в начальном состоянии: searchLoading=false, canLoadMore=false при пустых результатах', () => {
     const store = useSearchStore()
     expect(store.searchLoading).toBe(false)
@@ -193,20 +180,12 @@ describe('searchStore', () => {
       },
       act:            (store: ReturnType<typeof useSearchStore>) => store.loadMoreLocationMedias(1, 1001),
       expectedLength: 1
-    },
-    {
-      name:           'sendComment',
-      act:            (store: ReturnType<typeof useSearchStore>) => store.sendComment('media123', 1, 'Hello!'),
-      expectedLength: 0,
-      usePost:        true
     }
-  ])('$name при ошибке бросает исключение и сохраняет инвариант state', async ({ setup, act, expectedLength, checkLocations, usePost }) => {
+  ])('$name при ошибке бросает исключение и сохраняет инвариант state', async ({ setup, act, expectedLength, checkLocations }) => {
     const store = useSearchStore()
     await setup?.(store)
 
-    usePost
-      ? vi.mocked(api.post).mockRejectedValueOnce(new Error('Network error'))
-      : vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
 
     await expect(act(store)).rejects.toThrow()
 

@@ -5,7 +5,8 @@ import type { CommentApi, FetchCommentsResponseApi, FetchCommentRepliesResponseA
 
 vi.mock('@/boot/axios', () => ({
   api: {
-    get: vi.fn()
+    get:  vi.fn(),
+    post: vi.fn()
   }
 }))
 
@@ -107,9 +108,22 @@ describe('commentStore', () => {
     expect(comment.childComments[0]!.pk).toBe('r1')
   })
 
-  it('геттеры в начальном состоянии: commentsLoading=false', () => {
+  it('sendComment вызывает POST /media/{mediaId}/comment', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce(wrapResponse({ comment_pk: 'pk-1' }))
+
+    const store = useCommentStore()
+    await store.sendComment('media123', 1, 'Hello!')
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/media/media123/comment',
+      expect.objectContaining({ text: 'Hello!' })
+    )
+  })
+
+  it('геттеры в начальном состоянии: commentsLoading=false, sendCommentLoading=false', () => {
     const store = useCommentStore()
     expect(store.commentsLoading).toBe(false)
+    expect(store.sendCommentLoading).toBe(false)
   })
 
   it.each([
@@ -135,12 +149,20 @@ describe('commentStore', () => {
       },
       act:            (store: ReturnType<typeof useCommentStore>) => store.fetchReplies(1, 'media123', 'c1'),
       expectedLength: 1
+    },
+    {
+      name:           'sendComment',
+      act:            (store: ReturnType<typeof useCommentStore>) => store.sendComment('media123', 1, 'Hello!'),
+      expectedLength: 0,
+      usePost:        true
     }
-  ])('$name при ошибке бросает исключение и сохраняет инвариант state', async ({ setup, act, expectedLength }) => {
+  ])('$name при ошибке бросает исключение и сохраняет инвариант state', async ({ setup, act, expectedLength, usePost }) => {
     const store = useCommentStore()
     await setup?.(store)
 
-    vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
+    usePost
+      ? vi.mocked(api.post).mockRejectedValueOnce(new Error('Network error'))
+      : vi.mocked(api.get).mockRejectedValueOnce(new Error('Network error'))
 
     await expect(act(store)).rejects.toThrow()
     expect(store.comments).toHaveLength(expectedLength)
