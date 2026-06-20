@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 use App\Models\InstagramAccount;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Cache;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('comment-generation.{jobId}', function () {
-    return true;
+Broadcast::channel('comment-generation.{jobId}', function ($user, string $jobId) {
+    // Владелец job пишется в кэш контроллером синхронно до dispatch (см. CommentGenerateController)
+    $ownerId = Cache::get("comment-job-owner:{$jobId}");
+
+    return $ownerId !== null && (int) $ownerId === (int) $user->id;
 });
 
 Broadcast::channel('account-activity.{accountId}', function ($user, $accountId) {

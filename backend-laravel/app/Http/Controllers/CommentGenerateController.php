@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Jobs\GenerateCommentJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 final class CommentGenerateController extends Controller {
@@ -17,14 +18,19 @@ final class CommentGenerateController extends Controller {
             'account_id'   => 'nullable|integer',
         ]);
 
-        $jobId = (string) Str::uuid();
+        $jobId  = (string) Str::uuid();
+        $userId = $request->user()?->id;
+
+        // Привязываем job к владельцу ДО dispatch и до ответа клиенту — иначе гонка с
+        // /broadcasting/auth (клиент подпишется на канал раньше, чем появится маппинг). TTL с запасом.
+        $userId !== null && Cache::put("comment-job-owner:{$jobId}", $userId, now()->addMinutes(30));
 
         GenerateCommentJob::dispatch(
             $jobId,
             $request->input('image_url'),
             $request->input('caption_text'),
             $request->input('account_id') ? (int) $request->input('account_id') : null,
-            $request->user()?->id,
+            $userId,
         );
 
         return response()->json([
