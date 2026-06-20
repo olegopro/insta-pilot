@@ -20,4 +20,21 @@ interface ActivityLoggerServiceInterface {
         ?string $errorCode = null,
         ?int $durationMs = null,
     ): AccountActivityLog;
+
+    /**
+     * @param array<int, array{
+     *     action: string,
+     *     status: string,
+     *     http_code?: int|null,
+     *     endpoint?: string|null,
+     *     request_payload?: array<string, mixed>|null,
+     *     response_summary?: array<string, mixed>|null
+     * }> $entries
+     * @return AccountActivityLog[]
+     */
+    public function logBatch(
+        int $accountId,
+        int $userId,
+        array $entries,
+    ): array;
 }

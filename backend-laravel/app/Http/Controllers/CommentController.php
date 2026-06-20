@@ -43,7 +43,11 @@ final class CommentController extends Controller {
             return response()->json(['success' => false, 'error' => $result['error'] ?? 'Ошибка загрузки комментариев'], 422);
         }
 
-        return response()->json(['success' => true, 'data' => $result]);
+        return response()->json([
+            'success' => true,
+            'data'    => $result,
+            'message' => 'Комментарии загружены'
+        ]);
     }
 
     public function replies(Request $request): JsonResponse {
@@ -76,7 +80,11 @@ final class CommentController extends Controller {
             return response()->json(['success' => false, 'error' => $result['error'] ?? 'Ошибка загрузки ответов'], 422);
         }
 
-        return response()->json(['success' => true, 'data' => $result]);
+        return response()->json([
+            'success' => true,
+            'data'    => $result,
+            'message' => 'Ответы загружены'
+        ]);
     }
 
     public function store(string $mediaId, Request $request): JsonResponse {

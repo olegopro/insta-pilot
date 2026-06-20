@@ -92,10 +92,20 @@ class ActivityLogRepository implements ActivityLogRepositoryInterface {
     public function getStatsByAccount(int $accountId): array {
         $base = AccountActivityLog::where('instagram_account_id', $accountId);
 
-        $total = $base->count();
-        $today = (clone $base)->whereDate('created_at', today())->count();
-        $successCount = (clone $base)->where('status', 'success')->count();
+        // 4 скаляра одним рядом: диапазон created_at кросс-СУБД (sqlite+Postgres);
+        // avg(duration_ms) сам игнорирует NULL — как прежний whereNotNull->avg
+        $aggregates = (clone $base)
+            ->selectRaw('count(*) as total')
+            ->selectRaw('sum(case when created_at >= ? then 1 else 0 end) as today', [today()->toDateTimeString()])
+            ->selectRaw("sum(case when status = 'success' then 1 else 0 end) as success_count")
+            ->selectRaw('avg(duration_ms) as avg_duration')
+            ->first();
+
+        $total = (int) $aggregates->total;
+        $today = (int) $aggregates->today;
+        $successCount = (int) $aggregates->success_count;
         $successRate = $total > 0 ? round($successCount / $total * 100, 1) : 0.0;
+        $avgDuration = (int) ($aggregates->avg_duration ?? 0);
 
         $byAction = (clone $base)
             ->select('action', DB::raw('count(*) as total'))
@@ -117,8 +127,6 @@ class ActivityLogRepository implements ActivityLogRepositoryInterface {
             ->pluck('count', 'status')
             ->map(static fn ($count) => (int) $count)
             ->toArray();
-
-        $avgDuration = (int) ((clone $base)->whereNotNull('duration_ms')->avg('duration_ms') ?? 0);
 
         $lastError = (clone $base)
             ->where('status', '!=', 'success')

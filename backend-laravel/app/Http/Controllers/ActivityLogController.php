@@ -15,7 +15,11 @@ final class ActivityLogController extends Controller {
     ) {}
 
     public function index(Request $request, int $accountId): JsonResponse {
-        $account = InstagramAccount::findOrFail($accountId);
+        $account = InstagramAccount::find($accountId);
+
+        if ($account === null) {
+            return response()->json(['success' => false, 'error' => 'Аккаунт не найден'], 404);
+        }
 
         if (!auth()->user()->hasRole('admin') && $account->user_id !== auth()->id()) {
             return response()->json(['success' => false, 'error' => 'Доступ запрещён'], 403);
@@ -50,7 +54,11 @@ final class ActivityLogController extends Controller {
     }
 
     public function stats(int $accountId): JsonResponse {
-        $account = InstagramAccount::findOrFail($accountId);
+        $account = InstagramAccount::find($accountId);
+
+        if ($account === null) {
+            return response()->json(['success' => false, 'error' => 'Аккаунт не найден'], 404);
+        }
 
         if (!auth()->user()->hasRole('admin') && $account->user_id !== auth()->id()) {
             return response()->json(['success' => false, 'error' => 'Доступ запрещён'], 403);
