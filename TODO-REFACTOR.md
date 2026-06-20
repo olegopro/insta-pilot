@@ -15,6 +15,19 @@
 
 ---
 
+## Статус прохода (2026-06-20, ветка `refactor/todo-sweep`)
+
+**Section 2 (актуальный рефактор) выполнен полностью** — 13 коммитов, распределённая сборка
+(VibeProxy: Opus/Sonnet/GLM + Codex дают черновики/применяют, интеграция и верификация — главной моделью):
+M1, M3, M4, M5, M6, M7, M8, S1 (было done), S2, S3, S4, S5, S6, S7, S8, N1, N2, N3, N4, N5, N6, EXTRA.
+Гейты зелёные: BE **231 passed**, FE **284 passed** (tsc/eslint чисто, кроме предсуществующей
+`quasar.config.ts`), PY **165 passed**; smoke в Chrome — приложение грузится на чистом `/`, console чист.
+
+**Осталось (backlog, отдельными волнами, см. §3):** M2 (proxy end-to-end), B1 (cookie-auth),
+B3 (retry/backoff), B5 (eviction client cache), B7 (CRUD/product).
+
+---
+
 ## 0. Сводная таблица
 
 | ID | Тема | Статус | Объём | Параллельно? | Шов-файл |
