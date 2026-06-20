@@ -52,26 +52,4 @@ describe('axios api', () => {
 
     expect(localStorage.getItem('token')).toBeNull()
   })
-
-  it('response interceptor при 401 на /auth/login НЕ удаляет токен', () => {
-    localStorage.setItem('token', 'old-token')
-
-    type ResponseHandler = { rejected: (err: unknown) => unknown } | null
-    const responseHandlers = (api.interceptors.response as unknown as { handlers: ResponseHandler[] }).handlers
-    const handler = responseHandlers.find((handlerItem): handlerItem is NonNullable<typeof handlerItem> => handlerItem !== null)
-    if (!handler) return
-
-    const error = {
-      config: { url: '/auth/login' },
-      response: { status: 401 }
-    }
-
-    try {
-      handler.rejected(error)
-    } catch {
-      // ожидаемое поведение — interceptor выбрасывает ошибку
-    }
-
-    expect(localStorage.getItem('token')).toBe('old-token')
-  })
 })

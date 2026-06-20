@@ -19,10 +19,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isAuthLogin = (error.config?.url as string | undefined)?.includes('/auth/login')
-    if (error.response?.status === 401 && !isAuthLogin) {
+    // 401 теперь означает только невалидный/протухший токен Sanctum
+    // (неверный пароль логина отдаёт 422). history mode — чистый путь, без hash.
+    if (error.response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.href = '/#/login'
+      window.location.href = '/login'
     }
     throw error
   }

@@ -39,7 +39,7 @@ final class AuthController extends Controller {
             return response()->json([
                 'success' => false,
                 'error'   => 'Неверный email или пароль',
-            ], 401);
+            ], 422);
         }
 
         /** @var User $user */
