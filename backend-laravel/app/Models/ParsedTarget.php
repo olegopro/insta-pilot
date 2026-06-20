@@ -30,6 +30,7 @@ class ParsedTarget extends Model {
         'media_like_count',
         'media_comment_count',
         'media_taken_at',
+        'media_thumbnail_url',
         'metrics_snapshot',
         'status'
     ];

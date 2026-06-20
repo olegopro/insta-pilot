@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AutomationSettingsController;
+use App\Http\Controllers\AutomationTaskController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentGenerateController;
 use App\Http\Controllers\FeedController;
@@ -73,6 +75,28 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
 
     // Comment generation (LLM + WebSocket)
     Route::post('/comments/generate', [CommentGenerateController::class, 'generate']);
+
+    // Automation
+    Route::prefix('automation')->group(function () {
+        Route::get('/', [AutomationTaskController::class, 'index']);
+        Route::post('/', [AutomationTaskController::class, 'store']);
+        Route::get('/{id}', [AutomationTaskController::class, 'show']);
+        Route::post('/{id}/parse-targets', [AutomationTaskController::class, 'parseTargets']);
+        Route::get('/{id}/targets', [AutomationTaskController::class, 'targets']);
+        Route::patch('/{id}/targets/{targetId}/exclude', [AutomationTaskController::class, 'excludeTarget']);
+        Route::patch('/{id}/targets/{targetId}/restore', [AutomationTaskController::class, 'restoreTarget']);
+        Route::post('/{id}/start', [AutomationTaskController::class, 'start']);
+        Route::post('/{id}/pause', [AutomationTaskController::class, 'pause']);
+        Route::post('/{id}/resume', [AutomationTaskController::class, 'resume']);
+        Route::post('/{id}/cancel', [AutomationTaskController::class, 'cancel']);
+    });
+
+    // Automation settings (per account)
+    Route::prefix('accounts/{accountId}/automation-settings')->group(function () {
+        Route::get('/', [AutomationSettingsController::class, 'show']);
+        Route::put('/limits', [AutomationSettingsController::class, 'updateLimits']);
+        Route::put('/working-hours', [AutomationSettingsController::class, 'updateWorkingHours']);
+    });
 
     // Activity logs
     Route::prefix('accounts/{accountId}/activity')->group(function () {

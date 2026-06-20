@@ -24,4 +24,6 @@ interface InstagramClientServiceInterface {
     public function commentMedia(string $sessionData, int $accountId, string $mediaId, string $text, ?int $userId = null): array;
     public function fetchMediaComments(string $sessionData, int $accountId, string $mediaPk, ?string $minId = null, ?int $userId = null): array;
     public function fetchCommentReplies(string $sessionData, int $accountId, string $mediaPk, string $commentPk, ?string $minId = null, ?int $userId = null): array;
+    public function parseTargetsCandidates(array $params, ?int $userId = null): array;
+    public function parseTargetsEnrich(array $params, ?int $userId = null): array;
 }

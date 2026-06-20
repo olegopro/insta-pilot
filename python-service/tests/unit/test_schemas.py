@@ -16,6 +16,10 @@ from schemas import (
     LoginRequest,
     LoginResponse,
     MediaLikeRequest,
+    ParseCandidatesRequest,
+    ParseCandidatesResponse,
+    ParseEnrichRequest,
+    ParseEnrichResponse,
     SearchHashtagRequest,
     SearchLocationRequest,
     SearchLocationsRequest,
@@ -191,6 +195,30 @@ class TestUserInfoByPkRequest:
         assert req.user_pk == "123456"
 
 
+class TestParseCandidatesRequest:
+    def test_requires_source_type(self):
+        with pytest.raises(ValidationError):
+            ParseCandidatesRequest(session_data='{}')
+
+    def test_defaults(self):
+        req = ParseCandidatesRequest(session_data='{}', source_type="hashtag", query="nature")
+        assert req.amount == 30
+        assert req.hashtags is None
+        assert req.location_pk is None
+        assert req.next_max_id is None
+
+
+class TestParseEnrichRequest:
+    def test_requires_targets(self):
+        with pytest.raises(ValidationError):
+            ParseEnrichRequest(session_data='{}')
+
+    def test_defaults(self):
+        req = ParseEnrichRequest(session_data='{}', targets=[{"user_pk": "123"}])
+        assert req.last_n == 6
+        assert req.include_user_media is True
+
+
 class TestResponseSchemas:
     def test_login_response_requires_success(self):
         with pytest.raises(ValidationError):
@@ -223,3 +251,13 @@ class TestResponseSchemas:
     def test_comment_response_success(self):
         resp = CommentResponse(success=True, comment_pk="12345")
         assert resp.comment_pk == "12345"
+
+    def test_parse_candidates_response_defaults(self):
+        resp = ParseCandidatesResponse(success=True)
+        assert resp.candidates == []
+        assert resp.next_max_id is None
+
+    def test_parse_enrich_response_defaults(self):
+        resp = ParseEnrichResponse(success=True)
+        assert resp.targets == []
+        assert resp.errors == []

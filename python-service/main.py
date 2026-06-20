@@ -24,8 +24,10 @@ insta-pilot — Python FastAPI service.
 """
 
 import asyncio
+import datetime
 import json
 import logging
+from typing import Optional
 from urllib.parse import quote
 
 from fastapi import FastAPI
@@ -34,11 +36,15 @@ from instagrapi import Client
 
 from client import _make_client
 from helpers import (
+    _compute_target_metrics,
+    _dedup_candidates_by_author,
     _extract_posts,
+    _fetch_user_medias_raw,
     _fetch_sections,
     _instagram_response_debug,
     _paginate_feed,
     _serialize_comment,
+    _serialize_target_user,
 )
 from lock import account_lock
 from schemas import (
@@ -55,6 +61,10 @@ from schemas import (
     LoginResponse,
     MediaLikeRequest,
     MediaLikeResponse,
+    ParseCandidatesRequest,
+    ParseCandidatesResponse,
+    ParseEnrichRequest,
+    ParseEnrichResponse,
     SearchHashtagRequest,
     SearchLocationRequest,
     SearchLocationsRequest,
@@ -581,6 +591,205 @@ async def search_location_medias(data: SearchLocationRequest):
         }
 
         return SearchResponse(success=True, items=items, next_max_id=cursor, debug_info=debug_info)
+
+    async with account_lock(data.session_data):
+        return await asyncio.to_thread(_run)
+
+
+# ─── Parse targets ────────────────────────────────────────────────────────────
+
+@app.post("/parse/targets/candidates", response_model=ParseCandidatesResponse)
+async def parse_targets_candidates(data: ParseCandidatesRequest):
+    """
+    Собирает уникальных авторов из источника без user_info и user_medias.
+
+    Стоимость: один Instagram-запрос на страницу источника. Для hashtag_list
+    теги перебираются последовательно, пока не достигнут amount или список не
+    закончится.
+    """
+    def _hashtag_posts(cl: Client, hashtag: str, cursor: Optional[str], amount: Optional[int]):
+        base_data = {
+            "media_recency_filter": "top_recent_posts",
+            "_uuid": cl.uuid,
+            "include_persistent": "false",
+            "rank_token": cl.rank_token,
+        }
+        endpoint = f"tags/{quote(hashtag, safe='')}/sections/"
+        return _fetch_sections(cl, endpoint, base_data, cursor, amount, with_signature=False)
+
+    def _location_posts(cl: Client, location_pk: int, cursor: Optional[str], amount: Optional[int]):
+        base_data = {
+            "_uuid": cl.uuid,
+            "session_id": cl.client_session_id,
+            "tab": "recent",
+        }
+        endpoint = f"locations/{location_pk}/sections/"
+        return _fetch_sections(cl, endpoint, base_data, cursor, amount)
+
+    def _run():
+        cl = _make_client(data.session_data)
+        amount = max(min(data.amount, 90), 1)
+        candidates = []
+        seen_pks: set[str] = set()
+        next_cursor = None
+        request_debug = {
+            "source_type": data.source_type,
+            "amount": amount,
+            "is_pagination": bool(data.next_max_id),
+        }
+
+        if data.source_type == "hashtag":
+            hashtag = data.query or (data.hashtags or [None])[0]
+            if not hashtag:
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": "query or hashtags[0] is required", "error_code": "validation_error"},
+                )
+
+            posts, next_cursor = _hashtag_posts(cl, hashtag, data.next_max_id, amount if not data.next_max_id else None)
+            candidates = _dedup_candidates_by_author(posts, seen_pks)
+            request_debug["hashtag"] = hashtag
+
+        elif data.source_type == "hashtag_list":
+            hashtags = data.hashtags or []
+            if not hashtags:
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": "hashtags is required", "error_code": "validation_error"},
+                )
+
+            cursor_by_hashtag = {}
+            if data.next_max_id:
+                try:
+                    cursor_by_hashtag = json.loads(data.next_max_id).get("hashtag_cursors", {})
+                except (TypeError, ValueError, AttributeError):
+                    cursor_by_hashtag = {}
+
+            next_cursors = {}
+            for hashtag in hashtags:
+                remaining = amount - len(candidates)
+                if remaining <= 0:
+                    break
+
+                posts, cursor = _hashtag_posts(
+                    cl,
+                    hashtag,
+                    cursor_by_hashtag.get(hashtag),
+                    remaining,
+                )
+                candidates.extend(_dedup_candidates_by_author(posts, seen_pks))
+                if cursor:
+                    next_cursors[hashtag] = cursor
+
+            next_cursor = json.dumps({"hashtag_cursors": next_cursors}) if next_cursors else None
+            request_debug["hashtags"] = hashtags
+
+        elif data.source_type == "location":
+            if data.location_pk is None:
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": "location_pk is required", "error_code": "validation_error"},
+                )
+
+            posts, next_cursor = _location_posts(
+                cl,
+                data.location_pk,
+                data.next_max_id,
+                amount if not data.next_max_id else None,
+            )
+            candidates = _dedup_candidates_by_author(posts, seen_pks)
+            request_debug["location_pk"] = data.location_pk
+
+        else:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "unsupported source_type", "error_code": "validation_error"},
+            )
+
+        debug_info = {
+            "instagram_request": request_debug,
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+
+        return ParseCandidatesResponse(
+            success=True,
+            candidates=candidates[:amount],
+            next_max_id=next_cursor,
+            debug_info=debug_info,
+        )
+
+    async with account_lock(data.session_data):
+        return await asyncio.to_thread(_run)
+
+
+@app.post("/parse/targets/enrich", response_model=ParseEnrichResponse)
+async def parse_targets_enrich(data: ParseEnrichRequest):
+    """
+    Обогащает цели user_info и опционально последними медиа с агрегатами.
+
+    Ошибка по одной цели записывается в errors и не прерывает обработку
+    остальных целей в batch.
+    """
+    def _run():
+        cl = _make_client(data.session_data)
+        targets = data.targets[:20]
+        allowed_last_n = (5, 6, 10, 12)
+        last_n = next((value for value in allowed_last_n if data.last_n <= value), 12)
+        enriched = []
+        errors = []
+        now = datetime.datetime.now(datetime.timezone.utc)
+
+        for target in targets:
+            user_pk = str(target.get("user_pk") or target.get("pk") or "")
+            if not user_pk:
+                errors.append({
+                    "user_pk": None,
+                    "error": "user_pk is required",
+                    "error_code": "validation_error",
+                })
+                continue
+
+            try:
+                user = cl.user_info(int(user_pk))
+                serialized_user = _serialize_target_user(user)
+                medias = []
+                metrics = _compute_target_metrics([], now)
+
+                if data.include_user_media:
+                    medias = _fetch_user_medias_raw(cl, user_pk, last_n)
+                    metrics = _compute_target_metrics(medias, now)
+
+                enriched.append({
+                    **target,
+                    "user_pk": user_pk,
+                    "user": serialized_user,
+                    "metrics": metrics,
+                    "medias": medias if data.include_user_media else [],
+                })
+            except Exception as exc:
+                errors.append({
+                    "user_pk": user_pk,
+                    "error": str(exc),
+                    "error_code": error_to_code(exc),
+                })
+
+        debug_info = {
+            "instagram_request": {
+                "method": "user_info + feed/user/{pk}/",
+                "targets_requested": len(data.targets),
+                "targets_processed": len(targets),
+                "last_n": last_n,
+                "include_user_media": data.include_user_media,
+            },
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+
+        return ParseEnrichResponse(
+            success=True,
+            targets=enriched,
+            errors=errors,
+            debug_info=debug_info,
+        )
 
     async with account_lock(data.session_data):
         return await asyncio.to_thread(_run)

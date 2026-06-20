@@ -598,6 +598,113 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
+    public function parseTargetsCandidates(array $params, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
+        $accountId = isset($params['account_id']) ? (int) $params['account_id'] : null;
+        $start     = microtime(true);
+        $endpoint  = '/parse/targets/candidates';
+
+        $payload = $params;
+        unset($payload['account_id']);
+
+        $response   = Http::timeout(120)->post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        if ($accountId !== null) {
+            $this->activityLogger->log(
+                accountId:       $accountId,
+                userId:          $userId,
+                action:          'parse_candidates',
+                status:          $isSuccess ? 'success' : $this->detectStatus($result),
+                httpCode:        $response->status(),
+                endpoint:        $endpoint,
+                requestPayload:  [
+                    'source_type'       => $payload['source_type'] ?? null,
+                    'amount'            => $payload['amount'] ?? null,
+                    'python_request'    => [
+                        'endpoint'    => $endpoint,
+                        'source_type' => $payload['source_type'] ?? null,
+                        'amount'      => $payload['amount'] ?? null,
+                        'next_max_id' => $payload['next_max_id'] ?? null,
+                    ],
+                    'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+                ],
+                responseSummary: $isSuccess ? [
+                    'candidates_count'   => count($result['candidates'] ?? []),
+                    'has_more'           => ($result['next_max_id'] ?? null) !== null,
+                    'python_response'    => [
+                        'http_code'        => $response->status(),
+                        'candidates_count' => count($result['candidates'] ?? []),
+                    ],
+                    'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+                ] : null,
+                errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+                errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+                durationMs:      $durationMs,
+            );
+        }
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
+        return $result;
+    }
+
+    public function parseTargetsEnrich(array $params, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
+        $accountId = isset($params['account_id']) ? (int) $params['account_id'] : null;
+        $start     = microtime(true);
+        $endpoint  = '/parse/targets/enrich';
+
+        $payload = $params;
+        unset($payload['account_id']);
+
+        $response   = Http::timeout(120)->post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        if ($accountId !== null) {
+            $this->activityLogger->log(
+                accountId:       $accountId,
+                userId:          $userId,
+                action:          'parse_enrich',
+                status:          $isSuccess ? 'success' : $this->detectStatus($result),
+                httpCode:        $response->status(),
+                endpoint:        $endpoint,
+                requestPayload:  [
+                    'targets_count'     => count($payload['targets'] ?? []),
+                    'last_n'            => $payload['last_n'] ?? null,
+                    'python_request'    => [
+                        'endpoint'           => $endpoint,
+                        'targets_count'      => count($payload['targets'] ?? []),
+                        'last_n'             => $payload['last_n'] ?? null,
+                        'include_user_media' => $payload['include_user_media'] ?? null,
+                    ],
+                    'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+                ],
+                responseSummary: $isSuccess ? [
+                    'enriched_count'     => count($result['targets'] ?? []),
+                    'errors_count'       => count($result['errors'] ?? []),
+                    'python_response'    => [
+                        'http_code'      => $response->status(),
+                        'enriched_count' => count($result['targets'] ?? []),
+                        'errors_count'   => count($result['errors'] ?? []),
+                    ],
+                    'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+                ] : null,
+                errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+                errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+                durationMs:      $durationMs,
+            );
+        }
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
+        return $result;
+    }
+
     private function detectStatus(array $result): string {
         $code = $result['error_code'] ?? null;
 

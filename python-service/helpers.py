@@ -406,3 +406,120 @@ def _fetch_sections(
     cursor = _build_sections_cursor(raw)
 
     return posts, cursor
+
+
+# ─── Parse targets helpers ────────────────────────────────────────────────────
+
+def _fetch_user_medias_raw(cl: Client, user_pk: str, amount: int) -> list[dict]:
+    """
+    Загружает последнюю страницу медиа пользователя через raw private API.
+
+    TODO(DEBUG_PROTOCOL.md): подтвердить на живом аккаунте фактическую форму
+    ответа feed/user/{pk}/; Instagram может возвращать feed_items, items или
+    sections в зависимости от версии API/аккаунта.
+    """
+    raw = cl.private_request(
+        f"feed/user/{user_pk}/",
+        params={
+            "count": amount,
+            "_uuid": cl.uuid,
+        },
+    )
+
+    posts = _extract_posts(raw)
+    if posts:
+        return posts[:amount]
+
+    posts = _extract_sections_posts(raw, amount)
+    if posts:
+        return posts
+
+    items = raw.get("items") or []
+    serialized = []
+    for item in items:
+        media = item.get("media_or_ad") if isinstance(item, dict) else None
+        serialized_item = _serialize_media(media or item)
+        if serialized_item and serialized_item["pk"]:
+            serialized.append(serialized_item)
+        if len(serialized) >= amount:
+            break
+
+    return serialized
+
+
+def _compute_target_metrics(serialized: list[dict], now: datetime.datetime) -> dict:
+    posts = [post for post in serialized if post]
+    like_counts = [
+        int(post.get("like_count") or 0)
+        for post in posts
+    ]
+
+    last_post_age_days = None
+    if posts and posts[0].get("taken_at"):
+        try:
+            taken_at = datetime.datetime.fromisoformat(posts[0]["taken_at"].replace("Z", "+00:00"))
+            if taken_at.tzinfo is None:
+                taken_at = taken_at.replace(tzinfo=datetime.timezone.utc)
+            now_aware = now if now.tzinfo else now.replace(tzinfo=datetime.timezone.utc)
+            last_post_age_days = max((now_aware - taken_at).days, 0)
+        except ValueError:
+            last_post_age_days = None
+
+    captions = [
+        post.get("caption_text", "")
+        for post in posts
+        if post.get("caption_text")
+    ]
+
+    return {
+        "last_post_age_days": last_post_age_days,
+        "likes_sum_last_n": sum(like_counts),
+        "likes_avg_last_n": round(sum(like_counts) / len(like_counts), 2) if like_counts else 0,
+        "likes_min": min(like_counts) if like_counts else 0,
+        "likes_max": max(like_counts) if like_counts else 0,
+        "posts_analyzed": len(posts),
+        "captions_concat": "\n".join(captions),
+    }
+
+
+def _dedup_candidates_by_author(posts: list[dict], seen_pks: set[str]) -> list[dict]:
+    candidates = []
+
+    for post in posts:
+        user = post.get("user") or {}
+        user_pk = str(user.get("pk") or "")
+        if not user_pk or user_pk in seen_pks:
+            continue
+
+        seen_pks.add(user_pk)
+        candidates.append({
+            "user_pk": user_pk,
+            "username": user.get("username", ""),
+            "anchor_post": post,
+        })
+
+    return candidates
+
+
+def _serialize_target_user(user) -> dict:
+    def _get(field: str, default=None):
+        if isinstance(user, dict):
+            return user.get(field, default)
+        return getattr(user, field, default)
+
+    profile_pic_url = _get("profile_pic_url")
+    external_url = _get("external_url")
+
+    return {
+        "pk": str(_get("pk", "")),
+        "username": _get("username", "") or "",
+        "full_name": _get("full_name", "") or "",
+        "profile_pic_url": str(profile_pic_url) if profile_pic_url else None,
+        "biography": _get("biography", "") or "",
+        "follower_count": _get("follower_count", 0) or 0,
+        "following_count": _get("following_count", 0) or 0,
+        "media_count": _get("media_count", 0) or 0,
+        "is_private": bool(_get("is_private", False)),
+        "is_verified": bool(_get("is_verified", False)),
+        "external_url": str(external_url) if external_url else None,
+    }

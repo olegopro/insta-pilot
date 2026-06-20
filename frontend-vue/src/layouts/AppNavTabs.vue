@@ -14,6 +14,7 @@
     <q-route-tab to="/" label="Аккаунты" exact />
     <q-route-tab to="/feed" label="Лента" />
     <q-route-tab to="/search" label="Поиск" />
+    <q-route-tab to="/automation" label="Автоматизация" />
     <q-route-tab to="/logs" label="Логи" />
     <q-route-tab v-if="authStore.isAdmin" to="/settings/llm" label="Настройки LLM" />
     <q-route-tab v-if="authStore.isAdmin" to="/admin/users" label="Пользователи" />

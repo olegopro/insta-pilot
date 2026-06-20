@@ -30,3 +30,9 @@ Broadcast::channel('account-activity.{accountId}', function ($user, $accountId) 
 Broadcast::channel('activity-global.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
+
+Broadcast::channel('automation-task.{taskId}', function ($user, $taskId) {
+    return \App\Models\AutomationTask::where('id', $taskId)
+        ->where('user_id', $user->id)
+        ->exists();
+});

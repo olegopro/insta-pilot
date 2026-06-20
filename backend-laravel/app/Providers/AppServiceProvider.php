@@ -28,6 +28,18 @@ use App\Repositories\WorkingHoursRepository;
 use App\Repositories\WorkingHoursRepositoryInterface;
 use App\Services\ActivityLoggerService;
 use App\Services\ActivityLoggerServiceInterface;
+use App\Services\Automation\ActionPluginRegistry;
+use App\Services\Automation\ActionPluginRegistryInterface;
+use App\Services\Automation\ActionSchedulerService;
+use App\Services\Automation\ActionSchedulerServiceInterface;
+use App\Services\Automation\CommentActionPlugin;
+use App\Services\Automation\LikeActionPlugin;
+use App\Services\Automation\RateLimitGuardService;
+use App\Services\Automation\RateLimitGuardServiceInterface;
+use App\Services\Automation\TargetFilterService;
+use App\Services\Automation\TargetFilterServiceInterface;
+use App\Services\Automation\WorkingHoursService;
+use App\Services\Automation\WorkingHoursServiceInterface;
 use App\Services\InstagramClientService;
 use App\Services\InstagramClientServiceInterface;
 use App\Services\LlmService;
@@ -114,6 +126,39 @@ class AppServiceProvider extends ServiceProvider {
         $this->app->bind(
             WorkingHoursRepositoryInterface::class,
             WorkingHoursRepository::class
+        );
+
+        $this->app->bind(
+            TargetFilterServiceInterface::class,
+            TargetFilterService::class
+        );
+
+        $this->app->bind(
+            RateLimitGuardServiceInterface::class,
+            RateLimitGuardService::class
+        );
+
+        $this->app->bind(
+            WorkingHoursServiceInterface::class,
+            WorkingHoursService::class
+        );
+
+        $this->app->bind(
+            ActionSchedulerServiceInterface::class,
+            ActionSchedulerService::class
+        );
+
+        $this->app->tag(
+            [
+                CommentActionPlugin::class,
+                LikeActionPlugin::class
+            ],
+            'automation.plugins'
+        );
+
+        $this->app->bind(
+            ActionPluginRegistryInterface::class,
+            fn (mixed $app) => new ActionPluginRegistry($app->tagged('automation.plugins'))
         );
     }
 

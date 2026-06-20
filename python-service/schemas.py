@@ -136,6 +136,41 @@ class SearchLocationsResponse(BaseModel):
     debug_info: Optional[dict] = None
 
 
+# ─── Parse targets ────────────────────────────────────────────────────────────
+
+class ParseCandidatesRequest(SessionRequest):
+    source_type: str
+    query: Optional[str] = None
+    hashtags: Optional[List[str]] = None
+    location_pk: Optional[int] = None
+    amount: int = 30
+    next_max_id: Optional[str] = None
+
+
+class ParseCandidatesResponse(BaseModel):
+    success: bool
+    candidates: List[dict] = []
+    next_max_id: Optional[str] = None
+    error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
+
+
+class ParseEnrichRequest(SessionRequest):
+    targets: List[dict]
+    last_n: int = 6
+    include_user_media: bool = True
+
+
+class ParseEnrichResponse(BaseModel):
+    success: bool
+    targets: List[dict] = []
+    errors: List[dict] = []
+    error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
+
+
 # ─── Comments ─────────────────────────────────────────────────────────────────
 
 class FetchCommentsRequest(SessionRequest):

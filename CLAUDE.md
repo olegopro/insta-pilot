@@ -123,13 +123,19 @@ spacing Kiro (на одном аккаунте вызовы сериализую
 единый TZ на аккаунт (`account_working_hours.timezone`) для окна и границы суток лимита; методы
 `InstagramClientService` — auth-context-free (явный `?int $userId`).
 
-Статус сборки: **Wave 1 (фундамент) готов** — 9 таблиц (`parse_filter_presets`, `parse_runs`,
-`parsed_targets`, `automation_tasks`, `automation_action_items`, `account_action_limits`,
-`account_action_counters`, `account_working_hours`, `account_target_interactions`) + модели +
-репозитории; Phase 0 инфра (контейнеры `scheduler` и `automation-worker`, очередь `automation`,
-auth-context-free `InstagramClientService`). Дальше: Wave 2 — логика парсинга/движка (Python +
-Laravel); Wave 3 — фронтенд (FSD-слайсы). TODO Phase 1D: `retry_after` очереди `automation` >
-timeout `ExecuteActionItemJob` (сейчас дефолт `90==90`).
+Статус сборки: **MVP готов и проверен** (Wave 1–3; комментарии хэштег/гео, полу-ручной режим).
+Слой данных (9 таблиц + модели + репозитории); Python-парсинг (`POST /parse/targets/candidates|enrich`
++ хелперы метрик); Laravel-движок (контракт `ActionPluginInterface`, `Comment`/`LikeActionPlugin`,
+`RateLimitGuardService` со счётчиком `account_action_counters` + `FOR UPDATE`, `WorkingHoursService`,
+`ActionSchedulerService`, `ScheduleActionItemsJob`/`ExecuteActionItemJob`, команда-диспетчер
+`automation:dispatch` каждую минуту, событие `AutomationTaskProgress`); Laravel-парсинг (обёртки
+клиента, `TargetFilterService`, `ParseTargetsJob`, `AutomationTaskController` +
+`AutomationSettingsController`); фронтенд (FSD: 5 `shared/ui`-обёрток + entity/feature/widget +
+страница `/automation` + таб в `AppNavTabs`). Очередь `automation` (отдельный воркер), `retry_after=300`
+> job timeout. Проверено: BE 231 / PY 176 тестов зелёные, `vue-tsc` чисто, 14 маршрутов, UI вживую
+(Chrome) + API-roundtrip. **Живьём против реального IG-аккаунта парсинг/коммент НЕ запускались** —
+по решению владельца (нужны заданные дневные лимиты: fail-safe «нет строки лимита → действие
+запрещено»). Дальше — Phase 2+ плана (полностью-авто, лайки, UX часов/лимитов, масштаб, подписки).
 
 ---
 
