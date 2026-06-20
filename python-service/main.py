@@ -25,6 +25,7 @@ insta-pilot — Python FastAPI service.
 
 import asyncio
 import json
+import logging
 from urllib.parse import quote
 
 from fastapi import FastAPI
@@ -65,6 +66,9 @@ from schemas import (
 )
 from utils import error_to_code, error_to_http_status
 
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="insta-pilot python service")
 
@@ -234,7 +238,7 @@ async def get_feed(data: FeedRequest):
             # Собираем id всех показанных постов — понадобятся при пагинации
             seen = [p["id"] for p in all_posts]
 
-            print(f"[FEED] initial={len(all_posts)}, next_max_id={'yes' if next_max_id else 'no'}")
+            logger.debug(f"[FEED] initial={len(all_posts)}, next_max_id={'yes' if next_max_id else 'no'}")
 
             # Если первой страницы недостаточно для min_posts — докачиваем
             if data.min_posts and len(all_posts) < data.min_posts and more_available:

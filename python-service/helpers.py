@@ -1,10 +1,13 @@
 import datetime
 import json
+import logging
 import random
 import time
 from typing import Optional
 
 from instagrapi import Client
+
+logger = logging.getLogger(__name__)
 
 
 # ─── Feed pagination helpers ───────────────────────────────────────────────────
@@ -318,7 +321,7 @@ def _paginate_feed(
         next_max_id = raw.get("next_max_id")
         more_available = bool(raw.get("more_available", False)) and bool(next_max_id)
 
-        print(f"[FEED] {label} iteration={iterations}, batch={len(batch)}, total={len(all_posts)}, more={'yes' if more_available else 'no'}")
+        logger.debug(f"[FEED] {label} iteration={iterations}, batch={len(batch)}, total={len(all_posts)}, more={'yes' if more_available else 'no'}")
 
         if not min_posts or len(all_posts) >= min_posts or not more_available:
             break
