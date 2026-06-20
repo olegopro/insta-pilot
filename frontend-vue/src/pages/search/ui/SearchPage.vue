@@ -13,7 +13,7 @@
   import { InputComponent } from '@/shared/ui/input-component'
   import { SelectComponent } from '@/shared/ui/select-component'
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
-  import { MediaCard } from '@/shared/ui/media-card'
+  import { MediaCard } from '@/entities/media-post'
   import { EmptyStateComponent } from '@/shared/ui/empty-state-component'
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'

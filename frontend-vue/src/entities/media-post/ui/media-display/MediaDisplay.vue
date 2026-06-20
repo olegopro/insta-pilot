@@ -3,10 +3,10 @@
   import { Pagination, Mousewheel } from 'swiper/modules'
   import 'swiper/css'
   import 'swiper/css/pagination'
-  import { MEDIA_TYPE } from '@/entities/media-post'
-  import type { MediaPost } from '@/entities/media-post'
-  import { useMediaStyle } from '@/shared/ui/media-display/useMediaStyle'
-  import { useSwiperCarousel } from '@/shared/ui/media-display/useSwiperCarousel'
+  import { MEDIA_TYPE } from '@/entities/media-post/model/constants'
+  import type { MediaPost } from '@/entities/media-post/model/types'
+  import { useMediaStyle } from '@/entities/media-post/ui/media-display/useMediaStyle'
+  import { useSwiperCarousel } from '@/entities/media-post/ui/media-display/useSwiperCarousel'
 
   const props = defineProps<{
     post: MediaPost

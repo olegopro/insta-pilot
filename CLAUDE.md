@@ -2,13 +2,13 @@
 
 ## Project Overview
 Instagram auto-liker web service.
-Stack: Laravel 12 (backend) + Python FastAPI + instagrapi (Instagram layer) + Vue 3 + Quasar (frontend).
+Stack: Laravel 13 (backend) + Python FastAPI + instagrapi (Instagram layer) + Vue 3 + Quasar (frontend).
 DB: PostgreSQL 16. Queue: Redis.
 
 ## Project Structure
 ```
 insta-pilot/
-├── backend-laravel/    # Laravel 12, PHP 8.3
+├── backend-laravel/    # Laravel 13, PHP 8.3
 ├── frontend-vue/       # Vue 3 + Quasar + TypeScript
 ├── python-service/     # FastAPI + instagrapi
 ├── docker/             # Dockerfiles (laravel/, python/, vue/)
@@ -70,7 +70,7 @@ Context7 library ID: `/subzeroid/instagrapi`
 
 ---
 
-# Backend — Laravel 12
+# Backend — Laravel 13
 
 ## Документация
 - Laravel 12: Context7 library ID: `/websites/laravel_12_x`
@@ -156,7 +156,7 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 | error_message     | text, nullable | текст ошибки                             |
 | created_at        | timestamp      |                                          |
 
-Логирование через `ActivityLoggerService` / `ActivityLoggerServiceInterface`. Репозиторий: `ActivityLogRepository`. Broadcasting event: `ActivityLogCreated` (канал `private:activity-log`).
+Логирование через `ActivityLoggerService` / `ActivityLoggerServiceInterface`. Репозиторий: `ActivityLogRepository`. Broadcasting event: `ActivityLogCreated` (каналы `private:account-activity.{accountId}` и `private:activity-global.{userId}`).
 
 ## Таблица llm_settings
 | Поле          | Тип                   | Описание                        |
@@ -177,7 +177,8 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 | Канал | Event | Назначение |
 |-------|-------|-----------|
 | `private:comment-generation.{jobId}` | `CommentGenerationProgress` | прогресс генерации (starting → downloading → analyzing → completed/failed) |
-| `private:activity-log` | `ActivityLogCreated` | новая запись лога в реальном времени |
+| `private:account-activity.{accountId}` | `ActivityLogCreated` | новая запись лога аккаунта в реальном времени |
+| `private:activity-global.{userId}` | `ActivityLogCreated` | глобальный поток логов пользователя (admin) |
 
 ---
 
@@ -388,3 +389,60 @@ return { accounts, fetchAccounts, fetchAccountsLoading, ... }
 1. Сначала запустить ESLint autofix: `docker compose exec vue npx eslint --fix ./src`
 2. Проверить оставшиеся TS ошибки: `docker compose exec vue npx vue-tsc --noEmit`
 3. Исправлять вручную только то, что autofix не решил
+
+
+# Параллельная мульти-агентная оркестрация
+
+Когда фича декомпозируется на независимые куски (типично: 5–7 дашбордов/таблиц-страниц, каждый = свой
+page-slice + свои widget/entity-слайсы), их можно строить параллельными субагентами в изолированных
+git-worktree, а в конце собрать через ветки/merge. Подробный плейбук с worked-example и процедурой
+интеграции — `ORCHESTRATION.md` (читать перед запуском фан-аута). Полная архитектура «фабрики»
+массовой генерации админок (десятки экранов, контракт-first, гейты, кокпит, бюджет Kiro) — `AGENT-FACTORY.md`.
+
+## Когда разворачивать (fan-out), а когда нет
+- **Разворачивать**: ≥3 независимых единицы, каждая трогает в основном НОВЫЕ файлы (новые слайсы FSD),
+  пересечение только по немногим shared-seam файлам.
+- **Не разворачивать**: задача линейна, сильная связность правок, или почти всё идёт в одни и те же
+  shared-файлы — тогда параллелизм даёт только merge-конфликты.
+
+## Гарантия полного контекста каждому агенту
+- **По умолчанию (без настройки)**: каждый субагент, запущенный через Task/Agent, автоматически грузит
+  весь стек памяти — `~/.claude/CLAUDE.md`, корневой `CLAUDE.md` проекта, его `@import`-ы (рекурсивно,
+  до 4 хопов) и auto-memory (первые 200 строк / 25 КБ `MEMORY.md`). Это значит: правила этого файла
+  доходят до агентов сами, дублировать их в промпт НЕ нужно.
+- **Исключение — встроенные Explore и Plan**: они НАМЕРЕННО пропускают `CLAUDE.md` и git-status ради
+  скорости. Если оркестратор раздаёт работу через Explore/Plan — критичные правила (FSD-слои, паттерн
+  стора/таблицы, контракт shared-компонентов) нужно ПОВТОРИТЬ прямо в delegation-промпте.
+- **Что всё равно кладём в Task-промпт каждому**: конкретный scope (какие слайсы создаёт агент),
+  точные пути shared-контрактов для чтения, имя ветки/worktree, запрет трогать seam-файлы. Контекст —
+  это контекст, не принудиловка: чем конкретнее промпт, тем выше следование.
+- **Новая сессия**: `CLAUDE.md` + memory грузятся автоматически на старте, ручного шага нет. Проверка
+  состава — команда `/memory`.
+
+## Git: изоляция и интеграция
+- Каждый агент работает в своём worktree (`isolation: worktree` во frontmatter субагента либо просьба
+  «используй worktree для агентов»): отдельный каталог `.claude/worktrees/<name>/` и ветка
+  `worktree-<name>`, общая история репозитория.
+- **Авто-уборка только для worktree БЕЗ изменений** (нет правок, untracked-файлов и новых коммитов).
+  Worktree с коммитами/правками НЕ удаляется сам — нужен `git worktree remove` вручную либо ждать
+  истечения `cleanupPeriodDays`. Поэтому каждый агент обязан закоммитить свою единицу.
+- Интеграция: ветки агентов → ревью diff → merge в основную по одному слайсу. `cherry-pick` — для
+  переноса отдельного «чистого» коммита; `stash` — только для временного разведения контекста внутри
+  сессии. Полную процедуру см. в `ORCHESTRATION.md`.
+
+## Контракт shared-компонентов (правило когерентности)
+- Слой `shared/ui/*` и `shared/lib/*` — координируемый шов. Его расширяют ОДИН раз ДО фан-аута; агенты
+  его только читают, не правят параллельно.
+- НОВЫЙ shared-компонент = своя папка `shared/ui/<kebab>/` + `index.ts` (аддитивно, без конфликтов).
+  Добавление экспорта в СУЩЕСТВУЮЩИЙ barrel — это seam, делается последовательно, не агентами враздрай.
+- **Merge-conflict hotspots (сериализовать, не отдавать параллельно)**: `src/router/routes.ts`,
+  `src/layouts/AppNavTabs.vue` (навигация), на бэке — `routes/api.php` и `AppServiceProvider.php`.
+  Регистрацию маршрутов/табов/биндингов делает оркестратор после слияния слайсов, либо отдельный
+  финальный шаг одним агентом.
+
+## Маршрутизация через 3 Kiro-канала
+Claude Code умеет смотреть только на ОДИН base URL (`ANTHROPIC_BASE_URL`) — он меняет КУДА уходят
+запросы, а не КАКАЯ модель отвечает. Балансировку по 3 Kiro-аккаунтам делает CLI Proxy (порт 8318),
+не Claude Code. Per-agent override поддержан только для `model`, не для base URL. Конфиг и оговорки
+(tool-name limit 64 символа, request-spacing per-account) — в `ORCHESTRATION.md`. Требует
+подтверждения пользователя перед включением.

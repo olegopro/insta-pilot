@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import MediaCard from '@/shared/ui/media-card/MediaCard.vue'
-import type { MediaPost } from '@/entities/media-post'
+import MediaCard from '@/entities/media-post/ui/media-card/MediaCard.vue'
+import type { MediaPost } from '@/entities/media-post/model/types'
 
 const makePost = (overrides: Partial<MediaPost> = {}): MediaPost => ({
   pk:              'p1',

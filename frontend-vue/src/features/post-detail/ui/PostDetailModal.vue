@@ -6,7 +6,7 @@
   import { formatCount, formatDate, notifyError, notifySuccess } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
-  import { MediaDisplay } from '@/shared/ui/media-display'
+  import { MediaDisplay } from '@/entities/media-post'
   import { CaptionText } from '@/shared/ui/caption-text'
   import { InputComponent } from '@/shared/ui/input-component'
   import { ButtonComponent } from '@/shared/ui/button-component'

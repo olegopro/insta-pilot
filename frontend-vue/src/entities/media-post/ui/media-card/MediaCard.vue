@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { computed } from 'vue'
-  import type { MediaPost } from '@/entities/media-post'
+  import type { MediaPost } from '@/entities/media-post/model/types'
   import { formatCount } from '@/shared/lib'
   import type { Nullable } from '@/shared/lib'
   import { ButtonComponent } from '@/shared/ui/button-component'

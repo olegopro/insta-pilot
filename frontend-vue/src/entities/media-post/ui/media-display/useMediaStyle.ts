@@ -1,6 +1,6 @@
 import { computed } from 'vue'
-import { MEDIA_TYPE } from '@/entities/media-post'
-import type { MediaPost } from '@/entities/media-post'
+import { MEDIA_TYPE } from '@/entities/media-post/model/constants'
+import type { MediaPost } from '@/entities/media-post/model/types'
 
 /**
  * Возвращает CSS-строку `"W / H"` для свойства aspect-ratio.
