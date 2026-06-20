@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
   import { onBeforeRouteLeave } from 'vue-router'
-  import { useAccountSelect } from '@/entities/instagram-account/model/useAccountSelect'
+  import { useAccountSelect, AccountSelectComponent } from '@/entities/instagram-account'
   import { useFeedStore, MOCK_FEED } from '@/entities/media-post'
   import type { MediaPost } from '@/entities/media-post'
   import type { Nullable } from '@/shared/lib'
@@ -16,7 +16,6 @@
   import { EmptyStateComponent } from '@/shared/ui/empty-state-component'
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'
-  import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
 
   const feedStore = useFeedStore()
   const { selectedAccount, accountSelectRef, accountStackLabel, isInitializing, initAccounts } = useAccountSelect('feed_selected_account_id')

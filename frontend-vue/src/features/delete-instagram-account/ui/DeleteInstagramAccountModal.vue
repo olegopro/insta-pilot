@@ -1,6 +1,5 @@
 <script setup lang="ts">
-  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
-  import type { InstagramAccount } from '@/entities/instagram-account/model/types'
+  import { useAccountStore, type InstagramAccount } from '@/entities/instagram-account'
   import { notifySuccess, notifyError } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
 

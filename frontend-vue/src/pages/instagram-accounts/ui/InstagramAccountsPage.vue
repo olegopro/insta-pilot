@@ -1,10 +1,12 @@
 <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
-  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import {
+    useAccountStore,
+    instagramAccountTableColumns,
+    instagramAccountListDTO,
+    type InstagramAccount
+  } from '@/entities/instagram-account'
   import { useFeedStore } from '@/entities/media-post'
-  import instagramAccountTableColumns from '@/entities/instagram-account/model/instagramAccountTableColumns'
-  import instagramAccountListDTO from '@/entities/instagram-account/model/instagramAccountListDTO'
-  import type { InstagramAccount } from '@/entities/instagram-account/model/types'
   import type { Nullable } from '@/shared/lib'
   import { useFilterColumns, useSearchQuery, useModal, notifyError } from '@/shared/lib'
   import { PageComponent } from '@/shared/ui/page-component'

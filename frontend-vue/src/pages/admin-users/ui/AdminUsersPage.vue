@@ -1,8 +1,6 @@
 <script setup lang="ts">
   import { computed, onMounted, ref } from 'vue'
-  import { useAdminUsersStore, useAuthStore } from '@/entities/user'
-  import adminUsersTableColumns from '@/entities/user/model/adminUsersTableColumns'
-  import adminUsersListDTO from '@/entities/user/model/adminUsersListDTO'
+  import { useAdminUsersStore, useAuthStore, adminUsersTableColumns, adminUsersListDTO } from '@/entities/user'
   import { useFilterColumns, useSearchQuery, notifyError } from '@/shared/lib'
   import { PageComponent } from '@/shared/ui/page-component'
   import { TableComponent } from '@/shared/ui/table-component'

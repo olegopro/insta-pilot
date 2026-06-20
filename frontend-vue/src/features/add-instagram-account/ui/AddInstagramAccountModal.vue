@@ -1,7 +1,6 @@
 <script setup lang="ts">
   import { reactive, onMounted } from 'vue'
-  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
-  import type { AddAccountRequest } from '@/entities/instagram-account/model/types'
+  import { useAccountStore, type AddAccountRequest } from '@/entities/instagram-account'
   import { notifySuccess, notifyError, type Nullable } from '@/shared/lib'
   import { ModalComponent } from '@/shared/ui/modal-component'
   import { InputComponent } from '@/shared/ui/input-component'

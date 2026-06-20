@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { watch } from 'vue'
-  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import { useAccountStore } from '@/entities/instagram-account'
   import { ModalComponent } from '@/shared/ui/modal-component'
 
   const props = defineProps<{

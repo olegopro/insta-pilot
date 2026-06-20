@@ -1,8 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
   import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
-  import { useAccountSelect } from '@/entities/instagram-account/model/useAccountSelect'
-  import { useAccountStore } from '@/entities/instagram-account/model/accountStore'
+  import { useAccountSelect, useAccountStore, AccountSelectComponent } from '@/entities/instagram-account'
   import { useSearchStore, useFeedStore } from '@/entities/media-post'
   import type { MediaPost, Location } from '@/entities/media-post'
   import type { Nullable } from '@/shared/lib'
@@ -17,7 +16,6 @@
   import { EmptyStateComponent } from '@/shared/ui/empty-state-component'
   import { PostDetailModal } from '@/features/post-detail'
   import { InstagramUserModal } from '@/features/instagram-user'
-  import AccountSelectComponent from '@/entities/instagram-account/ui/AccountSelectComponent.vue'
   import type { SearchMode } from '@/pages/search/model/types'
 
   const route = useRoute()
