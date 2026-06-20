@@ -335,7 +335,7 @@ parallel-change** ([M.Fowler](https://martinfowler.com/bliki/ParallelChange.html
 
 ### 5.1 Реальная пропускная способность (количественно)
 
-Из `~/.cli-proxy-api/config.yaml`: `request-spacing` scope=`auth`, min `2s`, max `15s` (mean ~8.5s),
+Из `~/www/vibeproxy-server/config/merged-config.yaml`: `request-spacing` scope=`auth`, min `2s`, max `15s` (mean ~8.5s),
 `retry-buffer`, `max-retry-interval: 60`, `fill-first` + `busy-aware` affinity.
 
 - **Голый потолок по spacing:** `1/8.5 ≈ 0.118` старта/с ≈ **~7 стартов/мин на аккаунт**.
@@ -383,7 +383,7 @@ failure-амплификации; с красными гейтами ×1.7–2.5
 |---|---|---|
 | **Изоляция контекста** | Воркер читает 15 файлов в своём окне, отдаёт оркестратору condensed summary 1–2k токенов (что построено / контракты / хвосты / нарушения), НЕ полный трейс | Оркестратор не взрывается; -15x риск |
 | **Retrieval, не дамп** | НЕ векторный RAG. `ripgrep`/`glob` + точечный `Read` + lightweight-идентификаторы (пути из контракта). Не грузить целый слайс | grep свежее RAG (нет дрейфа индекса в worktree), -prompt-токены |
-| **Выбор модели по задаче** | Мелочь (git, переименования, тривиальные правки) → дешёвая модель (haiku-класс). Код/логика → sonnet/agentic. `dashboard-builder` уже `model: sonnet` | -стоимость без потери качества кода |
+| **Выбор модели по задаче** | Из 3 рабочих Kiro-моделей: мелочь (git, переименования, тривиальные правки) → дешёвая `kiro-glm-5`. Код/логика → `kiro-claude-sonnet-4-6` (+ `-agentic` для записи файлов). Макс. качество → `kiro-claude-opus-4-8`. `dashboard-builder` уже `model: sonnet` | -стоимость без потери качества кода |
 | **Компакция** | У предела окна — суммаризовать (сохранять архитектурные решения/контракты, выкидывать сырые tool-outputs — «tool result clearing»), продолжать с compressed + 5 последних файлов | защита от context rot на длинных структурах |
 | **Кэш (проверить!)** | Статика В НАЧАЛЕ префикса (system + фикс-набор тулов + CONTRACTS + FSD-конвенции), волатильное (session_id/timestamp/задача) В КОНЕЦ. Стабильный набор тулов. **Эмпирически проверить, поддерживает ли Kiro/CodeWhisperer prompt caching через VibeProxy** — зафиксировать в `DEBUG_PROTOCOL.md` | если кэш есть — до 90% дешевле; если нет — экономия только сокращением контекста |
 | **Окно self-healing** | `W=2–3`: при re-run по красному гейту давать агенту ТОЛЬКО diff+ошибку, не всю историю. Срезает квадратичный член `N(N+1)/2` | главный пожиратель токенов в self-healing |
@@ -751,5 +751,5 @@ SOTA-модели в 63% случаев кодят неоднозначную с
 - `.claude/skills/parallel-feature-build/SKILL.md` — скилл фан-аута
 - `.claude/agents/dashboard-builder.md` — субагент-исполнитель
 - `CLAUDE.md` — конвенции проекта (FSD, DTO, API-формат, Reverb, обёртки Quasar)
-- `DEBUG_PROTOCOL.md` (в `~/.cli-proxy-api/`) — протокол отладки провайдеров/моделей Kiro
-- `~/.cli-proxy-api/config.yaml` — параметры VibeProxy (spacing, affinity, routing)
+- `~/www/vibeproxy-server/DEBUG_PROTOCOL.md` — протокол отладки провайдеров/моделей Kiro
+- `~/www/vibeproxy-server/config/merged-config.yaml` — параметры VibeProxy (spacing, affinity, routing)
