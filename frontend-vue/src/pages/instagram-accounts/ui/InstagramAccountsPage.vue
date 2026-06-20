@@ -12,6 +12,7 @@
   import { TableComponent } from '@/shared/ui/table-component'
   import { TableToolsWrapper } from '@/shared/ui/table-tools-wrapper'
   import { BadgeComponent } from '@/shared/ui/badge-component'
+  import { ToggleComponent } from '@/shared/ui/toggle-component'
   import { AddInstagramAccountModal } from '@/features/add-instagram-account'
   import { DeleteInstagramAccountModal } from '@/features/delete-instagram-account'
   import { InstagramUserModal } from '@/features/instagram-user'
@@ -70,7 +71,7 @@
       search-placeholder="Поиск по аккаунтам"
     >
       <template #tools>
-        <q-toggle v-model="showActiveOnly" label="Активные" dense />
+        <ToggleComponent v-model="showActiveOnly" label="Активные" dense />
         <ButtonComponent
           color="primary"
           icon="add"

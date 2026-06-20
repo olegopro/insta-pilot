@@ -8,7 +8,8 @@
   import { ButtonComponent } from '@/shared/ui/button-component'
   import AppNavTabs from '@/layouts/AppNavTabs.vue'
   import UserMenuDropdown from '@/layouts/UserMenuDropdown.vue'
-  import RobotIcon from 'src/shared/ui/icons/RobotIcon.vue'
+  import { RobotIcon } from '@/shared/ui/icons'
+  import { BadgeComponent } from '@/shared/ui/badge-component'
 
   const router = useRouter()
 
@@ -67,11 +68,11 @@
       style="position: fixed; bottom: 16px; left: 16px; z-index: 100"
       @click="sidebarStore.open()"
     >
-      <q-badge
+      <BadgeComponent
         v-if="sidebarStore.unreadCount > 0"
         floating
         color="negative"
-        :label="sidebarStore.unreadCount > 99 ? '99+' : sidebarStore.unreadCount"
+        :label="sidebarStore.unreadCount > 99 ? '99+' : String(sidebarStore.unreadCount)"
       />
     </ButtonComponent>
   </q-layout>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { LoginForm } from '@/features/auth-login'
   import { CardComponent, CardSectionComponent } from '@/shared/ui/card-component'
-  import RobotIcon from '@/shared/ui/icons/RobotIcon.vue'
+  import { RobotIcon } from '@/shared/ui/icons'
 </script>
 
 <template>
