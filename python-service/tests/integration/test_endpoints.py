@@ -32,7 +32,9 @@ from tests.conftest import SAMPLE_SESSION_DATA
 @pytest.fixture
 def client():
     from main import app
-    return TestClient(app)
+    # raise_server_exceptions=False — чтобы тестировать глобальный @app.exception_handler
+    # (иначе TestClient переподнимает исключение вместо возврата ответа handler-а)
+    return TestClient(app, raise_server_exceptions=False)
 
 
 def make_mock_client(**overrides) -> MagicMock:

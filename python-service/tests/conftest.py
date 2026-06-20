@@ -88,4 +88,6 @@ def session_data_2() -> str:
 @pytest.fixture
 def app_client():
     from main import app
-    return TestClient(app)
+    # raise_server_exceptions=False — чтобы тестировать глобальный @app.exception_handler
+    # (иначе TestClient переподнимает исключение вместо возврата ответа handler-а)
+    return TestClient(app, raise_server_exceptions=False)
