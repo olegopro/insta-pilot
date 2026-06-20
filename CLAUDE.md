@@ -112,14 +112,15 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 | Поле                    | Тип                   | Описание                |
 |-------------------------|-----------------------|-------------------------|
 | id                      | bigIncrements         | PK                      |
+| user_id                 | FK, nullable          | владелец (users), nullOnDelete |
 | instagram_login         | string, unique        | логин                   |
 | instagram_password      | text                  | зашифрован              |
 | session_data            | text, nullable        | JSON сессии, зашифрован |
 | proxy                   | string, nullable      | прокси                  |
 | full_name               | string, nullable      | имя из Instagram        |
 | profile_pic_url         | text, nullable        | URL аватарки            |
-| device_profile_id       | FK, nullable          | профиль устройства      |
-| device_settings         | json, nullable        | UUID устройства и др.   |
+| device_profile_id       | FK, nullable          | профиль устройства (device_profiles), nullOnDelete |
+| device_model_name       | string, nullable      | модель устройства аккаунта |
 | is_active               | boolean, default true |                         |
 | last_used_at            | timestamp, nullable   |                         |
 | created_at / updated_at | timestamps            |                         |
@@ -127,34 +128,34 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 Шифрование через Accessors в модели с `INSTAGRAM_SALT` → `config('app.instagram_salt')`.
 
 ## Таблица device_profiles
-| Поле         | Тип    | Описание                        |
-|--------------|--------|---------------------------------|
-| id           | bigIncrements | PK                        |
-| name         | string | название профиля                |
-| manufacturer | string | производитель                   |
-| model        | string | модель устройства               |
-| android_version | string | версия Android               |
-| app_version  | string | версия приложения Instagram     |
-| user_agent   | text   | User-Agent строка               |
+| Поле         | Тип            | Описание                            |
+|--------------|----------------|-------------------------------------|
+| id           | bigIncrements  | PK                                  |
+| code         | string, unique | код профиля                         |
+| title        | string         | название профиля                    |
+| device_settings | json        | UUID и параметры устройства (Android) |
+| user_agent   | text           | User-Agent строка                   |
+| is_active    | boolean, default true |                              |
+| created_at / updated_at | timestamps |                            |
 
-Данные хранятся в `backend-laravel/data/device-profiles/device-profiles.json`. Заполняются через `DeviceProfileSeeder`. Назначается аккаунту при добавлении — передаётся в Python как заголовки запросов.
+Данные хранятся в `backend-laravel/data/device-profiles/device-profiles.json`. Заполняются через `DeviceProfileSeeder`. Назначается аккаунту при добавлении (`device_profile_id`) — передаётся в Python как заголовки запросов.
 
 ## Таблица account_activity_logs
-| Поле              | Тип            | Описание                                 |
-|-------------------|----------------|------------------------------------------|
-| id                | bigIncrements  | PK                                       |
-| instagram_account_id | FK          | аккаунт                                  |
-| action            | string         | тип действия (login, like, comment, ...) |
-| status            | string         | success / fail                           |
-| duration_ms       | integer, nullable | время выполнения запроса              |
-| vue_request       | json, nullable | данные из Vue → Laravel                  |
-| vue_response      | json, nullable | данные ответа Laravel → Vue              |
-| python_request    | json, nullable | данные Laravel → Python                  |
-| python_response   | json, nullable | данные ответа Python → Laravel           |
-| instagram_request | json, nullable | данные Python → Instagram                |
-| instagram_response| json, nullable | данные ответа Instagram → Python         |
-| error_message     | text, nullable | текст ошибки                             |
-| created_at        | timestamp      |                                          |
+| Поле              | Тип               | Описание                                 |
+|-------------------|-------------------|------------------------------------------|
+| id                | bigIncrements     | PK                                       |
+| instagram_account_id | FK             | аккаунт (cascadeOnDelete)                |
+| user_id           | FK                | пользователь-владелец (cascadeOnDelete)  |
+| action            | string            | тип действия (login, like, comment, ...) |
+| status            | string            | success / fail                           |
+| http_code         | smallInteger, nullable | HTTP-код ответа                     |
+| endpoint          | string, nullable  | вызванный endpoint                       |
+| request_payload   | json, nullable    | payload запроса (cast array, sanitized)  |
+| response_summary  | json, nullable    | сводка ответа (cast array)               |
+| error_message     | text, nullable    | текст ошибки                             |
+| error_code        | string, nullable  | код ошибки                               |
+| duration_ms       | integer, nullable | время выполнения запроса                 |
+| created_at        | timestamp, useCurrent | без updated_at (`$timestamps=false`) |
 
 Логирование через `ActivityLoggerService` / `ActivityLoggerServiceInterface`. Репозиторий: `ActivityLogRepository`. Broadcasting event: `ActivityLogCreated` (каналы `private:account-activity.{accountId}` и `private:activity-global.{userId}`).
 
