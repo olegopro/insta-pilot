@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
-import { useApi, type ApiResponseWrapper } from '@/shared/api'
+import { apiData, useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { Nullable } from '@/shared/lib'
 import type {
   InstagramAccountApi,
@@ -14,23 +14,23 @@ import instagramAccountDTO from '@/entities/instagram-account/model/instagramAcc
 
 export const useAccountStore = defineStore('accounts', () => {
   const fetchAccountsApi = useApi<ApiResponseWrapper<InstagramAccountApi[]>>(
-    () => api.get('/accounts/').then((response) => response.data)
+    () => apiData(api.get('/accounts/'))
   )
 
   const addAccountApi = useApi<ApiResponseWrapper<AddAccountResponseApi>, AddAccountRequest>(
-    (payload) => api.post('/accounts/login', instagramAccountDTO.toApiRequest(payload)).then((response) => response.data)
+    (payload) => apiData(api.post('/accounts/login', instagramAccountDTO.toApiRequest(payload)))
   )
 
   const fetchAccountDetailsApi = useApi<ApiResponseWrapper<InstagramAccountDetailedApi>, number>(
-    (accountId) => api.get(`/accounts/${String(accountId)}`).then((response) => response.data)
+    (accountId) => apiData(api.get(`/accounts/${String(accountId)}`))
   )
 
   const fetchDeviceProfilesApi = useApi<ApiResponseWrapper<DeviceProfileApi[]>>(
-    () => api.get('/accounts/device-profiles').then((response) => response.data)
+    () => apiData(api.get('/accounts/device-profiles'))
   )
 
   const deleteAccountApi = useApi<ApiResponseWrapper<null>, number>(
-    (accountId) => api.delete(`/accounts/${String(accountId)}`).then((response) => response.data)
+    (accountId) => apiData(api.delete(`/accounts/${String(accountId)}`))
   )
 
   const accounts = ref<InstagramAccount[]>([])

@@ -1,7 +1,8 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
-import { useApi, type ApiResponseWrapper } from '@/shared/api'
+import { apiData, useApi, type ApiResponseWrapper } from '@/shared/api'
+import { compactParams } from '@/shared/lib'
 import type { ActivityLog, ActivityStats, AccountActivitySummary, ActivityFilters } from '@/entities/activity-log/model/types'
 import type { ActivityLogsResponseApi, ActivityStatsApi, AccountActivitySummaryApi, ActivityLogApi } from '@/entities/activity-log/model/apiTypes'
 import activityLogDTO from '@/entities/activity-log/model/activityLogDTO'
@@ -23,7 +24,7 @@ export const useActivityLogStore = defineStore('activityLog', () => {
     aroundId?: number
   }>(
     ({ accountId, filters, beforeId, afterId, aroundId }) =>
-      api.get(`/accounts/${String(accountId)}/activity`, {
+      apiData(api.get(`/accounts/${String(accountId)}/activity`, {
         params: {
           per_page:   50,
           before_id:  beforeId,
@@ -35,20 +36,20 @@ export const useActivityLogStore = defineStore('activityLog', () => {
           date_from:  filters?.dateFrom,
           date_to:    filters?.dateTo
         }
-      }).then((response) => response.data)
+      }))
   )
 
   const fetchStatsApi = useApi<ApiResponseWrapper<ActivityStatsApi>, number>(
     (accountId) =>
-      api.get(`/accounts/${String(accountId)}/activity/stats`).then((response) => response.data)
+      apiData(api.get(`/accounts/${String(accountId)}/activity/stats`))
   )
 
   const fetchSummaryApi = useApi<ApiResponseWrapper<AccountActivitySummaryApi[]>>(
-    () => api.get('/activity/summary').then((response) => response.data)
+    () => apiData(api.get('/activity/summary'))
   )
 
   const fetchLogs = async (accountId: number, filters?: ActivityFilters) => {
-    const { data } = await fetchLogsApi.execute({ accountId, ...(filters ? { filters } : {}) })
+    const { data } = await fetchLogsApi.execute({ accountId, ...compactParams({ filters }) })
     const result = activityLogDTO.toLocalLogsResponse(data)
     logs.value = result.items
     hasMoreBefore.value = result.hasMoreBefore
@@ -61,7 +62,7 @@ export const useActivityLogStore = defineStore('activityLog', () => {
     const lastId = logs.value[logs.value.length - 1]?.id
     if (!lastId || !hasMoreBefore.value || fetchLogsApi.loading.value) return
 
-    const { data } = await fetchLogsApi.execute({ accountId, ...(filters ? { filters } : {}), beforeId: lastId })
+    const { data } = await fetchLogsApi.execute({ accountId, ...compactParams({ filters }), beforeId: lastId })
     const result = activityLogDTO.toLocalLogsResponse(data)
     logs.value = [...logs.value, ...result.items]
     hasMoreBefore.value = result.hasMoreBefore

@@ -1,7 +1,7 @@
 import { computed, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
-import { useApi, type ApiResponseWrapper } from '@/shared/api'
+import { apiData, useApi, type ApiResponseWrapper } from '@/shared/api'
 import type { UserApi, LoginRequestApi, AuthResponseApi } from '@/entities/user/model/apiTypes'
 import type { User, LoginRequest } from '@/entities/user/model/types'
 import type { Nullable } from '@/shared/lib'
@@ -11,15 +11,15 @@ export const useAuthStore = defineStore('auth', () => {
   const user = shallowRef<Nullable<User>>(null)
 
   const loginApi = useApi<ApiResponseWrapper<AuthResponseApi>, LoginRequestApi>(
-    (credentials) => api.post('/auth/login', credentials).then((response) => response.data)
+    (credentials) => apiData(api.post('/auth/login', credentials))
   )
 
   const logoutApi = useApi<ApiResponseWrapper<null>>(
-    () => api.post('/auth/logout').then((response) => response.data)
+    () => apiData(api.post('/auth/logout'))
   )
 
   const meApi = useApi<ApiResponseWrapper<UserApi>>(
-    () => api.get('/auth/me').then((response) => response.data)
+    () => apiData(api.get('/auth/me'))
   )
 
   const isAuthenticated = computed(() => !!user.value)

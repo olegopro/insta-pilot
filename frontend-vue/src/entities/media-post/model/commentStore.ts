@@ -2,8 +2,8 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { isCancel } from 'axios'
 import { api } from '@/boot/axios'
-import { useApi, type ApiResponseWrapper } from '@/shared/api'
-import type { Nullable } from '@/shared/lib'
+import { apiData, useApi, type ApiResponseWrapper } from '@/shared/api'
+import { compactParams, type Nullable } from '@/shared/lib'
 import type { PostComment } from '@/entities/media-post/model/types'
 import type { FetchCommentsResponseApi, FetchCommentRepliesResponseApi, SendCommentResponseApi } from '@/entities/media-post/model/apiTypes'
 import mediaPostDTO from '@/entities/media-post/model/mediaPostDTO'
@@ -15,31 +15,31 @@ export const useCommentStore = defineStore('comments', () => {
 
   const fetchCommentsApi = useApi<ApiResponseWrapper<FetchCommentsResponseApi>, { accountId: number; mediaPk: string; minId?: string }>(
     ({ accountId, mediaPk, minId }, signal) =>
-      api.get('/media/comments', {
-        params: { account_id: accountId, media_pk: mediaPk, ...(minId ? { min_id: minId } : {}) },
+      apiData(api.get('/media/comments', {
+        params: { account_id: accountId, media_pk: mediaPk, ...compactParams({ min_id: minId }) },
         signal
-      }).then((response) => response.data)
+      }))
   )
 
   const loadMoreCommentsApi = useApi<ApiResponseWrapper<FetchCommentsResponseApi>, { accountId: number; mediaPk: string; minId: string }>(
     ({ accountId, mediaPk, minId }, signal) =>
-      api.get('/media/comments', {
+      apiData(api.get('/media/comments', {
         params: { account_id: accountId, media_pk: mediaPk, min_id: minId },
         signal
-      }).then((response) => response.data)
+      }))
   )
 
   const fetchRepliesApi = useApi<ApiResponseWrapper<FetchCommentRepliesResponseApi>, { accountId: number; mediaPk: string; commentPk: string }>(
     ({ accountId, mediaPk, commentPk }, signal) =>
-      api.get('/media/comments/replies', {
+      apiData(api.get('/media/comments/replies', {
         params: { account_id: accountId, media_pk: mediaPk, comment_pk: commentPk },
         signal
-      }).then((response) => response.data)
+      }))
   )
 
   const sendCommentApi = useApi<ApiResponseWrapper<SendCommentResponseApi>, { mediaId: string; accountId: number; text: string }>(
     ({ mediaId, accountId, text }) =>
-      api.post(`/media/${mediaId}/comment`, { account_id: accountId, text }).then((response) => response.data)
+      apiData(api.post(`/media/${mediaId}/comment`, { account_id: accountId, text }))
   )
 
   const fetchComments = async (accountId: number, mediaPk: string) => {

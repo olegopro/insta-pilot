@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { useApi, type ApiResponseWrapper } from '@/shared/api'
+import { apiData, useApi, type ApiResponseWrapper } from '@/shared/api'
 import { api } from '@/boot/axios'
 import type { UserApi } from '@/entities/user/model/apiTypes'
 import type { User } from '@/entities/user/model/types'
@@ -8,15 +8,15 @@ import userDTO from '@/entities/user/model/userDTO'
 
 export const useAdminUsersStore = defineStore('adminUsers', () => {
   const listApi = useApi<ApiResponseWrapper<UserApi[]>>(
-    () => api.get('/admin/users').then((response) => response.data)
+    () => apiData(api.get('/admin/users'))
   )
 
   const toggleActiveApi = useApi<ApiResponseWrapper<UserApi>, { id: number }>(
-    ({ id }) => api.patch(`/admin/users/${String(id)}/toggle-active`).then((response) => response.data)
+    ({ id }) => apiData(api.patch(`/admin/users/${String(id)}/toggle-active`))
   )
 
   const updateRoleApi = useApi<ApiResponseWrapper<UserApi>, { id: number; role: string }>(
-    ({ id, role }) => api.patch(`/admin/users/${String(id)}/role`, { role }).then((response) => response.data)
+    ({ id, role }) => apiData(api.patch(`/admin/users/${String(id)}/role`, { role }))
   )
 
   const users = ref<User[]>([])

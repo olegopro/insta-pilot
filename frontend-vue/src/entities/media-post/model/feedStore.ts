@@ -1,8 +1,8 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/boot/axios'
-import { useApi, type ApiResponseWrapper } from '@/shared/api'
-import type { Nullable } from '@/shared/lib'
+import { apiData, useApi, type ApiResponseWrapper } from '@/shared/api'
+import { compactParams, type Nullable } from '@/shared/lib'
 import type { MediaPost, InstagramUserDetail } from '@/entities/media-post/model/types'
 import type { FeedResponseApi, InstagramUserDetailApi } from '@/entities/media-post/model/apiTypes'
 import mediaPostDTO from '@/entities/media-post/model/mediaPostDTO'
@@ -22,23 +22,20 @@ export const useFeedStore = defineStore('feed', () => {
     minPosts?: number
   }>(
     ({ accountId, reason, minPosts }, signal) =>
-      api.get(`/feed/${String(accountId)}`, {
-        params: {
-          ...(reason ? { reason } : {}),
-          ...(minPosts ? { min_posts: minPosts } : {})
-        },
+      apiData(api.get(`/feed/${String(accountId)}`, {
+        params: compactParams({ reason, min_posts: minPosts }),
         signal
-      }).then((response) => response.data)
+      }))
   )
 
   const likeFeedApi = useApi<ApiResponseWrapper<null>, { accountId: number; mediaId: string }>(
     ({ accountId, mediaId }) =>
-      api.post(`/feed/${String(accountId)}/like`, { media_id: mediaId }).then((response) => response.data)
+      apiData(api.post(`/feed/${String(accountId)}/like`, { media_id: mediaId }))
   )
 
   const fetchUserInfoApi = useApi<ApiResponseWrapper<InstagramUserDetailApi>, { accountId: number; userPk: string }>(
     ({ accountId, userPk }, signal) =>
-      api.get(`/instagram-user/${String(accountId)}/${userPk}`, { signal }).then((response) => response.data)
+      apiData(api.get(`/instagram-user/${String(accountId)}/${userPk}`, { signal }))
   )
 
   const loadFeed = async (accountId: number, reason?: string) => {
@@ -51,7 +48,7 @@ export const useFeedStore = defineStore('feed', () => {
     cache.loadCacheState(accountId)
 
     const minPosts = cache.minPostsPerLoad.value ?? undefined
-    const { data } = await fetchFeedApi.execute({ accountId, ...(reason ? { reason } : {}), ...(minPosts ? { minPosts } : {}) })
+    const { data } = await fetchFeedApi.execute({ accountId, ...compactParams({ reason, minPosts }) })
 
     posts.value = mediaPostDTO.toLocal(data.posts)
     nextMaxId.value = data.next_max_id
@@ -69,14 +66,14 @@ export const useFeedStore = defineStore('feed', () => {
     minPosts?: number
   }>(
     ({ accountId, maxId, seenPostsParam, minPosts }, signal) =>
-      api.get(`/feed/${String(accountId)}`, {
-        params: {
-          ...(maxId ? { max_id: maxId } : {}),
-          ...(seenPostsParam ? { seen_posts: seenPostsParam } : {}),
-          ...(minPosts ? { min_posts: minPosts } : {})
-        },
+      apiData(api.get(`/feed/${String(accountId)}`, {
+        params: compactParams({
+          max_id: maxId,
+          seen_posts: seenPostsParam,
+          min_posts: minPosts
+        }),
         signal
-      }).then((response) => response.data)
+      }))
   )
 
   const loadMoreFeed = async (accountId: number) => {
@@ -89,9 +86,7 @@ export const useFeedStore = defineStore('feed', () => {
 
     const { data } = await loadMoreApi.execute({
       accountId,
-      ...(maxId ? { maxId } : {}),
-      ...(seenPostsParam ? { seenPostsParam } : {}),
-      ...(minPosts ? { minPosts } : {})
+      ...compactParams({ maxId, seenPostsParam, minPosts })
     })
 
     const existingPks = new Set(posts.value.map((post) => post.pk))

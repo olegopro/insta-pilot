@@ -1,4 +1,5 @@
 export type { Nullable } from './types'
+export { compactParams } from './compactParams'
 export { notifySuccess, notifyError } from './notify'
 export { formatCount, formatDate, formatTimeHMS, formatTimeHM, formatDuration, formatDateRu, formatRelativeTime } from './formatters'
 export { useFilterColumns } from './useFilterColumns'
