@@ -28,7 +28,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
             $payload['device_profile'] = $deviceProfile;
         }
 
-        $response   = Http::post("$this->pythonUrl$endpoint", $payload);
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", $payload);
         $durationMs = (int) ((microtime(true) - $start) * 1000);
         $result     = $response->json();
         $isSuccess  = $response->successful();
@@ -65,7 +65,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
         $start    = microtime(true);
         $endpoint = '/account/info';
 
-        $response   = Http::post("$this->pythonUrl$endpoint", ['session_data' => $sessionData]);
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", ['session_data' => $sessionData]);
         $durationMs = (int) ((microtime(true) - $start) * 1000);
         $result     = $response->json();
         $isSuccess  = $response->successful();
@@ -105,7 +105,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
         $start    = microtime(true);
         $endpoint = '/media/like';
 
-        $response   = Http::post("$this->pythonUrl$endpoint", [
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", [
             'session_data' => $sessionData,
             'media_id'     => $mediaId,
         ]);
@@ -242,7 +242,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
         $start    = microtime(true);
         $endpoint = '/user/info';
 
-        $response   = Http::post("$this->pythonUrl$endpoint", [
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", [
             'session_data' => $sessionData,
             'user_pk'      => $userPk,
         ]);
@@ -349,7 +349,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
         $start    = microtime(true);
         $endpoint = '/search/locations';
 
-        $response   = Http::post("$this->pythonUrl$endpoint", [
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", [
             'session_data' => $sessionData,
             'query'        => $query,
         ]);
@@ -468,7 +468,7 @@ class InstagramClientService implements InstagramClientServiceInterface {
         $start    = microtime(true);
         $endpoint = '/media/comment';
 
-        $response   = Http::post("$this->pythonUrl$endpoint", [
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", [
             'session_data' => $sessionData,
             'media_id'     => $mediaId,
             'text'         => $text,
