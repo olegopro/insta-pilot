@@ -1,5 +1,10 @@
 # insta-pilot — Project Memory
 
+> **Карта документации (паутина `CLAUDE.md`).** Этот корневой файл — диспетчер: универсальный контекст +
+> указатели, грузится в каждую сессию. Area-специфика вынесена во вложенные `CLAUDE.md` и подхватывается
+> КОНТЕКСТНО (только при работе с файлами в соответствующей папке — это и есть разгрузка корня).
+> `AGENTS.md` — symlink на этот файл (единый источник правды).
+
 ## Project Overview
 Instagram auto-liker web service.
 Stack: Laravel 13 (backend) + Python FastAPI + instagrapi (Instagram layer) + Vue 3 + Quasar (frontend).
@@ -8,21 +13,34 @@ DB: PostgreSQL 16. Queue: Redis.
 ## Project Structure
 ```
 insta-pilot/
-├── backend-laravel/    # Laravel 13, PHP 8.3
-├── frontend-vue/       # Vue 3 + Quasar + TypeScript
-├── python-service/     # FastAPI + instagrapi
-├── docker/             # Dockerfiles (laravel/, python/, vue/)
+├── backend-laravel/    # Laravel 13, PHP 8.3                      → backend-laravel/CLAUDE.md
+├── frontend-vue/       # Vue 3 + Quasar + TypeScript              → frontend-vue/CLAUDE.md
+├── python-service/     # FastAPI + instagrapi                     → python-service/CLAUDE.md
+├── docker/             # Dockerfiles (laravel/python/vue/nginx)   → docker/CLAUDE.md
 └── docker-compose.yml
 ```
 
-## Docker Services
-- `vue`          → port 9000 (Vite dev server)
-- `laravel`      → port 8000 (PHP-FPM + Artisan serve)
-- `python`       → port 8001 (FastAPI + instagrapi)
-- `postgres`     → port 5432 (PostgreSQL 16)
-- `redis`        → port 6379 (Queue + Broadcasting)
-- `reverb`       → port 8080 (WebSocket сервер, Laravel Reverb)
-- `queue-worker` → Redis queue worker (обработка Jobs)
+## Карта документации
+Вложенные `CLAUDE.md` (грузятся контекстно при работе в папке — основная разгрузка корня):
+
+| Область | Файл | Что внутри |
+|---|---|---|
+| Backend | `backend-laravel/CLAUDE.md` | PHP/Laravel код-стайл, `app/`, API-формат, 4 таблицы, Reverb-каналы, BE-тесты |
+| Frontend | `frontend-vue/CLAUDE.md` | Vue/Quasar/FSD код-стайл, обёртки `shared/ui`, DTO, store/table-паттерны, FE-тесты, overlay |
+| Python | `python-service/CLAUDE.md` | instagrapi-правила, ручная пагинация ленты, `_pk`/`_id`, сессии/прокси/ошибки |
+| Docker / инфра | `docker/CLAUDE.md` | сервисы, порты, env, очереди/воркеры, масштабирование `automation-worker` |
+
+On-demand доки (по ссылке, НЕ грузятся на старте):
+- `AUTOMATION-ARCHITECTURE.md` — слои движка автоматизации, 9 таблиц, канонические инварианты (§2), статус реализации (§11).
+- `AUTOMATION-PLAN.md` — поэтапный план (Phase 0 → MVP → …).
+- `ORCHESTRATION.md` / `AGENT-FACTORY.md` — детальный плейбук параллельного fan-out.
+- `ORCHESTRATION-RETROSPECTIVE.md` — живой монитор-лог мультиагентных прогонов (kiro-cli + Codex + Claude-Agent).
+- `DEBUG_PROTOCOL.md` — чек-лист ручных проверок с живым IG-аккаунтом.
+- `documentation/01-realtime-websocket.md` · `02-llm-generation.md` · `03-pinia-store-pattern.md`.
+
+## Docker Services (кратко; детали — `docker/CLAUDE.md`)
+- `vue` → 9000 · `laravel` → 8000 · `python` → 8001 · `postgres` → 5432 · `redis` → 6379
+- `reverb` → 8080 (WebSocket) · `queue-worker` (очередь `default`) · `automation-worker` (очередь `automation`)
 
 ## Environment
 Root `.env`: `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `INSTAGRAM_SALT`
@@ -40,543 +58,56 @@ Laravel: `INSTAGRAM_PYTHON_URL=http://python:8001` (внутренний Docker 
           [Laravel Reverb] ←→ [Frontend (Echo + pusher-js)]
 ```
 
-## Python service — instagrapi
-Документация: https://subzeroid.github.io/instagrapi/
-Context7 library ID: `/subzeroid/instagrapi`
-Версия: `instagrapi==2.10.6` (требует Python ≥3.10; Docker-образ `python:3.12-slim`). Локальный `venv` (3.9) для запуска не подходит — тесты гонять в контейнере. Пакеты держим на последних версиях (`requirements.txt` / `requirements-dev.txt`).
-
-### Пагинация ленты (timeline feed) — РУЧНАЯ, не штатная
-Пагинация идёт через РУЧНОЙ `cl.private_request("feed/timeline/", data=_build_pagination_params(...), with_signature=False)` — тело передаётся как **dict (form-поля)**: `max_id` + `seen_posts` (csv виденных) + `feed_view_info` (`_build_view_info`) + поля устройства.
-
-ВАЖНО: штатный `cl.get_timeline_feed(max_id, seen_posts)` (instagrapi ≥2.10.5, PR #2497 для бага #1789) для ленты НЕ годится — он шлёт тело как `json.dumps` (строка), и Instagram `feed/timeline/` так почти не пагинируется. Замер на одном аккаунте: ручной способ дал 14 уникальных постов за 6 страниц, штатный — 4. Поэтому ленту оставляем на ручной реализации, апгрейд instagrapi её не меняет.
-
-`_paginate_feed` дедуплицирует батч по уже собранным id (ранжированная лента может повторять посты). Старый снимок ленты — git-тег `feed-manual-pagination-v1`. Будущее (отдельный этап): рассмотреть забор ленты через headless-браузер или Android-эмулятор — private API даёт ограниченную/повторяющуюся домашнюю ленту.
-
-### Правила работы (по проекту)
-- Основной клиент: `instagrapi.Client` внутри `python-service` слоя, без прямых вызовов из Laravel/Vue.
-- Любые сетевые/Instagram-ошибки оборачивать в предсказуемый API-ответ FastAPI (без traceback наружу).
-- Сессии хранить и переиспользовать через `session_data` (JSON), чтобы снижать количество логинов.
-- Перед логином загружать существующую сессию; после успешной авторизации сохранять обновлённые настройки клиента.
-- Прокси задавать на клиенте до авторизации; формат и валидность прокси проверять заранее.
-- Не логировать пароль, cookie, full session dump и другие чувствительные данные.
-- Таймауты/ретраи делать ограниченными и аккуратными, чтобы не провоцировать антибот-защиту.
-- Не использовать массовые/агрессивные действия без явной бизнес-необходимости (rate-limit first).
-- В Instagram API суффикс `_pk` — всегда числовой ID сущности (`user_pk`, `location_pk`, `media_pk`), суффикс `_id` — составной (`media_id` = `{media_pk}_{user_pk}`); использовать тот суффикс, который принимает конкретный метод instagrapi.
-
 ## User Preferences
 - Answer in Russian
 - User writes code themselves — give hints, not full implementations
 - No implementation without explicit request — plan first
 
-## Делегирование субагентам — приоритет по умолчанию
+## Коммиты
+Формат — conventional commits: `тип(scope): краткое описание` (как в истории репо).
+- Тип = действие: `feat` / `fix` / `docs` / `refactor` / `chore` / `test` / `perf`
+- Scope в скобках — затронутая область: `automation`, `llm`, `claude-md`, `frontend`, …
+- Заголовок ≤70 символов, без точки в конце
+- После заголовка — пустая строка, далее описание списком с тире; пункты — глаголом
+  прошедшего времени («Ужал», «Вынес», «Добавил»)
+- Точки в конце пунктов не ставить; описание — по-русски, по существу
+- Co-authored-by НЕ добавлять
 
-При работе в ЭТОМ репозитории главная модель по умолчанию — ОРКЕСТРАТОР, а не единственный
-исполнитель. На старте каждого чата держать в уме: рядом всегда есть пул внешних агентов через MCP —
-**Kiro CLI** (первый приоритет) и **Codex** (второй). Как только задача больше тривиальной — затрагивает
-**>1 файла**, требует широкого чтения/анализа, ресёрча, второго мнения или объёмной правки — в ПЕРВУЮ
-очередь делегировать, а не прогонять всё через свой контекст.
+## Безопасность (универсально, любой слой)
+- Не логировать пароль, cookie, full session dump, API-ключи и прочие чувствительные данные.
+- Instagram: rate-limit first — без массовых/агрессивных действий без явной бизнес-необходимости.
 
-Это не отменяет правила выше: «hints, not implementations» и «plan first» решают, ЧТО показать
-пользователю и когда вообще начинать кодить; делегирование — это КАК выполнять работу, когда она уже
-санкционирована. Делегированный результат пользователю всё равно подаётся как разобранный diff/итог,
-а не как «накодил за тебя».
+## Автоматизация / Бот — ЗАВЕРШЕНО
+Парсер целей (хэштег/гео + источник `my_following`) + единый движок действий: **comment** (с
+LLM-автогенерацией) / **like** / **follow** / **unfollow**; режимы полу-ручной и полностью-авто.
+**Полностью собран и проверен на живом аккаунте.** Источник правды — `AUTOMATION-ARCHITECTURE.md`
+(слои, 9 таблиц, канонические инварианты «НЕ нарушать» §2, статус реализации §11) + `AUTOMATION-PLAN.md`.
 
-### Приоритет каналов (строгий)
+## Делегирование субагентам — политика (приоритет по умолчанию)
+Главная модель — ОРКЕСТРАТОР, не единственный исполнитель. Как только задача больше тривиальной
+(>1 файла, широкое чтение/анализ, ресёрч, второе мнение, объёмная правка) — сперва ДЕЛЕГИРОВАТЬ, потом
+верифицировать и сводить. Это не отменяет «hints, not implementations» и «plan first» (они решают, ЧТО
+показать пользователю); делегирование — это КАК выполнять санкционированную работу. Итог подаётся как
+разобранный diff/итог; чужие черновики на веру не принимать — ВЕРИФИЦИРОВАТЬ фактом.
 
-1. **Kiro CLI (MCP `kiro-cli`) — ПЕРВЫЙ приоритет ВСЕГДА и с МАКСИМАЛЬНЫМ мышлением, независимо от
-   того, простая задача или сложная.** Официальная обёртка над `kiro-cli chat`: нативный Kiro-агент сам
-   читает/правит файлы в `workdir`, помнит сессию на диске, возвращает итог + `session_id` +
-   `git diff --stat`. Проектный `CLAUDE.md` (+ его `@`-импорты) подмешивается в промпт ЦЕЛИКОМ
-   автоматически — дублировать конвенции в задачу не нужно.
-   - `mcp__kiro-cli__delegate(task, workdir, model?, effort?)` — НОВАЯ задача → новая сессия.
-   - `mcp__kiro-cli__reply(session_id, task, workdir)` — ПРОДОЛЖИТЬ ту же сессию (см. «Переиспользование»).
-   - **Модели** (цена Opus НЕ ограничение): по умолчанию **`claude-opus-4.8`** (максимум качества) →
-     **`claude-sonnet-4.6`** когда Opus избыточен (рутинная широкая правка) → **`glm-5`** лишь крайний
-     случай (узкая дешёвая задача; на большом контексте плывёт, раздувает токены).
-   - **Мышление — `max` по умолчанию.** Обёртка сама ставит `effort=max` для opus/sonnet, если не
-     задано иначе (у `glm-5`/`qwen` мышления нет). Понижать — только когда ЯВНО нужна скорость/дешевизна.
-2. **Codex (MCP `mcp__codex__codex`) — ВТОРОЙ приоритет, по возможности.** Независимое второе мнение,
-   глубокий анализ/ресёрч, чтение реального репозитория, «посчитай по коду». Поле `config`
+Каналы (строгий приоритет):
+1. **Kiro CLI** (MCP `kiro-cli`) — ПЕРВЫЙ, всегда, с максимальным мышлением. `delegate(task, workdir,
+   model?, effort?)` — новая сессия; `reply(session_id, task, workdir)` — продолжить ту же (НЕ плодить
+   новые сессии). Проектный `CLAUDE.md` подмешивается автоматически. Модели: `claude-opus-4.8` по
+   умолчанию → `claude-sonnet-4.6` когда Opus избыточен → `glm-5` крайний случай. Effort `max` по
+   умолчанию (понижать только под явную скорость/дешевизну).
+2. **Codex** (MCP `codex`) — ВТОРОЙ: независимое мнение, глубокий анализ, чтение реального репо. `config`
    (service_tier/effort) — по правилу глобального `CLAUDE.md`. Продолжение — `codex-reply` по `threadId`.
 
-### Переиспользование сессий (ОБЯЗАТЕЛЬНО, не плодить новые)
-
-Если делегированный агент закончил, а дальше по цепочке нужно ДОУЗНАТЬ, ПОПРАВИТЬ или ПРОДОЛЖИТЬ его
-работу — продолжать ту же сессию через `mcp__kiro-cli__reply(session_id, …)`, а НЕ заводить новый
-`delegate`. Kiro помнит весь контекст той сессии на диске; повторно подмешивать `CLAUDE.md`/файлы и
-создавать новую сессию НЕ нужно. Держать `session_id` (из предыдущего `delegate`/`reply`) у себя в
-контексте и звать `reply` с ТЕМ ЖЕ `workdir` (сессии — per-директория). Максимально переиспользовать
-живых агентов вместо пересборки контекста с нуля. У Codex аналогично — `codex-reply` по `threadId`.
-
-### Параллелизм и что НЕ делегировать
-
-- Несколько независимых кусков — несколько агентов разом, но по РАЗНЫМ каналам/директориям. Помнить про
-  **per-account spacing Kiro**: на одном Kiro-аккаунте вызовы сериализуются (реального параллелизма по
-  одному аккаунту нет); тяжёлый сустейнед-объём гнать через Codex/Claude-Agent, а не давить один Kiro.
-- **Не делегировать** (узкие исключения из «Kiro первым»): по-настоящему тривиальные однофайловые
-  правки, разговорные ответы, то что быстрее и надёжнее сделать самому, и **coherence-швы** — сам
-  `CLAUDE.md`, `routes/api.php`, `AppServiceProvider.php`, навигация/роуты — их держит оркестратор.
-
-### Верификация и мониторинг
-
-- Каждый делегированный diff/ответ ВЕРИФИЦИРОВАТЬ (черновики чужих моделей не принимать на веру),
-  держать когерентность по `CLAUDE.md`, сводить результат — это на главной модели.
-- **⚠️ Механизм В РЕЖИМЕ ТЕСТА — логировать сбои агентов.** Делегирование через `kiro-cli`/Codex ещё
-  обкатывается (обёртка `kiro-cli` свежая). ЛЮБУЮ ошибку/сбой/нюанс агента — особенно **Kiro CLI** —
-  фиксировать в `ORCHESTRATION-RETROSPECTIVE.md` (живой монитор-лог), в т.ч. в НОВОМ чате. Уже так
-  выловлено несколько багов (ложный auth-баннер; маскировка `exit≠0` под успех; гонка `session_id`).
-- Детальный плейбук параллельного fan-out — `ORCHESTRATION.md` и `AGENT-FACTORY.md`.
-
----
-
-# Блок «Автоматизация/Бот» (в разработке)
-
-Парсер целей (хэштег/гео + комбо-фильтры аккаунта и контента) + переиспользуемый движок действий
-(комментарий — MVP; лайк/подписка/отписка — позже) с распределением во времени, дневными лимитами и
-рабочими часами на аккаунт. Два режима: полу-ручной (парсинг → корзина → старт) и полностью авто.
-
-Источник истины по архитектуре — проектные документы в корне:
-- `AUTOMATION-ARCHITECTURE.md` — все слои, 9 таблиц, контракты, разрешённые конфликты, дефолты.
-- `AUTOMATION-PLAN.md` — поэтапный план (Phase 0 → MVP «комментарии хэштег/гео полу-ручной» → …).
-- `ORCHESTRATION-RETROSPECTIVE.md` — ретро + живой мониторинг мультиагентных прогонов (текущий стек:
-  kiro-cli + Codex + Claude-Agent).
-
-Канонические решения (НЕ нарушать при доработке): учёт дневных лимитов — таблица-счётчик
-`account_action_counters` + `SELECT … FOR UPDATE` (НЕ COUNT по логам); распределение — БД-строки
-`automation_action_items.run_at` + диспетчер `schedule()->everyMinute()` (НЕ delay()-jobs);
-идемпотентность — UNIQUE(`instagram_account_id`,`action_type`,`media_pk`) + CAS-claim + reconcile;
-единый TZ на аккаунт (`account_working_hours.timezone`) для окна и границы суток лимита; методы
-`InstagramClientService` — auth-context-free (явный `?int $userId`).
-
-Статус сборки: **MVP готов и проверен** (Wave 1–3; комментарии хэштег/гео, полу-ручной режим).
-Слой данных (9 таблиц + модели + репозитории); Python-парсинг (`POST /parse/targets/candidates|enrich`
-+ хелперы метрик); Laravel-движок (контракт `ActionPluginInterface`, `Comment`/`LikeActionPlugin`,
-`RateLimitGuardService` со счётчиком `account_action_counters` + `FOR UPDATE`, `WorkingHoursService`,
-`ActionSchedulerService`, `ScheduleActionItemsJob`/`ExecuteActionItemJob`, команда-диспетчер
-`automation:dispatch` каждую минуту, событие `AutomationTaskProgress`); Laravel-парсинг (обёртки
-клиента, `TargetFilterService`, `ParseTargetsJob`, `AutomationTaskController` +
-`AutomationSettingsController`); фронтенд (FSD: 5 `shared/ui`-обёрток + entity/feature/widget +
-страница `/automation` + таб в `AppNavTabs`). Очередь `automation` (отдельный воркер), `retry_after=300`
-> job timeout. Проверено: BE 231 / PY 176 тестов зелёные, `vue-tsc` чисто, 14 маршрутов, UI вживую
-(Chrome) + API-roundtrip. **Проверено вживую на реальном аккаунте** (3 задачи): парсинг (candidates+
-enrich по реальному IG), корзина, запуск, диспетчер `automation:dispatch`, исполнение — опубликованы
-реальный комментарий и реальный лайк; лимиты (`FOR UPDATE`+откат), cooldown, идемпотентность, очереди
-(default+automation) работают. Движок action-agnostic (comment/like — один конвейер, разные плагины).
-Caveat: авто-генерация текста коммента требует настроенного LLM-провайдера (`llm_settings` — задаётся
-владельцем; без ключа `resolve` падает понятной ошибкой, исполнение через готовый `comment_text` — ок).
-**Грабли:** `queue:work` кэширует код — после правок рестартить queue-worker И automation-worker.
-**Phase 2 (полностью-авто) — готова и проверена живьём:** full_auto (`СТАРТ (АВТО)`) парсит и САМ
-планирует исполнение (`ParseTargetsJob` авто-диспатчит `ScheduleActionItemsJob`, без ручного `/start`),
-UI уходит на вкладку «Задачи» с realtime-прогрессом; выбор действия (комментарий/лайк) в конструкторе;
-review-таблица авто-обновляется после async-парсинга (`useParseProgress`: подписка `.AutomationTaskProgress`
-+ fallback-поллинг). Идемпотентность: `ActionSchedulerService` под `lockForUpdate` не дублирует
-планирование, `/start` идемпотентен. **Phase 4 (UX настроек) — готова и проверена живьём:** вкладка «Настройки» грузит/сохраняет дневные
-лимиты (PUT в `account_action_limits`) и рабочие часы (модалка-сетка 7×24 + TZ → `account_working_hours`),
-рабочие часы **enforced** планировщиком (`run_at` сдвигается на начало открытого окна). Весь блок
-«Автоматизация» проверен на живом аккаунте от парсинга до исполнения (реальные коммент+лайки), вкл.
-полу-ручной и полностью-авто, лимиты/часы/cooldown/идемпотентность. **Phase 6 (подписки) — follow готов и проверен живьём:** Python `/user/follow` + `/user/unfollow`,
-`InstagramClientService::followUser/unfollowUser` (по образцу `addLike`), `Follow`/`UnfollowActionPlugin`
-(зарегистрированы в теге `automation.plugins`); follow проверен на живом аккаунте (реальная подписка,
-`friendship_status.following=true`). Полный набор действий **comment/like/follow** работает через один
-движок (расширяемость плагинами подтверждена). **Unfollow — готов и проверен живьём:** добавлен источник `my_following` (Python `POST /user/following`
-→ `cl.user_following(cl.user_id)`; ветка в `ParseTargetsJob`; в UI при выборе «Отписка» источник =
-`my_following`, выбор хэштега/гео скрыт). Реальная отписка подтверждена (`friendship_status.following=
-false`). Лимиты follow/unfollow в форме настроек. Источник `my_following` — единственный, где цели без
-media (отписка от текущих подписок аккаунта).
-
-**Phase 5 (масштаб) — готов:** `automation-worker` масштабируется `docker compose up -d --scale
-automation-worker=N` (нет `container_name`); многоворкерность безопасна (диспетчер — `FOR UPDATE SKIP
-LOCKED`, исполнение — CAS-claim); реальный параллелизм по РАЗНЫМ аккаунтам (Python `account_lock`
-сериализует один аккаунт). `--timeout=180` (> job comment 120, < `retry_after` 300).
-
-**LLM-авто-генерация коммента — проверена живьём:** провайдер `openai/gpt-4o` (ключ владельца) →
-`CommentActionPlugin.resolve` → `LlmService::generateComment(фото поста, caption)` сгенерил контекстный
-коммент по фото (для lashes-поста — про ресницы) и опубликовал на живом аккаунте (`comment_pk`
-подтверждён). `LlmSettingsController::store` теперь авто-делает первую настройку дефолтной (`getDefault()
-=== null && setDefault(...)`) — иначе генерация не находила провайдера (этот пробел всплыл вживую).
-
-**БЛОК «АВТОМАТИЗАЦИЯ» ПОЛНОСТЬЮ ЗАВЕРШЁН И ПРОВЕРЕН НА ЖИВОМ АККАУНТЕ.** Все 4 действия
-(comment с LLM-авто-генерацией / like / follow / unfollow); полу-ручной + полностью-авто; парсинг
-(хэштег/гео + `my_following`), фильтры, корзина; лимиты, рабочие часы (UI+enforcement), настройки;
-очереди + диспетчер; cooldown, идемпотентность, realtime-прогресс, масштабирование воркеров.
-
----
-
-# Backend — Laravel 13
-
-## Документация
-- Laravel 12: Context7 library ID: `/websites/laravel_12_x`
-- Laravel (общая): Context7 library ID: `/laravel/docs`
-
-## Правила
-- `declare(strict_types=1)` в каждом PHP файле
-- Controllers: `final class`, только `JsonResponse` в return
-- DI через конструктор, `private readonly`
-- Паттерн: Interface → Implementation → bind в AppServiceProvider → (опционально) Facade
-- Фигурная скобка `{` на той же строке: `class Foo {`, `function bar(): void {`, `interface Baz {`
-- Trailing comma в массивах не ставится: `['a', 'b', 'c']`, не `['a', 'b', 'c',]`
-- Массивы с 2+ элементами — многострочно, каждый элемент на своей строке
-
-## Структура app/
-```
-Http/Controllers/             # final class, readonly DI, JsonResponse
-Http/Middleware/               # EnsureUserIsActive и другие
-Models/                       # Eloquent, шифрование через Accessors
-Models/Concerns/              # Trait-ы моделей (HasEncryption)
-Providers/AppServiceProvider  # все bindings в register()
-Repositories/                 # Interface + Implementation
-Services/                     # Interface + Implementation
-Jobs/                         # Queue jobs (GenerateCommentJob)
-Events/                       # Broadcasting events
-Facades/                      # extends Facade → aliases в config/app.php
-Console/                      # Artisan commands
-```
-
-## API Response Format
-```php
-// Успех
-return response()->json(['success' => true, 'data' => $data, 'message' => 'OK']);
-// Ошибка
-return response()->json(['success' => false, 'error' => 'Описание'], 500);
-```
-
-## Таблица instagram_accounts
-| Поле                    | Тип                   | Описание                |
-|-------------------------|-----------------------|-------------------------|
-| id                      | bigIncrements         | PK                      |
-| user_id                 | FK, nullable          | владелец (users), nullOnDelete |
-| instagram_login         | string, unique        | логин                   |
-| instagram_password      | text                  | зашифрован              |
-| session_data            | text, nullable        | JSON сессии, зашифрован |
-| proxy                   | string, nullable      | прокси                  |
-| full_name               | string, nullable      | имя из Instagram        |
-| profile_pic_url         | text, nullable        | URL аватарки            |
-| device_profile_id       | FK, nullable          | профиль устройства (device_profiles), nullOnDelete |
-| device_model_name       | string, nullable      | модель устройства аккаунта |
-| is_active               | boolean, default true |                         |
-| last_used_at            | timestamp, nullable   |                         |
-| created_at / updated_at | timestamps            |                         |
-
-Шифрование через Accessors в модели с `INSTAGRAM_SALT` → `config('app.instagram_salt')`.
-
-## Таблица device_profiles
-| Поле         | Тип            | Описание                            |
-|--------------|----------------|-------------------------------------|
-| id           | bigIncrements  | PK                                  |
-| code         | string, unique | код профиля                         |
-| title        | string         | название профиля                    |
-| device_settings | json        | UUID и параметры устройства (Android) |
-| user_agent   | text           | User-Agent строка                   |
-| is_active    | boolean, default true |                              |
-| created_at / updated_at | timestamps |                            |
-
-Данные хранятся в `backend-laravel/data/device-profiles/device-profiles.json`. Заполняются через `DeviceProfileSeeder`. Назначается аккаунту при добавлении (`device_profile_id`) — передаётся в Python как заголовки запросов.
-
-## Таблица account_activity_logs
-| Поле              | Тип               | Описание                                 |
-|-------------------|-------------------|------------------------------------------|
-| id                | bigIncrements     | PK                                       |
-| instagram_account_id | FK             | аккаунт (cascadeOnDelete)                |
-| user_id           | FK                | пользователь-владелец (cascadeOnDelete)  |
-| action            | string            | тип действия (login, like, comment, ...) |
-| status            | string            | success / fail                           |
-| http_code         | smallInteger, nullable | HTTP-код ответа                     |
-| endpoint          | string, nullable  | вызванный endpoint                       |
-| request_payload   | json, nullable    | payload запроса (cast array, sanitized)  |
-| response_summary  | json, nullable    | сводка ответа (cast array)               |
-| error_message     | text, nullable    | текст ошибки                             |
-| error_code        | string, nullable  | код ошибки                               |
-| duration_ms       | integer, nullable | время выполнения запроса                 |
-| created_at        | timestamp, useCurrent | без updated_at (`$timestamps=false`) |
-
-Логирование через `ActivityLoggerService` / `ActivityLoggerServiceInterface`. Репозиторий: `ActivityLogRepository`. Broadcasting event: `ActivityLogCreated` (каналы `private:account-activity.{accountId}` и `private:activity-global.{userId}`).
-
-## Таблица llm_settings
-| Поле          | Тип                   | Описание                        |
-|---------------|-----------------------|---------------------------------|
-| id            | bigIncrements         | PK                              |
-| provider      | string                | glm / openai                    |
-| api_key       | text                  | зашифрован (hidden по умолчанию)|
-| model_name    | string                | имя модели LLM                  |
-| system_prompt | text, nullable        | системный промпт                |
-| tone          | string, nullable      | friendly/professional/casual/humorous |
-| use_caption   | boolean, default true | передавать ли описание поста в LLM |
-| is_default    | boolean, default false| провайдер по умолчанию          |
-
-## WebSocket (Laravel Reverb)
-- Broadcasting через Laravel Echo + pusher-js
-- Frontend: `echo` instance в `shared/lib/echo.ts`
-
-| Канал | Event | Назначение |
-|-------|-------|-----------|
-| `private:comment-generation.{jobId}` | `CommentGenerationProgress` | прогресс генерации (starting → downloading → analyzing → completed/failed) |
-| `private:account-activity.{accountId}` | `ActivityLogCreated` | новая запись лога аккаунта в реальном времени |
-| `private:activity-global.{userId}` | `ActivityLogCreated` | глобальный поток логов пользователя (admin) |
-
----
-
-# Frontend — Vue 3 + Quasar + TypeScript
-
-## Документация
-- Vue 3: Context7 library ID: `/vuejs/docs`
-- Quasar: Context7 library ID: `/quasarframework/quasar`
-- FSD: Context7 library ID: `/feature-sliced/documentation`
-
-## Архитектура: FSD (Feature-Sliced Design)
-Документация: https://feature-sliced.design/docs
-
-## Правила
-- Порядок блоков SFC: `<script setup lang="ts">` → `<template>` → `<style>`
-- Импорты: через `@/` (не `./` или `../`)
-- Обработчики событий: суффикс `Handler` (`submitHandler`)
-- UI компоненты: только кастомные обёртки из `shared/ui/` (ButtonComponent, InputComponent, SelectComponent, ToggleComponent, ...) над Quasar, суффикс `Component`
-- Каждый action в store — через `useApi`, никакого внутреннего state в store
-- Public API слайсов — через `index.ts` в каждом сегменте
-- Стиль кода: стрелочные функции без `{}` если тело — один expression (`.catch(() => Notify.create(...))`); enforced ESLint-правилом `local/arrow-concise-body` с autofix
-- Стиль кода: параметры callback-ов — только полные имена, без однобуквенных сокращений (`.then((response) => response.data)`, `.find((account) => account.id === id)`, не `r`, `a`, `e` и т.п.)`
-- Стиль кода: `&&` вместо `if` для коротких условных вызовов (`opened && fn()`)
-- Стиль кода: хуки жизненного цикла (`onMounted`, `onBeforeUnmount` и др.) размещать в самом конце `<script setup>`, после всех переменных, computed и watch — ESLint это не проверяет, соглашение проекта
-- Шаблоны: никогда не добавлять `.value` — Vue автоматически разворачивает `Ref` в `<template>`
-- Уведомления: использовать `notifyError` / `notifySuccess` из `@/shared/lib`, а не `Notify.create` напрямую
-- Trailing comma в объектах не ставится: `{ a: 1, b: 2 }`, не `{ a: 1, b: 2, }`; правило распространяется и на объект с одним свойством: `{ a: 1 }`, не `{ a: 1, }`
-- Валидация форм: правила выносить в переменные в `<script setup>`, не писать функции прямо в `:rules`; все переиспользуемые валидаторы — в `shared/lib/validators.ts` (реэкспорт через `shared/lib/index.ts`); для email использовать `patterns.testPattern.email` из `quasar`, не `type="email"`
-
-## Обёртки над Quasar-компонентами (shared/ui)
-
-Паттерн каждого wrapper-компонента (`shared/ui/*/`):
-- `interface XxxComponentProps extends Omit<QXxxProps, 'modelValue'>` + `defineProps<XxxComponentProps>()`
-- `useForwardProps(props)` из `@/shared/lib` — фильтрует `undefined` для корректного проброса пропсов
-- `defineOptions({ inheritAttrs: false })` + `v-bind="{ ...$attrs, ...forwarded }"` на корневом элементе
-- `defineModel` для двустороннего бинда
-- Слоты: proxy через `v-for` по `$slots`
-- `export interface XxxComponentProps` + реэкспорт через `index.ts` сегмента
-- Компоненты с required-пропсами (QTable, QTree и др.) — нужен cast: `v-bind="{ ...$attrs, ...(forwarded as QXxxProps) }"` (см. JSDoc в `useForwardProps.ts`)
-
-Примеры: `shared/ui/input-component/` (без cast), `shared/ui/table-component/` (с cast)
-
-## Типы и DTO
-- API типы (snake_case от бэкенда): суффикс `Api` — `MediaPostApi`, `FeedResponseApi`. Файл: `apiTypes.ts`
-- Локальные типы (camelCase): без суффикса — `MediaPost`, `InstagramUserDetail`. Файл: `types.ts`
-- DTO: класс-синглтон с `toLocal()` / `toLocalPost()`. Файл: `*DTO.ts`, экспорт: `export default new ClassName()`
-- `Nullable<T>` из `@/shared/lib` вместо `T | null`
-
-## Паттерн таблиц (QTable)
-Всегда использовать `TableComponent` из `@/shared/ui/table-component` вместо `q-table` напрямую.
-Для каждой сущности с таблицей создавать два файла в `entities/*/model/`:
-- `*TableColumns.ts` — колонки + `RowModel` интерфейс (`satisfies QTableColumn<RowModel>[]`)
-- `*ListDTO.ts` — маппинг API-модели (snake_case) → RowModel (camelCase), класс + singleton
-
-Страница/виджет с таблицей использует:
-```ts
-const { columns, columnsVisibleNames } = useFilterColumns(*TableColumns)
-const { searchText } = useSearchQuery()
-const rows = computed(() => *ListDTO.toLocal(store.someApi.data?.data ?? []))
-```
-Пример: [InstagramAccountsList.vue](src/widgets/instagram-accounts-list/ui/InstagramAccountsList.vue)
-
-## Структура src/ (FSD)
-```
-boot/                    # Quasar boot (не трогать расположение)
-  axios.ts               # axios instance + globalProperties
-router/                  # Quasar router (не трогать расположение)
-  index.ts               # createRouter + Router.beforeEach(authGuard)
-  guard.ts               # authGuard — навигационный guard (вынесен из index.ts ради unit-тестов)
-layouts/                 # MainLayout
-
-shared/
-  api/                   # useApi, ApiResponseWrapper
-  lib/                   # Nullable, notify, formatters, echo, useModal, useFilterColumns,
-                         # useSearchQuery, useForwardProps, validators, proxyImageUrl,
-                         # useReverseInfiniteScroll
-  ui/
-    button-component/    # каждый компонент — своя папка (kebab-case) + index.ts
-    input-component/
-    modal-component/
-    select-component/
-    toggle-component/
-    table-component/
-    table-tools-wrapper/
-    masonry-grid/        # CSS columns Masonry
-    media-card/          # Карточка поста (thumbnail + overlay)
-    media-display/       # Фото/видео/карусель (Swiper.js)
-
-entities/
-  instagram-account/     # InstagramAccount, accountStore, ProfileCard
-  media-post/            # MediaPost, feedStore, searchStore, MEDIA_TYPE constants
-  llm-settings/          # LlmSetting, llmSettingsStore, LLM_PROVIDERS/MODELS constants
-  user/                  # User, authStore, token management
-  activity-log/          # AccountActivityLog, activityLogStore, sidebarActivityStore,
-                         # activityLogTableColumns, activitySummaryTableColumns,
-                         # activityLogListDTO, activitySummaryListDTO, apiTypes, types, constants
-
-features/
-  add-instagram-account/ # Добавление аккаунта
-  delete-instagram-account/
-  view-instagram-account/
-  auth-login/            # Форма логина
-  post-detail/           # PostDetailModal (фото/видео, комментарии, лайки)
-  instagram-user/        # InstagramUserModal (профиль пользователя)
-  generate-comment/      # useCommentGeneration (WebSocket), GenerationStatus
-  activity-filter/       # Фильтрация логов (аккаунт, действие, статус, дата)
-  activity-live/         # WebSocket-подписка на ActivityLogCreated
-
-widgets/
-  instagram-accounts-list/  # Таблица аккаунтов
-  activity-log-table/       # Таблица логов (с разворотом строки, reverse-scroll)
-  activity-sidebar/         # Боковая панель с деталями записи лога
-  activity-stats-cards/     # Карточки сводной статистики
-  activity-summary-table/   # Таблица сводки по действиям
-  activity-grouped-stats/   # Сгруппированная статистика
-
-pages/
-  login/                 # LoginPage
-  instagram-accounts/    # InstagramAccountsPage
-  feed/                  # FeedPage (Masonry-лента)
-  search/                # SearchPage (хэштеги/гео + комментарии)
-  llm-settings/          # LlmSettingsPage (admin)
-  admin-users/           # AdminUsersPage (admin)
-  logs/                  # LogsPage (мониторинг активности, Phase 5)
-```
-
-## Нейминг
-- `instagram-account` — Instagram аккаунт в системе
-- `user` — пользователь системы insta-pilot (Sanctum auth + Spatie roles: admin/user)
-- `media-post` — публикация Instagram (фото/видео/карусель)
-- `llm-settings` — настройки LLM-провайдера (GLM / OpenAI)
-- `activity-log` — запись лога активности аккаунта (`account_activity_logs`)
-- `device-profile` — профиль устройства Android для инстаграм-клиента
-
-## Pinia и .value
-- В компоненте через `store.someProperty`: `.value` НЕ нужно — Pinia применяет `UnwrapRef` рекурсивно
-- Правило: `store.*.value` в компоненте — это ошибка TS
-
-## Паттерн store: нейминг и структура
-```ts
-// ПРИВАТНЫЕ useApi-объекты (суффикс Api, не в return):
-const fetchAccountsApi = useApi(...)
-const deleteAccountApi = useApi(...)
-
-// ПУБЛИЧНЫЕ ref-данные (существительное):
-const accounts = ref<InstagramAccount[]>([])
-
-// ПУБЛИЧНЫЕ actions — всегда императивный паттерн:
-const fetchAccounts = async () => {
-  const { data } = await fetchAccountsApi.execute()
-  accounts.value = data
-}
-const fetchAccountsLoading = computed(() => fetchAccountsApi.loading.value)
-
-// Если action не работает с данными ответа — fire-and-forget:
-const deleteAccount = (id: number) => deleteAccountApi.execute(id)
-const deleteAccountLoading = computed(() => deleteAccountApi.loading.value)
-const deleteAccountError = computed(() => deleteAccountApi.error.value)
-
-// return — только публичное, никаких *Api:
-return { accounts, fetchAccounts, fetchAccountsLoading, ... }
-```
-- `*Api`-объекты никогда не выставляются наружу через return
-- Данные всегда в `ref`, не в `computed(() => api.response.value?.data)`
-- `execute()` возвращает `Promise<TData>` — данные получаем через `const { data } = await execute()`
-- При ошибке `execute()` ставит `error.value` и пробрасывает throw — код после `await` не выполнится
-- Не использовать `if (!data) return` после `await execute()` — ошибки уже обработаны через throw
-
-## useReverseInfiniteScroll
-Хук `shared/lib/useReverseInfiniteScroll.ts` — загрузка старых записей при скролле вверх.
-- Слушает `window.scroll` (не контейнер)
-- При `scrollY < 100` вызывает `loadOlderFn()`, затем восстанавливает позицию скролла через `window.scrollTo`
-- Восстановление только если `addedHeight > 0` (предотвращает jitter)
-- Вызывающий компонент обязан навешивать throttle (150 мс) самостоятельно
-
-## Паттерн activity-log-table
-- `ActivityLogTable` использует window scroll + `useReverseInfiniteScroll` для пагинации вверх
-- Клик по строке таблицы разворачивает `ActivityLogExpandedRow` (без отдельной кнопки expand)
-- `ActivityLogExpandedRow` показывает 3 секции: Vue↔Laravel / Laravel↔Python / Python↔Instagram
-- Секции Vue↔Laravel и Python↔Instagram имеют вкладки Кратко/Подробно — только если данные содержат объекты/массивы (`hasNestedData`)
-- Секция Laravel↔Python — всегда без вкладок (данные скалярные)
-- Поля `*_preview` в response отображаются с иконкой ⓘ и tooltip о том, что это сокращённые данные
-
-## Тесты (конвенции)
-Запуск (в контейнерах): FE unit — `docker compose exec vue npx vitest run`; FE integration — `... vitest run --config vitest.integration.config.ts` (нужен живой laravel; иначе авто-skip); FE e2e — `... npx playwright test`; BE — `docker compose exec laravel php artisan test` (sqlite `:memory:`).
-- **Авторитет покрытия по слоям, без дублей**: маппинг snake↔camel — только в `*DTO.spec` (store-тесты доказывают лишь запись в `ref`); дефолт `loading`/throw/`error.value` — только в `useApi.spec` (не повторять в каждом сторе); границы авторизации (401/403/404/ownership) — в Laravel Feature/e2e; шифрование — один авторитетный Model-unit на сущность
-- **Параметризация однотипных кейсов**: FE — `it.each([...])`, BE — `#[\PHPUnit\Framework\Attributes\DataProvider('name')]` (БД-stateful кейсы только через DataProvider — даёт изоляцию `RefreshDatabase`, не через `foreach`). При слиянии сохранять каждый уникальный state-инвариант
-- **Не писать тавтологии**: не тестировать `$fillable`/штатные касты Eloquent/Spatie-трейты/литералы конфига (`tries`, имя события), реактивность голого `ref`, `toBeDefined`/`toBeTruthy` без поведенческой проверки
-- **Навигационный guard** тестируется через `authGuard` из `router/guard.ts` (реальная функция), а не через копию логики в тестовом роутере
-- Ручные проверки с живым Instagram-аккаунтом (бывшие `@group instagram`-заглушки) вынесены в чек-лист `DEBUG_PROTOCOL.md`, а не висят пустыми `markTestSkipped`
-
-## Отладка ошибок
-
-### Где смотреть ошибки
-- Ошибки видны в IDE (Volar + ESLint), при сборке `quasar build`, и вручную.
-- Логи контейнера: `docker compose logs vue` или `docker compose logs -f vue`
-- Ручная проверка TS: `docker compose exec vue npx vue-tsc --noEmit`
-
-### Красный overlay ошибок в браузере (dev) — ВЫКЛЮЧЕН по умолчанию
-Это «оверлей Vue с красными ошибками» = `vite-plugin-checker` (vueTsc + typed ESLint).
-Он держит TS-программу в памяти (~1 ГБ на dev-контейнер), поэтому в dev отключён.
-- **Включить overlay обратно**: запустить dev с `CHECK=1`, напр. внутри контейнера
-  `CHECK=1 npx quasar dev --hostname 0.0.0.0` (или поменять command vue в docker-compose на `CHECK=1 ...`).
-- Гейт в `frontend-vue/quasar.config.ts`: `ctx.prod || process.env.CHECK`. При сборке всегда включён.
-- Если пользователь просит «включи оверлей с ошибками Vue / красные ошибки в браузере» — речь про это (`CHECK=1`).
-
-### Workflow после реализации задачи
-1. Сначала запустить ESLint autofix: `docker compose exec vue npx eslint --fix ./src`
-2. Проверить оставшиеся TS ошибки: `docker compose exec vue npx vue-tsc --noEmit`
-3. Исправлять вручную только то, что autofix не решил
-
-
-# Параллельная мульти-агентная оркестрация
-
-Когда фича декомпозируется на независимые куски (типично: 5–7 дашбордов/таблиц-страниц, каждый = свой
-page-slice + свои widget/entity-слайсы), их можно строить параллельными субагентами в изолированных
-git-worktree, а в конце собрать через ветки/merge. Подробный плейбук с worked-example и процедурой
-интеграции — `ORCHESTRATION.md` (читать перед запуском фан-аута). Полная архитектура «фабрики»
-массовой генерации админок (десятки экранов, контракт-first, гейты, кокпит, бюджет Kiro) — `AGENT-FACTORY.md`.
-
-## Когда разворачивать (fan-out), а когда нет
-- **Разворачивать**: ≥3 независимых единицы, каждая трогает в основном НОВЫЕ файлы (новые слайсы FSD),
-  пересечение только по немногим shared-seam файлам.
-- **Не разворачивать**: задача линейна, сильная связность правок, или почти всё идёт в одни и те же
-  shared-файлы — тогда параллелизм даёт только merge-конфликты.
-
-## Гарантия полного контекста каждому агенту
-- **По умолчанию (без настройки)**: каждый субагент, запущенный через Task/Agent, автоматически грузит
-  весь стек памяти — `~/.claude/CLAUDE.md`, корневой `CLAUDE.md` проекта, его `@import`-ы (рекурсивно,
-  до 4 хопов) и auto-memory (первые 200 строк / 25 КБ `MEMORY.md`). Это значит: правила этого файла
-  доходят до агентов сами, дублировать их в промпт НЕ нужно.
-- **Исключение — встроенные Explore и Plan**: они НАМЕРЕННО пропускают `CLAUDE.md` и git-status ради
-  скорости. Если оркестратор раздаёт работу через Explore/Plan — критичные правила (FSD-слои, паттерн
-  стора/таблицы, контракт shared-компонентов) нужно ПОВТОРИТЬ прямо в delegation-промпте.
-- **Что всё равно кладём в Task-промпт каждому**: конкретный scope (какие слайсы создаёт агент),
-  точные пути shared-контрактов для чтения, имя ветки/worktree, запрет трогать seam-файлы. Контекст —
-  это контекст, не принудиловка: чем конкретнее промпт, тем выше следование.
-- **Новая сессия**: `CLAUDE.md` + memory грузятся автоматически на старте, ручного шага нет. Проверка
-  состава — команда `/memory`.
-
-## Git: изоляция и интеграция
-- Каждый агент работает в своём worktree (`isolation: worktree` во frontmatter субагента либо просьба
-  «используй worktree для агентов»): отдельный каталог `.claude/worktrees/<name>/` и ветка
-  `worktree-<name>`, общая история репозитория.
-- **Авто-уборка только для worktree БЕЗ изменений** (нет правок, untracked-файлов и новых коммитов).
-  Worktree с коммитами/правками НЕ удаляется сам — нужен `git worktree remove` вручную либо ждать
-  истечения `cleanupPeriodDays`. Поэтому каждый агент обязан закоммитить свою единицу.
-- Интеграция: ветки агентов → ревью diff → merge в основную по одному слайсу. `cherry-pick` — для
-  переноса отдельного «чистого» коммита; `stash` — только для временного разведения контекста внутри
-  сессии. Полную процедуру см. в `ORCHESTRATION.md`.
-
-## Контракт shared-компонентов (правило когерентности)
-- Слой `shared/ui/*` и `shared/lib/*` — координируемый шов. Его расширяют ОДИН раз ДО фан-аута; агенты
-  его только читают, не правят параллельно.
-- НОВЫЙ shared-компонент = своя папка `shared/ui/<kebab>/` + `index.ts` (аддитивно, без конфликтов).
-  Добавление экспорта в СУЩЕСТВУЮЩИЙ barrel — это seam, делается последовательно, не агентами враздрай.
-- **Merge-conflict hotspots (сериализовать, не отдавать параллельно)**: `src/router/routes.ts`,
-  `src/layouts/AppNavTabs.vue` (навигация), на бэке — `routes/api.php` и `AppServiceProvider.php`.
-  Регистрацию маршрутов/табов/биндингов делает оркестратор после слияния слайсов, либо отдельный
-  финальный шаг одним агентом.
-
-## Подключение Kiro в фан-аут (через MCP `kiro-cli`)
-Внешние Kiro-модели подключаются как отдельные делегаты через MCP `kiro-cli` (`delegate`/`reply`) —
-см. «Делегирование субагентам». Главная модель остаётся на своём провайдере. Свои Task/Agent-субагенты Claude Code
-и делегаты `kiro-cli` комбинируются: разные каналы/директории идут конкурентно. Оговорка —
-**per-account spacing Kiro**: на одном Kiro-аккаунте вызовы сериализуются (паузы per-auth), реального
-параллелизма по одному аккаунту нет; для конкуренции разводить нагрузку по каналам (Kiro/Codex/
-Claude-Agent), не по моделям одного Kiro.
+Параллелизм: независимые куски — разом, но по РАЗНЫМ каналам/директориям. **Per-account spacing Kiro:**
+один Kiro-аккаунт сериализует вызовы — тяжёлый сустейнед-объём гнать через Codex/Claude-Agent.
+**⚠️ Механизм в режиме теста** — любой сбой/нюанс агента (особенно Kiro CLI) фиксировать в
+`ORCHESTRATION-RETROSPECTIVE.md`. Детальный fan-out-плейбук — `ORCHESTRATION.md` / `AGENT-FACTORY.md`.
+
+## Coherence-швы (держит оркестратор — НЕ делегировать враздрай)
+- Эти memory-файлы: корневой `CLAUDE.md` + `AGENTS.md` (symlink на него).
+- Кросс-сервисные контракты: Laravel API ↔ Python FastAPI ↔ Vue DTO/типы.
+- `docker-compose.yml` — имена/порты/env сервисов.
+- Backend: `backend-laravel/routes/api.php`, `app/Providers/AppServiceProvider.php`, `routes/channels.php`.
+- Frontend-навигация: `frontend-vue/src/router/routes.ts`, `src/layouts/AppNavTabs.vue`; барелы `shared/ui/*`, `shared/lib/*`.
+- Инварианты движка автоматизации (счётчик `FOR UPDATE`, `run_at`+диспетчер, CAS-claim, единый TZ) — `AUTOMATION-ARCHITECTURE.md §2`.

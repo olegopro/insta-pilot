@@ -409,3 +409,69 @@ user-level).
 - **Frontend**: `TableComponent` + `*ListDTO` + `*TableColumns` (таблица целей), `MasonryGrid` +
   `MediaCard` (плитка), паттерн store (`searchStore`/`accountStore`), `activity-live` (образец
   realtime-подписки).
+
+---
+
+## 11. Статус реализации (проверено на живом аккаунте)
+
+> Перенесено из корневого `CLAUDE.md` при разбивке документации на паутину. Канонические инварианты
+> движка — выше, в §2; здесь — история готовности и живых проверок.
+
+**MVP готов и проверен** (Wave 1–3; комментарии хэштег/гео, полу-ручной режим). Слой данных (9 таблиц +
+модели + репозитории); Python-парсинг (`POST /parse/targets/candidates|enrich` + хелперы метрик);
+Laravel-движок (контракт `ActionPluginInterface`, `Comment`/`LikeActionPlugin`, `RateLimitGuardService`
+со счётчиком `account_action_counters` + `FOR UPDATE`, `WorkingHoursService`, `ActionSchedulerService`,
+`ScheduleActionItemsJob`/`ExecuteActionItemJob`, команда-диспетчер `automation:dispatch` каждую минуту,
+событие `AutomationTaskProgress`); Laravel-парсинг (обёртки клиента, `TargetFilterService`,
+`ParseTargetsJob`, `AutomationTaskController` + `AutomationSettingsController`); фронтенд (FSD: 5
+`shared/ui`-обёрток + entity/feature/widget + страница `/automation` + таб в `AppNavTabs`). Очередь
+`automation` (отдельный воркер), `retry_after=300` > job timeout. Проверено: BE 231 / PY 176 тестов
+зелёные, `vue-tsc` чисто, 14 маршрутов, UI вживую (Chrome) + API-roundtrip. **Проверено вживую на
+реальном аккаунте** (3 задачи): парсинг (candidates+enrich по реальному IG), корзина, запуск, диспетчер
+`automation:dispatch`, исполнение — опубликованы реальный комментарий и реальный лайк; лимиты
+(`FOR UPDATE`+откат), cooldown, идемпотентность, очереди (default+automation) работают. Движок
+action-agnostic (comment/like — один конвейер, разные плагины). Caveat: авто-генерация текста коммента
+требует настроенного LLM-провайдера (`llm_settings` — задаётся владельцем; без ключа `resolve` падает
+понятной ошибкой, исполнение через готовый `comment_text` — ок). **Грабли:** `queue:work` кэширует код —
+после правок рестартить queue-worker И automation-worker.
+
+**Phase 2 (полностью-авто) — готова и проверена живьём:** full_auto (`СТАРТ (АВТО)`) парсит и САМ
+планирует исполнение (`ParseTargetsJob` авто-диспатчит `ScheduleActionItemsJob`, без ручного `/start`),
+UI уходит на вкладку «Задачи» с realtime-прогрессом; выбор действия (комментарий/лайк) в конструкторе;
+review-таблица авто-обновляется после async-парсинга (`useParseProgress`: подписка
+`.AutomationTaskProgress` + fallback-поллинг). Идемпотентность: `ActionSchedulerService` под
+`lockForUpdate` не дублирует планирование, `/start` идемпотентен.
+
+**Phase 4 (UX настроек) — готова и проверена живьём:** вкладка «Настройки» грузит/сохраняет дневные
+лимиты (PUT в `account_action_limits`) и рабочие часы (модалка-сетка 7×24 + TZ → `account_working_hours`),
+рабочие часы **enforced** планировщиком (`run_at` сдвигается на начало открытого окна). Весь блок
+«Автоматизация» проверен на живом аккаунте от парсинга до исполнения (реальные коммент+лайки), вкл.
+полу-ручной и полностью-авто, лимиты/часы/cooldown/идемпотентность.
+
+**Phase 6 (подписки) — follow готов и проверен живьём:** Python `/user/follow` + `/user/unfollow`,
+`InstagramClientService::followUser/unfollowUser` (по образцу `addLike`), `Follow`/`UnfollowActionPlugin`
+(зарегистрированы в теге `automation.plugins`); follow проверен на живом аккаунте (реальная подписка,
+`friendship_status.following=true`). Полный набор действий **comment/like/follow** работает через один
+движок (расширяемость плагинами подтверждена).
+
+**Unfollow — готов и проверен живьём:** добавлен источник `my_following` (Python `POST /user/following`
+→ `cl.user_following(cl.user_id)`; ветка в `ParseTargetsJob`; в UI при выборе «Отписка» источник =
+`my_following`, выбор хэштега/гео скрыт). Реальная отписка подтверждена (`friendship_status.following=
+false`). Лимиты follow/unfollow в форме настроек. Источник `my_following` — единственный, где цели без
+media (отписка от текущих подписок аккаунта).
+
+**Phase 5 (масштаб) — готов:** `automation-worker` масштабируется `docker compose up -d --scale
+automation-worker=N` (нет `container_name`); многоворкерность безопасна (диспетчер — `FOR UPDATE SKIP
+LOCKED`, исполнение — CAS-claim); реальный параллелизм по РАЗНЫМ аккаунтам (Python `account_lock`
+сериализует один аккаунт). `--timeout=180` (> job comment 120, < `retry_after` 300).
+
+**LLM-авто-генерация коммента — проверена живьём:** провайдер `openai/gpt-4o` (ключ владельца) →
+`CommentActionPlugin.resolve` → `LlmService::generateComment(фото поста, caption)` сгенерил контекстный
+коммент по фото (для lashes-поста — про ресницы) и опубликовал на живом аккаунте (`comment_pk`
+подтверждён). `LlmSettingsController::store` теперь авто-делает первую настройку дефолтной (`getDefault()
+=== null && setDefault(...)`) — иначе генерация не находила провайдера (этот пробел всплыл вживую).
+
+**БЛОК «АВТОМАТИЗАЦИЯ» ПОЛНОСТЬЮ ЗАВЕРШЁН И ПРОВЕРЕН НА ЖИВОМ АККАУНТЕ.** Все 4 действия
+(comment с LLM-авто-генерацией / like / follow / unfollow); полу-ручной + полностью-авто; парсинг
+(хэштег/гео + `my_following`), фильтры, корзина; лимиты, рабочие часы (UI+enforcement), настройки;
+очереди + диспетчер; cooldown, идемпотентность, realtime-прогресс, масштабирование воркеров.
