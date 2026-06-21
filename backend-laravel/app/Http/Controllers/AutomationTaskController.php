@@ -66,10 +66,7 @@ final class AutomationTaskController extends Controller {
 
         return response()->json([
             'success' => true,
-            'data'    => [
-                'task'      => $task,
-                'parse_run' => $parseRun
-            ],
+            'data'    => $task,
             'message' => 'Задача создана'
         ]);
     }

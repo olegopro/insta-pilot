@@ -86,8 +86,12 @@
     taskStore.clearCurrentTask()
   }
 
-  // Смена аккаунта сбрасывает незавершённый черновик конструктора.
-  watch(accountId, (id, oldId) => oldId && id !== oldId && resetBuilderHandler())
+  // Смена аккаунта сбрасывает незавершённый черновик конструктора и синхронизирует accountId
+  // в черновик парсинга (от него зависит canStartParse и валидность кнопки «Старт парсинга»).
+  watch(accountId, (id, oldId) => {
+    oldId && id !== oldId && resetBuilderHandler()
+    parsingStore.draft.accountId = id
+  }, { immediate: true })
 
   onMounted(() => void initAccounts())
 </script>

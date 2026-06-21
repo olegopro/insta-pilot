@@ -45,7 +45,13 @@ class ActivityLoggerService implements ActivityLoggerServiceInterface {
             'created_at'           => now(),
         ]);
 
-        broadcast(new ActivityLogCreated($log));
+        // Broadcast — побочный эффект мониторинга: его падение (например, Reverb «payload too large»)
+        // НЕ должно ронять уже залогированную бизнес-операцию.
+        try {
+            broadcast(new ActivityLogCreated($log));
+        } catch (\Throwable $error) {
+            report($error);
+        }
 
         return $log;
     }
