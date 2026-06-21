@@ -1,6 +1,6 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
-import { createDefaultDraft } from '@/entities/automation-parsing/model/constants'
+import { createDefaultDraft, createDefaultSource } from '@/entities/automation-parsing/model/constants'
 import parsingDraftDTO from '@/entities/automation-parsing/model/parsingDraftDTO'
 import { useAutomationTaskStore } from '@/entities/automation-task'
 import type { CommentActionConfig } from '@/entities/automation-task'
@@ -22,12 +22,24 @@ export const useAutomationParsingStore = defineStore('automationParsing', () => 
 
   const isSourceValid = computed(() => {
     const { source } = draft.value
+    // Отписка от своих подписок: целевой источник без хэштегов/гео — всегда валиден.
+    if (source.type === 'my_following') return true
     if (source.type === 'location') return source.locationPk !== null
     if (source.type === 'hashtag_location') return source.hashtags.length > 0 && source.locationPk !== null
     return source.hashtags.length > 0
   })
 
   const canStartParse = computed(() => draft.value.accountId !== null && isSourceValid.value)
+
+  // Источник жёстко связан с действием: для unfollow цель = свои подписки ('my_following'),
+  // выбор хэштега/гео не нужен. При уходе с unfollow возвращаем дефолтный источник (hashtag).
+  watch(() => draft.value.actionType, (actionType) => {
+    if (actionType === 'unfollow') {
+      draft.value.source = { ...createDefaultSource(), type: 'my_following' }
+    } else if (draft.value.source.type === 'my_following') {
+      draft.value.source = createDefaultSource()
+    }
+  })
 
   const resetDraft = () => {
     draft.value = createDefaultDraft()

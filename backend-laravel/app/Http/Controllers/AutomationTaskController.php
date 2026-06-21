@@ -27,8 +27,8 @@ final class AutomationTaskController extends Controller {
             'mode'                 => 'required|string|in:semi_auto,full_auto',
             'action_type'          => 'required|string|in:comment,like,follow,unfollow',
             'source'               => 'required|array',
-            'source.type'          => 'required|string|in:hashtag,location,hashtag_location,hashtag_list',
-            'source.value'         => 'required|array',
+            'source.type'          => 'required|string|in:hashtag,location,hashtag_location,hashtag_list,my_following',
+            'source.value'         => 'present|array',
             'filters'              => 'nullable|array',
             'target_count'         => 'required|integer|min:1|max:200',
             'action_config'        => 'nullable|array'

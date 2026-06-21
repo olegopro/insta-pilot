@@ -64,6 +64,30 @@ class ParseTargetsJob implements ShouldQueue {
             $targetLimit     = max(1, (int) $parseRun->target_limit);
             $oversampleLimit = (int) ceil($targetLimit * self::OVERSAMPLE);
 
+            if ((string) $parseRun->source_type === 'my_following') {
+                $kept = $this->collectFollowingTargets(
+                    $instagramClient,
+                    $parsedTargetRepository,
+                    (string) $account->session_data,
+                    $accountId,
+                    $userId,
+                    $targetLimit,
+                    $scannedCount
+                );
+
+                $parseRun->forceFill([
+                    'scanned_count'   => $scannedCount,
+                    'collected_count' => $kept,
+                    'status'          => 'completed',
+                    'finished_at'     => now()
+                ])->save();
+
+                $this->broadcastProgress($this->parseRunId, 'completed', $kept);
+                $this->scheduleFullAutoTask($parseRun);
+
+                return;
+            }
+
             $candidates = $this->collectCandidates(
                 $instagramClient,
                 (string) $account->session_data,
@@ -220,6 +244,40 @@ class ParseTargetsJob implements ShouldQueue {
         return $collected;
     }
 
+    private function collectFollowingTargets(
+        InstagramClientServiceInterface $instagramClient,
+        ParsedTargetRepositoryInterface $parsedTargetRepository,
+        string $sessionData,
+        int $accountId,
+        int $userId,
+        int $targetLimit,
+        ?int &$scannedCount
+    ): int {
+        $result = $instagramClient->getFollowing($sessionData, $accountId, $targetLimit, $userId);
+
+        if (empty($result['success'])) {
+            throw new \RuntimeException((string) ($result['error'] ?? 'Не удалось получить список подписок'));
+        }
+
+        $users        = array_slice($result['users'] ?? [], 0, $targetLimit);
+        $scannedCount = count($users);
+        $kept         = 0;
+
+        foreach ($users as $user) {
+            $data = $this->buildFollowingTargetData($user, $this->parseRunId, $userId);
+
+            if ($data === null) {
+                continue;
+            }
+
+            $parsedTargetRepository->create($data);
+            $kept++;
+            $this->broadcastProgress($this->parseRunId, 'running', $kept);
+        }
+
+        return $kept;
+    }
+
     /**
      * Дешёвый пред-отсев по follower_count из ответа источника (если доступен).
      *
@@ -312,6 +370,42 @@ class ParseTargetsJob implements ShouldQueue {
             'media_taken_at'         => $takenAt,
             'media_thumbnail_url'    => $thumbnail,
             'metrics_snapshot'       => $metricsSnapshot,
+            'status'                 => 'kept'
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     * @return array<string, mixed>|null
+     */
+    private function buildFollowingTargetData(array $user, int $parseRunId, int $userId): ?array {
+        $userPk   = (string) ($user['user_pk'] ?? '');
+        $username = (string) ($user['username'] ?? '');
+
+        if ($userPk === '' || $username === '') {
+            return null;
+        }
+
+        return [
+            'parse_run_id'           => $parseRunId,
+            'user_id'                => $userId,
+            'target_user_pk'         => $userPk,
+            'target_username'        => $username,
+            'target_full_name'       => $user['full_name'] ?? null,
+            'target_profile_pic_url' => $user['profile_pic_url'] ?? null,
+            'follower_count'         => null,
+            'following_count'        => null,
+            'media_count'            => null,
+            'is_private'             => false,
+            'is_verified'            => false,
+            'media_pk'               => null,
+            'media_id'               => null,
+            'media_caption'          => null,
+            'media_like_count'       => null,
+            'media_comment_count'    => null,
+            'media_taken_at'         => null,
+            'media_thumbnail_url'    => null,
+            'metrics_snapshot'       => [],
             'status'                 => 'kept'
         ];
     }

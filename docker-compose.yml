@@ -122,11 +122,16 @@ services:
 
   # Выделенный воркер очереди `automation` — бот не конкурирует с GenerateCommentJob
   # на default-воркере (queue-worker слушает только default).
+  # Масштабирование (Phase 5): docker compose up -d --scale automation-worker=N.
+  # Несколько воркеров безопасны — диспетчер выбирает due-под-действия через FOR UPDATE
+  # SKIP LOCKED, исполнение — через CAS-claim; параллелизм реальный по РАЗНЫМ аккаунтам
+  # (Python account_lock сериализует один аккаунт). --timeout=180 > job timeout (comment=120,
+  # есть LLM-генерация) и < retry_after очереди (300), чтобы воркер не убивал job раньше срока.
   automation-worker:
     build:
       context: .
       dockerfile: docker/laravel/Dockerfile
-    command: php artisan queue:work redis --queue=automation --sleep=3 --tries=3 --timeout=90
+    command: php artisan queue:work redis --queue=automation --sleep=3 --tries=3 --timeout=180
     volumes:
       - ./backend-laravel:/var/www/html
     env_file:

@@ -220,6 +220,60 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
+    public function getFollowing(string $sessionData, int $accountId, int $amount = 50, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
+        $start    = microtime(true);
+        $endpoint = '/user/following';
+
+        $response   = Http::timeout(60)->post("$this->pythonUrl$endpoint", [
+            'session_data' => $sessionData,
+            'amount'       => $amount
+        ]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          $userId,
+            action:          'fetch_following',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'amount'            => $amount,
+                'python_request'    => ['endpoint' => $endpoint, 'amount' => $amount],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null
+            ],
+            responseSummary: $isSuccess ? [
+                'results_count'      => count($result['users'] ?? []),
+                'users_preview'      => array_slice(
+                    array_map(
+                        fn($user) => [
+                            'user_pk'  => $user['user_pk'] ?? null,
+                            'username' => $user['username'] ?? null
+                        ],
+                        $result['users'] ?? []
+                    ),
+                    0,
+                    5
+                ),
+                'python_response'    => [
+                    'http_code'     => $response->status(),
+                    'results_count' => count($result['users'] ?? [])
+                ],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
+        return $result;
+    }
+
     /**
      * Загрузить страницу ленты Instagram.
      *

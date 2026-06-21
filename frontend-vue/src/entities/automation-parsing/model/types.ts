@@ -1,6 +1,6 @@
 import type { Nullable } from '@/shared/lib'
 
-export type SourceType = 'hashtag' | 'location' | 'hashtag_location' | 'hashtag_list'
+export type SourceType = 'hashtag' | 'location' | 'hashtag_location' | 'hashtag_list' | 'my_following'
 export type AutomationMode = 'semi_auto' | 'full_auto'
 export type AutomationActionType = 'comment' | 'like' | 'follow' | 'unfollow'
 

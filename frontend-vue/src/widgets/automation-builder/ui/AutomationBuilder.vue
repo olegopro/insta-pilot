@@ -19,6 +19,9 @@
 
   const parsingStore = useAutomationParsingStore()
 
+  // Отписка: цель = свои подписки, выбор источника и фильтры не нужны (скрыты).
+  const isUnfollow = computed(() => parsingStore.draft.actionType === 'unfollow')
+
   const startLabel = computed(() =>
     parsingStore.draft.mode === 'full_auto' ? 'Старт (авто)' : 'Старт парсинга')
 
@@ -32,15 +35,24 @@
       <ActionTypeSelect v-model="parsingStore.draft.actionType" />
     </section>
 
-    <section class="builder__section">
+    <section v-if="isUnfollow" class="builder__section">
       <h2 class="builder__title">Источник</h2>
-      <AutomationSourceConfig v-model="parsingStore.draft.source" :account-id="accountId" />
+      <p class="builder__hint">
+        Отписка от ваших текущих подписок (до {{ parsingStore.draft.targetCount }})
+      </p>
     </section>
 
-    <section class="builder__section">
-      <h2 class="builder__title">Фильтры отбора</h2>
-      <AutomationFilterConfig v-model="parsingStore.draft.filters" />
-    </section>
+    <template v-else>
+      <section class="builder__section">
+        <h2 class="builder__title">Источник</h2>
+        <AutomationSourceConfig v-model="parsingStore.draft.source" :account-id="accountId" />
+      </section>
+
+      <section class="builder__section">
+        <h2 class="builder__title">Фильтры отбора</h2>
+        <AutomationFilterConfig v-model="parsingStore.draft.filters" />
+      </section>
+    </template>
 
     <footer class="builder__footer">
       <div class="builder__count">
@@ -86,6 +98,12 @@
     font-size: $font-size-md;
     font-weight: $font-weight-semibold;
     margin: 0 0 $indent-m;
+  }
+
+  .builder__hint {
+    font-size: $font-size-sm;
+    color: $content-secondary;
+    margin: 0;
   }
 
   .builder__footer {

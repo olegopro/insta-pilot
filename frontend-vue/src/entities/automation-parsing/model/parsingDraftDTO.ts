@@ -8,6 +8,9 @@ class ParsingDraftDTO {
     const { source } = draft
     const value: Record<string, unknown> = {}
 
+    // Отписка: источник = свои подписки, никаких параметров не передаём.
+    if (source.type === 'my_following') return value
+
     if (source.type === 'hashtag' || source.type === 'hashtag_list' || source.type === 'hashtag_location') {
       value.hashtags = source.hashtags
     }

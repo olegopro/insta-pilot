@@ -15,6 +15,7 @@ insta-pilot — Python FastAPI service.
   POST /user/info             — публичный профиль пользователя по PK
   POST /user/follow           — подписаться на пользователя по PK
   POST /user/unfollow         — отписаться от пользователя по PK
+  POST /user/following        — список подписок текущего аккаунта
   POST /search/hashtag        — поиск постов по хэштегу
   POST /search/locations      — поиск геолокаций по названию
   POST /search/location       — посты по конкретной геолокации
@@ -59,6 +60,8 @@ from schemas import (
     FetchCommentsResponse,
     FetchCommentRepliesRequest,
     FetchCommentRepliesResponse,
+    FollowingRequest,
+    FollowingResponse,
     LoginRequest,
     LoginResponse,
     MediaLikeRequest,
@@ -429,6 +432,39 @@ async def unfollow_user(data: UserActionRequest):
             friendship_status=friendship_status,
             debug_info=debug_info,
         )
+
+    async with account_lock(data.session_data):
+        return await asyncio.to_thread(_run)
+
+
+@app.post("/user/following", response_model=FollowingResponse)
+async def get_following(data: FollowingRequest):
+    """
+    Возвращает пользователей, на которых подписан текущий Instagram-аккаунт.
+    Используется как источник целей для unfollow.
+    """
+    def _run():
+        cl = _make_client(data.session_data)
+        amount = max(min(data.amount, 200), 1)
+
+        following = cl.user_following(cl.user_id, amount=amount)
+        users = []
+
+        for user in following.values():
+            serialized_user = _serialize_target_user(user)
+            users.append({
+                "user_pk": serialized_user["pk"],
+                "username": serialized_user["username"],
+                "full_name": serialized_user["full_name"],
+                "profile_pic_url": serialized_user["profile_pic_url"]
+            })
+
+        debug_info = {
+            "instagram_request": {"method": "user_following", "user_pk": cl.user_id, "amount": amount},
+            "instagram_response": {"status": "ok", "results_count": len(users)},
+        }
+
+        return FollowingResponse(success=True, users=users, debug_info=debug_info)
 
     async with account_lock(data.session_data):
         return await asyncio.to_thread(_run)

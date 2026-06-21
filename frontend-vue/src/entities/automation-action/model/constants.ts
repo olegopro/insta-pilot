@@ -9,15 +9,14 @@ export interface ActionTypeOption {
   disable: boolean
 }
 
-// Доступные типы действий движка. comment/like/follow — рабочие (бэкенд поддерживает).
-// unfollow — disabled: отписка требует источник «мой список подписок» (текущие подписки
-// аккаунта), а хэштег-парсинг целей для неё не годится. Будет включена, когда появится
-// этот источник целей (Phase 6+).
+// Доступные типы действий движка. Все рабочие (бэкенд поддерживает). unfollow использует
+// источник 'my_following' (текущие подписки аккаунта-исполнителя) — без хэштег-парсинга и
+// фильтров; UI выбора источника для отписки скрыт.
 export const ACTION_TYPE_OPTIONS: ActionTypeOption[] = [
   { label: 'Комментарий', value: 'comment', icon: 'chat_bubble', disable: false },
   { label: 'Лайк', value: 'like', icon: 'favorite', disable: false },
   { label: 'Подписка', value: 'follow', icon: 'person_add', disable: false },
-  { label: 'Отписка', value: 'unfollow', icon: 'person_remove', disable: true }
+  { label: 'Отписка', value: 'unfollow', icon: 'person_remove', disable: false }
 ]
 
 // Действия, требующие LLM-генерации текста (конфиг тона/шаблона/use_caption).

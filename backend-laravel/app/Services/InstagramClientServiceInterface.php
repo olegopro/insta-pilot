@@ -10,6 +10,7 @@ interface InstagramClientServiceInterface {
     public function addLike(string $sessionData, string $mediaId, int $accountId, ?int $userId = null): array;
     public function followUser(string $sessionData, string $userPk, int $accountId, ?int $userId = null): array;
     public function unfollowUser(string $sessionData, string $userPk, int $accountId, ?int $userId = null): array;
+    public function getFollowing(string $sessionData, int $accountId, int $amount = 50, ?int $userId = null): array;
     public function getFeed(
         string $sessionData,
         int $accountId,

@@ -111,6 +111,18 @@ class UserActionResponse(BaseModel):
     debug_info: Optional[dict] = None
 
 
+class FollowingRequest(SessionRequest):
+    amount: int = 50
+
+
+class FollowingResponse(BaseModel):
+    success: bool
+    users: List[dict] = []
+    error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
+
+
 # ─── Search ───────────────────────────────────────────────────────────────────
 
 class SearchHashtagRequest(SessionRequest):
