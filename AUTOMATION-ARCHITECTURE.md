@@ -1,7 +1,7 @@
 # Автоматизация / Бот — Архитектура
 
 Статус: **проект (design)**, код не написан. Источник: мультиагентный прогон (Workflow Opus ×9 +
-Codex + VibeProxy Kiro-Opus/Sonnet), сведённый оркестратором. Ретроспектива прогона —
+Codex + Kiro-Opus/Sonnet), сведённый оркестратором. Ретроспектива прогона —
 [ORCHESTRATION-RETROSPECTIVE.md](ORCHESTRATION-RETROSPECTIVE.md). Поэтапный план —
 [AUTOMATION-PLAN.md](AUTOMATION-PLAN.md).
 
