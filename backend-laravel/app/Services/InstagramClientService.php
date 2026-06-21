@@ -140,6 +140,86 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
+    public function followUser(string $sessionData, string $userPk, int $accountId, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
+        $start    = microtime(true);
+        $endpoint = '/user/follow';
+
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", [
+            'session_data' => $sessionData,
+            'user_pk'      => $userPk,
+        ]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          $userId,
+            action:          'follow',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'user_pk'           => $userPk,
+                'python_request'    => ['endpoint' => $endpoint, 'user_pk' => $userPk],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+            ],
+            responseSummary: $isSuccess ? [
+                'user_pk'            => $userPk,
+                'python_response'    => ['http_code' => $response->status()],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
+        return $result;
+    }
+
+    public function unfollowUser(string $sessionData, string $userPk, int $accountId, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
+        $start    = microtime(true);
+        $endpoint = '/user/unfollow';
+
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", [
+            'session_data' => $sessionData,
+            'user_pk'      => $userPk,
+        ]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        $this->activityLogger->log(
+            accountId:       $accountId,
+            userId:          $userId,
+            action:          'unfollow',
+            status:          $isSuccess ? 'success' : $this->detectStatus($result),
+            httpCode:        $response->status(),
+            endpoint:        $endpoint,
+            requestPayload:  [
+                'user_pk'           => $userPk,
+                'python_request'    => ['endpoint' => $endpoint, 'user_pk' => $userPk],
+                'instagram_request' => $result['debug_info']['instagram_request'] ?? null,
+            ],
+            responseSummary: $isSuccess ? [
+                'user_pk'            => $userPk,
+                'python_response'    => ['http_code' => $response->status()],
+                'instagram_response' => $result['debug_info']['instagram_response'] ?? null,
+            ] : null,
+            errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+            errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+            durationMs:      $durationMs,
+        );
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
+        return $result;
+    }
+
     /**
      * Загрузить страницу ленты Instagram.
      *

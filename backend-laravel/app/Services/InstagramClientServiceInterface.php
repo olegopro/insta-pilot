@@ -8,6 +8,8 @@ interface InstagramClientServiceInterface {
     public function login(string $login, string $password, ?array $deviceProfile = null, ?int $accountId = null, ?int $userId = null): array;
     public function getUserInfo(string $sessionData, ?int $accountId = null, ?int $userId = null): array;
     public function addLike(string $sessionData, string $mediaId, int $accountId, ?int $userId = null): array;
+    public function followUser(string $sessionData, string $userPk, int $accountId, ?int $userId = null): array;
+    public function unfollowUser(string $sessionData, string $userPk, int $accountId, ?int $userId = null): array;
     public function getFeed(
         string $sessionData,
         int $accountId,

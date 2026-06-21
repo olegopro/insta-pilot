@@ -13,6 +13,8 @@ insta-pilot — Python FastAPI service.
   POST /media/like            — поставить лайк посту
   POST /media/comment         — оставить комментарий к посту
   POST /user/info             — публичный профиль пользователя по PK
+  POST /user/follow           — подписаться на пользователя по PK
+  POST /user/unfollow         — отписаться от пользователя по PK
   POST /search/hashtag        — поиск постов по хэштегу
   POST /search/locations      — поиск геолокаций по названию
   POST /search/location       — посты по конкретной геолокации
@@ -71,6 +73,8 @@ from schemas import (
     SearchLocationsResponse,
     SearchResponse,
     SessionRequest,
+    UserActionRequest,
+    UserActionResponse,
     UserInfoByPkRequest,
     UserInfoByPkResponse,
 )
@@ -368,6 +372,62 @@ async def get_user_info_by_pk(data: UserInfoByPkRequest):
                 "follower_count": getattr(user, "follower_count", 0),
                 "following_count": getattr(user, "following_count", 0),
             },
+        )
+
+    async with account_lock(data.session_data):
+        return await asyncio.to_thread(_run)
+
+
+@app.post("/user/follow")
+async def follow_user(data: UserActionRequest):
+    """
+    Подписывается на пользователя Instagram по числовому user_pk.
+    """
+    def _run():
+        cl = _make_client(data.session_data)
+        user_pk = int(data.user_pk)
+
+        result = cl.user_follow(user_pk)
+
+        debug_info = {
+            "instagram_request": {"method": "user_follow", "user_pk": user_pk},
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+
+        friendship_status = result.get("friendship_status") if isinstance(result, dict) else None
+
+        return UserActionResponse(
+            success=True,
+            friendship_status=friendship_status,
+            debug_info=debug_info,
+        )
+
+    async with account_lock(data.session_data):
+        return await asyncio.to_thread(_run)
+
+
+@app.post("/user/unfollow")
+async def unfollow_user(data: UserActionRequest):
+    """
+    Отписывается от пользователя Instagram по числовому user_pk.
+    """
+    def _run():
+        cl = _make_client(data.session_data)
+        user_pk = int(data.user_pk)
+
+        result = cl.user_unfollow(user_pk)
+
+        debug_info = {
+            "instagram_request": {"method": "user_unfollow", "user_pk": user_pk},
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+
+        friendship_status = result.get("friendship_status") if isinstance(result, dict) else None
+
+        return UserActionResponse(
+            success=True,
+            friendship_status=friendship_status,
+            debug_info=debug_info,
         )
 
     async with account_lock(data.session_data):

@@ -1,6 +1,6 @@
 import type { ActionLimit, LimitAction, WorkingHours } from '@/entities/automation-settings/model/types'
 
-// Дневные дефолты из §9: like 80–100/день, comment 30/день, follow 50/день.
+// Дневные дефолты из §9: like 80–100/день, comment 30/день, follow/unfollow 50/день.
 export const DEFAULT_DAILY_LIMITS: Record<LimitAction, number> = {
   like: 90,
   comment: 30,

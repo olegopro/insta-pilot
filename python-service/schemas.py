@@ -99,6 +99,18 @@ class UserInfoByPkResponse(BaseModel):
     error_code: Optional[str] = None
 
 
+class UserActionRequest(SessionRequest):
+    user_pk: int
+
+
+class UserActionResponse(BaseModel):
+    success: bool
+    friendship_status: Optional[dict] = None
+    error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
+
+
 # ─── Search ───────────────────────────────────────────────────────────────────
 
 class SearchHashtagRequest(SessionRequest):

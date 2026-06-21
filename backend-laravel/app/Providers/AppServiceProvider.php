@@ -33,11 +33,13 @@ use App\Services\Automation\ActionPluginRegistryInterface;
 use App\Services\Automation\ActionSchedulerService;
 use App\Services\Automation\ActionSchedulerServiceInterface;
 use App\Services\Automation\CommentActionPlugin;
+use App\Services\Automation\FollowActionPlugin;
 use App\Services\Automation\LikeActionPlugin;
 use App\Services\Automation\RateLimitGuardService;
 use App\Services\Automation\RateLimitGuardServiceInterface;
 use App\Services\Automation\TargetFilterService;
 use App\Services\Automation\TargetFilterServiceInterface;
+use App\Services\Automation\UnfollowActionPlugin;
 use App\Services\Automation\WorkingHoursService;
 use App\Services\Automation\WorkingHoursServiceInterface;
 use App\Services\InstagramClientService;
@@ -151,7 +153,9 @@ class AppServiceProvider extends ServiceProvider {
         $this->app->tag(
             [
                 CommentActionPlugin::class,
-                LikeActionPlugin::class
+                LikeActionPlugin::class,
+                FollowActionPlugin::class,
+                UnfollowActionPlugin::class
             ],
             'automation.plugins'
         );
