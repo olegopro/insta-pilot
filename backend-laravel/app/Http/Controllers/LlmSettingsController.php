@@ -105,9 +105,13 @@ final class LlmSettingsController extends Controller {
 
         $setting = $this->repository->upsert($data['provider'], $data);
 
+        // Первая настройка (или если дефолтной ещё нет) — делаем её дефолтной автоматически,
+        // иначе генерация комментариев не найдёт провайдера по умолчанию.
+        $this->repository->getDefault() === null && $this->repository->setDefault($setting->id);
+
         return response()->json([
             'success' => true,
-            'data'    => $setting,
+            'data'    => $setting->fresh(),
             'message' => 'Saved'
         ]);
     }
