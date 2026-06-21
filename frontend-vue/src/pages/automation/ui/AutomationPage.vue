@@ -40,15 +40,22 @@
   // для full_auto бэк сам планирует исполнение (ScheduleActionItemsJob) — фронт не зовёт
   // /start, а уходит на вкладку «Задачи» к запущенной задаче с realtime-прогрессом.
   const parseProgress = useParseProgress({
-    onDone: (taskId: number) => {
-      isParsing.value = false
+    onDone: async (taskId: number): Promise<number> => {
+      // full_auto: целей в review нет — бэк сам планирует исполнение. Завершаем сразу
+      // (возвращаем >0 как терминальный успех) и уходим на вкладку «Задачи».
       if (parsingStore.draft.mode === 'full_auto') {
+        isParsing.value = false
         resetBuilderHandler()
         activeTab.value = 'tasks'
-        void taskStore.fetchTasks().catch(() => notifyError('Не удалось обновить задачи'))
-        return
+        await taskStore.fetchTasks().catch(() => notifyError('Не удалось обновить задачи'))
+        return 1
       }
-      void targetStore.fetchTargets(taskId).catch(() => notifyError('Не удалось загрузить цели'))
+      // semi_auto: рефетч — источник истины. count===0 (парс ещё идёт / гонка коммита)
+      // не считаем терминалом: useParseProgress продолжит поллинг до появления целей.
+      await targetStore.fetchTargets(taskId)
+      const count = targetStore.targets.length
+      count > 0 && (isParsing.value = false)
+      return count
     },
     onFail: () => {
       isParsing.value = false
