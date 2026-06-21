@@ -6,6 +6,7 @@
   import { AutomationSourceConfig } from '@/features/automation-source-config'
   import { AutomationFilterConfig } from '@/features/automation-filter-config'
   import { StartAutomationTask } from '@/features/start-automation-task'
+  import { ActionTypeSelect } from '@/features/configure-automation-action'
   import { InputComponent } from '@/shared/ui/input-component'
 
   defineProps<{
@@ -26,6 +27,11 @@
 
 <template>
   <div class="builder">
+    <section class="builder__section">
+      <h2 class="builder__title">Действие</h2>
+      <ActionTypeSelect v-model="parsingStore.draft.actionType" />
+    </section>
+
     <section class="builder__section">
       <h2 class="builder__title">Источник</h2>
       <AutomationSourceConfig v-model="parsingStore.draft.source" :account-id="accountId" />

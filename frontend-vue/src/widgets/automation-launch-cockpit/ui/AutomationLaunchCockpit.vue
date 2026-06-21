@@ -2,6 +2,7 @@
   import { computed } from 'vue'
   import { useAutomationParsingStore } from '@/entities/automation-parsing'
   import type { AutomationTask } from '@/entities/automation-task'
+  import { ACTION_TYPE_OPTIONS, isLlmAction } from '@/entities/automation-action'
   import { CommentActionConfig } from '@/features/configure-automation-action'
   import { TimeDistributionPreview } from '@/shared/ui/time-distribution-preview'
   import { BadgeComponent } from '@/shared/ui/badge-component'
@@ -19,13 +20,23 @@
 
   const parsingStore = useAutomationParsingStore()
 
-  const isComment = computed(() => props.task.actionType === 'comment')
+  // Конфиг комментария (тон/шаблон/use_caption) нужен только для LLM-действий (comment).
+  // Для like LLM не задействован — секция настройки скрывается.
+  const showCommentConfig = computed(() => isLlmAction(props.task.actionType))
+  const actionLabel = computed(() =>
+    ACTION_TYPE_OPTIONS.find((option) => option.value === props.task.actionType)?.label
+    ?? props.task.actionType)
   const canLaunch = computed(() => props.keptCount > 0)
 </script>
 
 <template>
   <div class="cockpit">
-    <section v-if="isComment" class="cockpit__section">
+    <section class="cockpit__section cockpit__section--action">
+      <h2 class="cockpit__title">Действие</h2>
+      <BadgeComponent :label="actionLabel" color="primary" size="md" />
+    </section>
+
+    <section v-if="showCommentConfig" class="cockpit__section">
       <h2 class="cockpit__title">Настройка комментария</h2>
       <CommentActionConfig v-model="parsingStore.commentConfig" />
     </section>
@@ -74,6 +85,16 @@
     font-size: $font-size-md;
     font-weight: $font-weight-semibold;
     margin: 0 0 $indent-m;
+  }
+
+  .cockpit__section--action {
+    display: flex;
+    align-items: center;
+    gap: $spacing-inline-gap;
+
+    .cockpit__title {
+      margin: 0;
+    }
   }
 
   .cockpit__footer {

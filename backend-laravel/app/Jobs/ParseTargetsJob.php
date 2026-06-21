@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\AutomationTask;
+use App\Models\ParseRun;
 use App\Repositories\InstagramAccountRepositoryInterface;
 use App\Repositories\ParsedTargetRepositoryInterface;
 use App\Repositories\ParseRunRepositoryInterface;
@@ -126,6 +128,7 @@ class ParseTargetsJob implements ShouldQueue {
             ])->save();
 
             $this->broadcastProgress($this->parseRunId, 'completed', $kept);
+            $this->scheduleFullAutoTask($parseRun);
 
         } catch (\Throwable $e) {
             $parseRun->forceFill([
@@ -329,5 +332,19 @@ class ParseTargetsJob implements ShouldQueue {
             0,
             'parsing'
         ));
+    }
+
+    private function scheduleFullAutoTask(ParseRun $parseRun): void {
+        if ($parseRun->mode !== 'full_auto') {
+            return;
+        }
+
+        $task = AutomationTask::where('parse_run_id', $parseRun->id)->first();
+
+        if ($task === null || $task->mode !== 'full_auto') {
+            return;
+        }
+
+        ScheduleActionItemsJob::dispatch((int) $task->id);
     }
 }

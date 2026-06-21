@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Jobs\ParseTargetsJob;
+use App\Jobs\ScheduleActionItemsJob;
 use App\Repositories\AutomationTaskRepositoryInterface;
 use App\Repositories\InstagramAccountRepositoryInterface;
 use App\Repositories\ParsedTargetRepositoryInterface;
@@ -137,7 +138,15 @@ final class AutomationTaskController extends Controller {
             return $this->taskNotFound();
         }
 
-        \App\Jobs\ScheduleActionItemsJob::dispatch($id);
+        if ($task->actionItems()->exists()) {
+            return response()->json([
+                'success' => true,
+                'data'    => ['task_id' => $id],
+                'message' => 'Задача уже запущена'
+            ]);
+        }
+
+        ScheduleActionItemsJob::dispatch($id);
 
         return response()->json([
             'success' => true,

@@ -9,6 +9,7 @@
   import { AutomationLaunchCockpit } from '@/widgets/automation-launch-cockpit'
   import { AutomationTaskList } from '@/widgets/automation-task-list'
   import { AutomationAccountSettings } from '@/widgets/automation-account-settings'
+  import { useParseProgress } from '@/features/automation-task-live'
   import { PageComponent } from '@/shared/ui/page-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
   import { isCancelledRequest } from '@/shared/api'
@@ -27,21 +28,53 @@
   const activeTab = ref<Tab>('builder')
   const builderStep = ref<BuilderStep>('configure')
   const curatingId = ref<number | null>(null)
+  // Парсинг идёт асинхронно в очереди (ParseTargetsJob) — держим флаг, пока ждём
+  // завершение по WebSocket/fallback, чтобы review-таблица показывала загрузку.
+  const isParsing = ref(false)
 
   const accountId = computed(() => selectedAccount.value?.id ?? null)
   const keptCount = computed(() => targetStore.keptTargets.length)
+  const targetsLoading = computed(() => isParsing.value || targetStore.fetchTargetsLoading)
+
+  // Завершение async-парсинга: для semi_auto рефетчим цели в review-таблицу;
+  // для full_auto бэк сам планирует исполнение (ScheduleActionItemsJob) — фронт не зовёт
+  // /start, а уходит на вкладку «Задачи» к запущенной задаче с realtime-прогрессом.
+  const parseProgress = useParseProgress({
+    onDone: (taskId: number) => {
+      isParsing.value = false
+      if (parsingStore.draft.mode === 'full_auto') {
+        resetBuilderHandler()
+        activeTab.value = 'tasks'
+        void taskStore.fetchTasks().catch(() => notifyError('Не удалось обновить задачи'))
+        return
+      }
+      void targetStore.fetchTargets(taskId).catch(() => notifyError('Не удалось загрузить цели'))
+    },
+    onFail: () => {
+      isParsing.value = false
+      notifyError('Парсинг завершился с ошибкой')
+      resetBuilderHandler()
+    }
+  })
 
   // Старт парсинга: создаёт задачу из черновика и запускает парсинг источника.
+  // Парсинг асинхронный — подписываемся на его завершение (см. parseProgress).
   const startParseHandler = () => {
     if (!accountId.value) return
     parsingStore.draft.accountId = accountId.value
+    const isFullAuto = parsingStore.draft.mode === 'full_auto'
+    isParsing.value = true
+    builderStep.value = isFullAuto ? builderStep.value : 'review'
     parsingStore.startParse()
       .then((task) => {
-        notifySuccess('Парсинг запущен')
-        return targetStore.fetchTargets(task.id)
+        notifySuccess(isFullAuto ? 'Задача запущена в авто-режиме' : 'Парсинг запущен')
+        parseProgress.watchParse(task.id)
       })
-      .then(() => builderStep.value = parsingStore.draft.mode === 'full_auto' ? 'launch' : 'review')
-      .catch((error: unknown) => isCancelledRequest(error) || notifyError('Не удалось запустить парсинг'))
+      .catch((error: unknown) => {
+        isParsing.value = false
+        builderStep.value = 'configure'
+        isCancelledRequest(error) || notifyError('Не удалось запустить парсинг')
+      })
   }
 
   const excludeTargetHandler = (targetId: number) => {
@@ -70,18 +103,20 @@
     taskStore.startTask(taskId)
       .then(() => {
         notifySuccess('Задача запущена')
-        builderStep.value = 'configure'
-        parsingStore.resetDraft()
-        targetStore.clearTargets()
-        taskStore.clearCurrentTask()
+        resetBuilderHandler()
         activeTab.value = 'tasks'
       })
       .catch(() => notifyError('Не удалось запустить задачу'))
   }
 
   const resetBuilderHandler = () => {
+    parseProgress.leave()
+    isParsing.value = false
     builderStep.value = 'configure'
     parsingStore.resetDraft()
+    // resetDraft() обнуляет accountId — сразу возвращаем выбранный аккаунт в черновик,
+    // иначе кнопка «Старт» останется заблокированной (canStartParse требует accountId).
+    parsingStore.draft.accountId = accountId.value
     targetStore.clearTargets()
     taskStore.clearCurrentTask()
   }
@@ -135,13 +170,13 @@
               label="К запуску"
               icon="arrow_forward"
               color="primary"
-              :disable="keptCount === 0"
+              :disable="keptCount === 0 || targetsLoading"
               @click="goToLaunchHandler"
             />
           </div>
           <AutomationTargetsView
             :targets="targetStore.targets"
-            :loading="targetStore.fetchTargetsLoading"
+            :loading="targetsLoading"
             :curating-id="curatingId"
             @exclude="excludeTargetHandler"
             @restore="restoreTargetHandler"

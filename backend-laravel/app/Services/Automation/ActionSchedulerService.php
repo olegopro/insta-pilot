@@ -16,45 +16,60 @@ final class ActionSchedulerService implements ActionSchedulerServiceInterface {
     ) {}
 
     public function scheduleTask(AutomationTask $task): void {
-        $task->loadMissing('instagramAccount');
-
         DB::transaction(function () use ($task): void {
-            $targets = ParsedTarget::where('parse_run_id', $task->parse_run_id)
-                ->where('user_id', $task->user_id)
+            $lockedTask = AutomationTask::whereKey($task->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($lockedTask === null || in_array($lockedTask->status, [
+                'paused',
+                'cancelled'
+            ], true)) {
+                return;
+            }
+
+            if (AutomationActionItem::where('automation_task_id', $lockedTask->id)->exists()) {
+                return;
+            }
+
+            $lockedTask->loadMissing('instagramAccount');
+
+            $targets = ParsedTarget::where('parse_run_id', $lockedTask->parse_run_id)
+                ->where('user_id', $lockedTask->user_id)
                 ->where('status', 'kept')
                 ->orderBy('id')
-                ->limit($task->target_count)
+                ->limit($lockedTask->target_count)
                 ->get();
 
             $total = $targets->count();
             $now = Carbon::now();
-            $spacing = $this->spacingSeconds($task, $total);
+            $spacing = $this->spacingSeconds($lockedTask, $total);
             $runAt = $now->copy()->subSeconds($spacing);
             $items = [];
 
             foreach ($targets as $index => $target) {
                 $baseRunAt = $now->copy()->addSeconds($index * $spacing);
-                $jitteredRunAt = $this->withJitter($baseRunAt, (int) ($task->jitter_seconds ?? 0));
+                $jitteredRunAt = $this->withJitter($baseRunAt, (int) ($lockedTask->jitter_seconds ?? 0));
                 $runAt = $this->antiBurstSlot($jitteredRunAt, $runAt, $spacing);
 
-                if ($task->respect_working_hours) {
-                    $runAt = $this->workingHours->nextOpenSlot($task->instagramAccount, $runAt);
+                if ($lockedTask->respect_working_hours) {
+                    $runAt = $this->workingHours->nextOpenSlot($lockedTask->instagramAccount, $runAt);
                 }
 
-                $items[] = $this->itemData($task, $target, $runAt);
+                $items[] = $this->itemData($lockedTask, $target, $runAt);
             }
 
             if ($items !== []) {
                 AutomationActionItem::insert($items);
             }
 
-            $task->forceFill([
+            $lockedTask->forceFill([
                 'status' => 'running',
                 'items_total' => $total,
                 'items_done' => 0,
                 'items_failed' => 0,
                 'items_skipped' => 0,
-                'started_at' => $task->started_at ?? now()
+                'started_at' => $lockedTask->started_at ?? now()
             ])->save();
         });
     }
