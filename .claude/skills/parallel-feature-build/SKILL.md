@@ -31,4 +31,4 @@ Seam-файлы (НЕ отдавать агентам параллельно):
 5. **Финал**: ESLint autofix → `vue-tsc --noEmit` → smoke-рендер страниц → `git worktree remove`
    для отработавших worktree.
 
-Полный плейбук с worked-example и оговорками по контексту/git/провайдеру: `ORCHESTRATION.md`.
+Полный плейбук с worked-example и оговорками по контексту/git/провайдеру: `docs/orchestration/playbook.md`.

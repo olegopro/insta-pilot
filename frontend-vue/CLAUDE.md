@@ -57,7 +57,7 @@ const { columns, columnsVisibleNames } = useFilterColumns(*TableColumns)
 const { searchText } = useSearchQuery()
 const rows = computed(() => *ListDTO.toLocal(store.someApi.data?.data ?? []))
 ```
-Пример: [InstagramAccountsList.vue](src/widgets/instagram-accounts-list/ui/InstagramAccountsList.vue)
+Пример: [InstagramAccountsPage.vue](src/pages/instagram-accounts/ui/InstagramAccountsPage.vue)
 
 ## Структура src/ (FSD)
 ```
@@ -186,7 +186,7 @@ return { accounts, fetchAccounts, fetchAccountsLoading, ... }
 - **Параметризация однотипных кейсов**: FE — `it.each([...])`.
 - **Не писать тавтологии**: не тестировать реактивность голого `ref`, `toBeDefined`/`toBeTruthy` без поведенческой проверки.
 - **Навигационный guard** тестируется через `authGuard` из `router/guard.ts` (реальная функция), а не через копию логики в тестовом роутере.
-- Ручные проверки с живым Instagram-аккаунтом (бывшие `@group instagram`-заглушки) вынесены в чек-лист `DEBUG_PROTOCOL.md`, а не висят пустыми `markTestSkipped`.
+- Ручные проверки с живым Instagram-аккаунтом (бывшие `@group instagram`-заглушки) вынесены в чек-лист `docs/debug-protocol.md`, а не висят пустыми `markTestSkipped`.
 
 ## Отладка ошибок
 
@@ -209,7 +209,7 @@ return { accounts, fetchAccounts, fetchAccountsLoading, ... }
 3. Исправлять вручную только то, что autofix не решил
 
 ## Связанные документы
-- [`../documentation/01-realtime-websocket.md`](../documentation/01-realtime-websocket.md) — WebSocket на фронте.
-- [`../documentation/02-llm-generation.md`](../documentation/02-llm-generation.md) — UI генерации.
-- [`../documentation/03-pinia-store-pattern.md`](../documentation/03-pinia-store-pattern.md) — детальный паттерн Pinia-стора.
-- [`../AUTOMATION-ARCHITECTURE.md`](../AUTOMATION-ARCHITECTURE.md) — контракт фронта с движком автоматизации.
+- [`../docs/guides/realtime-websocket.md`](../docs/guides/realtime-websocket.md) — WebSocket на фронте.
+- [`../docs/guides/llm-generation.md`](../docs/guides/llm-generation.md) — UI генерации.
+- [`../docs/guides/pinia-store-pattern.md`](../docs/guides/pinia-store-pattern.md) — детальный паттерн Pinia-стора.
+- [`../docs/automation/architecture.md`](../docs/automation/architecture.md) — контракт фронта с движком автоматизации.

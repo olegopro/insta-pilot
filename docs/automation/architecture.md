@@ -2,8 +2,8 @@
 
 Статус: **проект (design)**, код не написан. Источник: мультиагентный прогон (Workflow Opus ×9 +
 Codex + Kiro-Opus/Sonnet), сведённый оркестратором. Ретроспектива прогона —
-[ORCHESTRATION-RETROSPECTIVE.md](ORCHESTRATION-RETROSPECTIVE.md). Поэтапный план —
-[AUTOMATION-PLAN.md](AUTOMATION-PLAN.md).
+[retrospective.md](../orchestration/retrospective.md). Поэтапный план —
+[plan.md](plan.md).
 
 MVP-вертикаль (реализуется первой): **комментарии по хэштегу/гео, полу-ручной режим**.
 
@@ -191,7 +191,7 @@ activity-логи, сессии/прокси аккаунтов). Laravel нич
 
 Новые хелперы (чистые, тестируемые без Instagram):
 - `_fetch_user_medias_raw(cl, user_pk, amount)` — забор через `private_request 'feed/user/{pk}/'`
-  (формат подтвердить на живом аккаунте, чек-лист `DEBUG_PROTOCOL.md`), переиспользует `_extract_posts`
+  (формат подтвердить на живом аккаунте, чек-лист `../debug-protocol.md`), переиспользует `_extract_posts`
   → `_serialize_media`. **НЕ** `cl.user_medias` (отдаёт Media-модели, несовместимо с raw-dict).
 - `_compute_target_metrics(serialized, now)` → `last_post_age_days`, `likes_sum_last_n`,
   `likes_avg_last_n`, `likes_min/max`, `posts_analyzed`, `captions_concat`.

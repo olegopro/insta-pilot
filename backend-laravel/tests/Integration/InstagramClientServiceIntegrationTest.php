@@ -20,7 +20,7 @@ use Tests\TestCase;
  *
  * Проверки, требующие реального Instagram-аккаунта (login → session_data,
  * feed → posts, add_like, media_comments, search_hashtag), выполняются
- * вручную — чек-лист в DEBUG_PROTOCOL.md (раздел «Ручные проверки с живым
+ * вручную — чек-лист в docs/debug-protocol.md (раздел «Ручные проверки с живым
  * аккаунтом»), фикстуры — в _TEST/fixtures/session.json.
  */
 class InstagramClientServiceIntegrationTest extends TestCase {

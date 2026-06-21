@@ -25,5 +25,5 @@ Context7 library ID: `/subzeroid/instagrapi`
 - В Instagram API суффикс `_pk` — всегда числовой ID сущности (`user_pk`, `location_pk`, `media_pk`), суффикс `_id` — составной (`media_id` = `{media_pk}_{user_pk}`); использовать тот суффикс, который принимает конкретный метод instagrapi.
 
 ## Связанные документы
-- [`../DEBUG_PROTOCOL.md`](../DEBUG_PROTOCOL.md) — чек-лист ручных проверок с живым Instagram-аккаунтом.
-- [`../AUTOMATION-ARCHITECTURE.md`](../AUTOMATION-ARCHITECTURE.md) — Python-слой парсинга целей и действий в архитектуре движка автоматизации.
+- [`../docs/debug-protocol.md`](../docs/debug-protocol.md) — чек-лист ручных проверок с живым Instagram-аккаунтом.
+- [`../docs/automation/architecture.md`](../docs/automation/architecture.md) — Python-слой парсинга целей и действий в архитектуре движка автоматизации.

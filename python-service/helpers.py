@@ -414,7 +414,7 @@ def _fetch_user_medias_raw(cl: Client, user_pk: str, amount: int) -> list[dict]:
     """
     Загружает последнюю страницу медиа пользователя через raw private API.
 
-    TODO(DEBUG_PROTOCOL.md): подтвердить на живом аккаунте фактическую форму
+    TODO(docs/debug-protocol.md): подтвердить на живом аккаунте фактическую форму
     ответа feed/user/{pk}/; Instagram может возвращать feed_items, items или
     sections в зависимости от версии API/аккаунта.
     """

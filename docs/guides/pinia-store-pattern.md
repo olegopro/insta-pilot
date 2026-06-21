@@ -84,10 +84,10 @@
 
 | Файл                                                                                                                  | Что делает                                |
 | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| [`shared/api/useApi.ts`](../frontend-vue/src/shared/api/useApi.ts)                                                    | Композабл, ядро паттерна                  |
-| [`shared/api/types.ts`](../frontend-vue/src/shared/api/types.ts)                                                      | `ApiResponse<T>`, `ApiError`              |
-| [`entities/instagram-account/model/accountStore.ts`](../frontend-vue/src/entities/instagram-account/model/accountStore.ts) | Эталонный пример store                    |
-| [`entities/instagram-account/model/instagramAccountDTO.ts`](../frontend-vue/src/entities/instagram-account/model/instagramAccountDTO.ts) | snake_case → camelCase                    |
+| [`shared/api/useApi.ts`](../../frontend-vue/src/shared/api/useApi.ts)                                                    | Композабл, ядро паттерна                  |
+| [`shared/api/types.ts`](../../frontend-vue/src/shared/api/types.ts)                                                      | `ApiResponse<T>`, `ApiError`              |
+| [`entities/instagram-account/model/accountStore.ts`](../../frontend-vue/src/entities/instagram-account/model/accountStore.ts) | Эталонный пример store                    |
+| [`entities/instagram-account/model/instagramAccountDTO.ts`](../../frontend-vue/src/entities/instagram-account/model/instagramAccountDTO.ts) | snake_case → camelCase                    |
 
 ---
 
@@ -205,6 +205,6 @@ export const useAccountStore = defineStore('account', () => {
 
 <div align="center">
 
-← [Вернуться к README](../README.md)
+← [Вернуться к README](../../README.md)
 
 </div>

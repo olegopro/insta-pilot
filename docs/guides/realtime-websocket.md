@@ -92,19 +92,19 @@ Broadcast::channel('activity-log', function (User $user) {
 
 | Файл                                                                                  | Что делает                                          |
 | ------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| [`app/Events/ActivityLogCreated.php`](../backend-laravel/app/Events/ActivityLogCreated.php) | Broadcast-событие, сериализует лог в WS-payload     |
-| [`app/Services/ActivityLoggerService.php`](../backend-laravel/app/Services/ActivityLoggerService.php) | Сохраняет лог в БД и диспатчит событие              |
-| [`routes/channels.php`](../backend-laravel/routes/channels.php)                       | Авторизация подписок на private-каналы              |
-| [`docker-compose.yml`](../docker-compose.yml)                                         | Сервис `reverb` на `:8080`                          |
+| [`app/Events/ActivityLogCreated.php`](../../backend-laravel/app/Events/ActivityLogCreated.php) | Broadcast-событие, сериализует лог в WS-payload     |
+| [`app/Services/ActivityLoggerService.php`](../../backend-laravel/app/Services/ActivityLoggerService.php) | Сохраняет лог в БД и диспатчит событие              |
+| [`routes/channels.php`](../../backend-laravel/routes/channels.php)                       | Авторизация подписок на private-каналы              |
+| [`docker-compose.yml`](../../docker-compose.yml)                                         | Сервис `reverb` на `:8080`                          |
 
 ### Frontend
 
 | Файл                                                                                                                     | Что делает                              |
 | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| [`shared/lib/echo.ts`](../frontend-vue/src/shared/lib/echo.ts)                                                           | Singleton `Echo`-клиент                 |
-| [`entities/activity-log/model/sidebarActivityStore.ts`](../frontend-vue/src/entities/activity-log/model/sidebarActivityStore.ts) | Pinia-стор для сайдбара                 |
-| [`entities/activity-log/model/sidebarActivityDTO.ts`](../frontend-vue/src/entities/activity-log/model/sidebarActivityDTO.ts) | snake_case → camelCase                  |
-| [`features/activity-live/`](../frontend-vue/src/features/activity-live/)                                                | Подписка и обработка событий            |
+| [`shared/lib/echo.ts`](../../frontend-vue/src/shared/lib/echo.ts)                                                           | Singleton `Echo`-клиент                 |
+| [`entities/activity-log/model/sidebarActivityStore.ts`](../../frontend-vue/src/entities/activity-log/model/sidebarActivityStore.ts) | Pinia-стор для сайдбара                 |
+| [`entities/activity-log/model/sidebarActivityDTO.ts`](../../frontend-vue/src/entities/activity-log/model/sidebarActivityDTO.ts) | snake_case → camelCase                  |
+| [`features/activity-live/`](../../frontend-vue/src/features/activity-live/)                                                | Подписка и обработка событий            |
 
 ---
 
@@ -149,6 +149,6 @@ echo.private('activity-log')
 
 <div align="center">
 
-← [Вернуться к README](../README.md)
+← [Вернуться к README](../../README.md)
 
 </div>

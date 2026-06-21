@@ -83,18 +83,18 @@ state-машиной и отрисовывает прогресс.
 
 | Файл                                                                                                       | Что делает                                  |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| [`app/Jobs/GenerateCommentJob.php`](../backend-laravel/app/Jobs/GenerateCommentJob.php)                    | Точка входа, оркестрирует весь pipeline     |
-| [`app/Services/LlmService.php`](../backend-laravel/app/Services/LlmService.php)                            | Отправка в OpenAI / GLM, нормализация ответов |
-| [`app/Events/CommentGenerationProgress.php`](../backend-laravel/app/Events/CommentGenerationProgress.php)  | Broadcast-событие прогресса                 |
-| [`routes/channels.php`](../backend-laravel/routes/channels.php)                                            | Авторизация private-канала по `jobId`        |
+| [`app/Jobs/GenerateCommentJob.php`](../../backend-laravel/app/Jobs/GenerateCommentJob.php)                    | Точка входа, оркестрирует весь pipeline     |
+| [`app/Services/LlmService.php`](../../backend-laravel/app/Services/LlmService.php)                            | Отправка в OpenAI / GLM, нормализация ответов |
+| [`app/Events/CommentGenerationProgress.php`](../../backend-laravel/app/Events/CommentGenerationProgress.php)  | Broadcast-событие прогресса                 |
+| [`routes/channels.php`](../../backend-laravel/routes/channels.php)                                            | Авторизация private-канала по `jobId`        |
 
 ### Frontend
 
 | Файл                                                                                                                         | Что делает                                |
 | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| [`features/generate-comment/lib/useCommentGeneration.ts`](../frontend-vue/src/features/generate-comment/lib/useCommentGeneration.ts) | State-машина прогресса                    |
-| [`features/generate-comment/ui/GenerationStatus.vue`](../frontend-vue/src/features/generate-comment/ui/GenerationStatus.vue)         | Отображение текущего шага                 |
-| [`shared/lib/echo.ts`](../frontend-vue/src/shared/lib/echo.ts)                                                               | Подписка на канал по `jobId`              |
+| [`features/generate-comment/lib/useCommentGeneration.ts`](../../frontend-vue/src/features/generate-comment/lib/useCommentGeneration.ts) | State-машина прогресса                    |
+| [`features/generate-comment/ui/GenerationStatus.vue`](../../frontend-vue/src/features/generate-comment/ui/GenerationStatus.vue)         | Отображение текущего шага                 |
+| [`shared/lib/echo.ts`](../../frontend-vue/src/shared/lib/echo.ts)                                                               | Подписка на канал по `jobId`              |
 
 ---
 
@@ -170,6 +170,6 @@ echo.private(`comment-generation.${jobId}`)
 
 <div align="center">
 
-← [Вернуться к README](../README.md)
+← [Вернуться к README](../../README.md)
 
 </div>

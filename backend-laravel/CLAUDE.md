@@ -118,7 +118,7 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 - **Не писать тавтологии**: не тестировать `$fillable`/штатные касты Eloquent/Spatie-трейты/литералы конфига (`tries`, имя события).
 
 ## Связанные документы
-- [`../AUTOMATION-ARCHITECTURE.md`](../AUTOMATION-ARCHITECTURE.md) — слои движка автоматизации, 9 таблиц, инварианты.
-- [`../DEBUG_PROTOCOL.md`](../DEBUG_PROTOCOL.md) — чек-лист ручных проверок с живым IG.
-- [`../documentation/01-realtime-websocket.md`](../documentation/01-realtime-websocket.md) — Reverb/Echo realtime.
-- [`../documentation/02-llm-generation.md`](../documentation/02-llm-generation.md) — генерация комментов через LLM.
+- [`../docs/automation/architecture.md`](../docs/automation/architecture.md) — слои движка автоматизации, 9 таблиц, инварианты.
+- [`../docs/debug-protocol.md`](../docs/debug-protocol.md) — чек-лист ручных проверок с живым IG.
+- [`../docs/guides/realtime-websocket.md`](../docs/guides/realtime-websocket.md) — Reverb/Echo realtime.
+- [`../docs/guides/llm-generation.md`](../docs/guides/llm-generation.md) — генерация комментов через LLM.

@@ -10,7 +10,7 @@
 - Новый канал — официальный **Kiro CLI MCP** (`delegate`/`reply`, resume по `session_id`): первый
   приоритет в корневом `CLAUDE.md`, Codex — второй. Зафиксировано правило переиспользования сессий
   (`reply`, не плодить новые) и максимальное мышление по умолчанию.
-- `ORCHESTRATION-RETROSPECTIVE.md` переоформлен из VibeProxy-ретро в живой монитор-лог под текущий
+- `docs/orchestration/retrospective.md` переоформлен из VibeProxy-ретро в живой монитор-лог под текущий
   стек (kiro-cli + Codex + Claude-Agent).
 
 ### Обёртка `~/www/kiro-cli-mcp` (hardening после ревью mine+Codex)
@@ -24,5 +24,5 @@
 ### ⚠️ Статус: В РЕЖИМЕ ТЕСТА
 Новый механизм делегирования и hardening обёртки **не прошли полную живую проверку** — только
 `py_compile` + смоук-тесты чистой логики; живая верификация — после реконнекта MCP. **Любые
-сбои/нюансы агентов (особенно Kiro CLI) логировать в `ORCHESTRATION-RETROSPECTIVE.md`** — за этот
+сбои/нюансы агентов (особенно Kiro CLI) логировать в `docs/orchestration/retrospective.md`** — за этот
 заход так уже выловлено несколько багов.

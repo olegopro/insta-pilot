@@ -178,7 +178,7 @@ docker-compose.yml
 > 💡 Это позволяет видеть **полный путь запроса в реальном времени** —
 > удобно и для отладки, и для демонстрации.
 
-🔗 **Подробный разбор:** [documentation/01-realtime-websocket.md](documentation/01-realtime-websocket.md)
+🔗 **Подробный разбор:** [docs/guides/realtime-websocket.md](docs/guides/realtime-websocket.md)
 
 ---
 
@@ -217,7 +217,7 @@ docker-compose.yml
 
 **Стек одной фичи:** `Job + Service + LLM API + Broadcasting + Echo + State-машина`
 
-🔗 **Подробный разбор:** [documentation/02-llm-generation.md](documentation/02-llm-generation.md)
+🔗 **Подробный разбор:** [docs/guides/llm-generation.md](docs/guides/llm-generation.md)
 
 ---
 
@@ -253,9 +253,9 @@ docker-compose.yml
 
 | Тема                                                                                  | О чём                                                              |
 | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 🔄 [Real-time через WebSocket](documentation/01-realtime-websocket.md)                | Reverb + Echo + private-каналы + авторизация через Sanctum         |
-| 🤖 [Генерация комментариев через LLM](documentation/02-llm-generation.md)             | Job + Service + Broadcasting + state-машина на фронте              |
-| 📦 [Паттерн Pinia store через useApi](documentation/03-pinia-store-pattern.md)        | Императивные actions, без скрытого состояния, типизация end-to-end |
+| 🔄 [Real-time через WebSocket](docs/guides/realtime-websocket.md)                | Reverb + Echo + private-каналы + авторизация через Sanctum         |
+| 🤖 [Генерация комментариев через LLM](docs/guides/llm-generation.md)             | Job + Service + Broadcasting + state-машина на фронте              |
+| 📦 [Паттерн Pinia store через useApi](docs/guides/pinia-store-pattern.md)        | Императивные actions, без скрытого состояния, типизация end-to-end |
 
 ---
 

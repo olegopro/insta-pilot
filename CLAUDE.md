@@ -31,12 +31,12 @@ insta-pilot/
 | Docker / инфра | `docker/CLAUDE.md` | сервисы, порты, env, очереди/воркеры, масштабирование `automation-worker` |
 
 On-demand доки (по ссылке, НЕ грузятся на старте):
-- `AUTOMATION-ARCHITECTURE.md` — слои движка автоматизации, 9 таблиц, канонические инварианты (§2), статус реализации (§11).
-- `AUTOMATION-PLAN.md` — поэтапный план (Phase 0 → MVP → …).
-- `ORCHESTRATION.md` / `AGENT-FACTORY.md` — детальный плейбук параллельного fan-out.
-- `ORCHESTRATION-RETROSPECTIVE.md` — живой монитор-лог мультиагентных прогонов (kiro-cli + Codex + Claude-Agent).
-- `DEBUG_PROTOCOL.md` — чек-лист ручных проверок с живым IG-аккаунтом.
-- `documentation/01-realtime-websocket.md` · `02-llm-generation.md` · `03-pinia-store-pattern.md`.
+- `docs/automation/architecture.md` — слои движка автоматизации, 9 таблиц, канонические инварианты (§2), статус реализации (§11).
+- `docs/automation/plan.md` — поэтапный план (Phase 0 → MVP → …).
+- `docs/orchestration/playbook.md` / `docs/orchestration/agent-factory.md` — детальный плейбук параллельного fan-out.
+- `docs/orchestration/retrospective.md` — живой монитор-лог мультиагентных прогонов (kiro-cli + Codex + Claude-Agent).
+- `docs/debug-protocol.md` — чек-лист ручных проверок с живым IG-аккаунтом.
+- `docs/guides/realtime-websocket.md` · `docs/guides/llm-generation.md` · `docs/guides/pinia-store-pattern.md`.
 
 ## Docker Services (кратко; детали — `docker/CLAUDE.md`)
 - `vue` → 9000 · `laravel` → 8000 · `python` → 8001 · `postgres` → 5432 · `redis` → 6379
@@ -80,8 +80,8 @@ Laravel: `INSTAGRAM_PYTHON_URL=http://python:8001` (внутренний Docker 
 ## Автоматизация / Бот — ЗАВЕРШЕНО
 Парсер целей (хэштег/гео + источник `my_following`) + единый движок действий: **comment** (с
 LLM-автогенерацией) / **like** / **follow** / **unfollow**; режимы полу-ручной и полностью-авто.
-**Полностью собран и проверен на живом аккаунте.** Источник правды — `AUTOMATION-ARCHITECTURE.md`
-(слои, 9 таблиц, канонические инварианты «НЕ нарушать» §2, статус реализации §11) + `AUTOMATION-PLAN.md`.
+**Полностью собран и проверен на живом аккаунте.** Источник правды — `docs/automation/architecture.md`
+(слои, 9 таблиц, канонические инварианты «НЕ нарушать» §2, статус реализации §11) + `docs/automation/plan.md`.
 
 ## Делегирование субагентам — политика (приоритет по умолчанию)
 Главная модель — ОРКЕСТРАТОР, не единственный исполнитель. Как только задача больше тривиальной
@@ -102,7 +102,7 @@ LLM-автогенерацией) / **like** / **follow** / **unfollow**; реж
 Параллелизм: независимые куски — разом, но по РАЗНЫМ каналам/директориям. **Per-account spacing Kiro:**
 один Kiro-аккаунт сериализует вызовы — тяжёлый сустейнед-объём гнать через Codex/Claude-Agent.
 **⚠️ Механизм в режиме теста** — любой сбой/нюанс агента (особенно Kiro CLI) фиксировать в
-`ORCHESTRATION-RETROSPECTIVE.md`. Детальный fan-out-плейбук — `ORCHESTRATION.md` / `AGENT-FACTORY.md`.
+`docs/orchestration/retrospective.md`. Детальный fan-out-плейбук — `docs/orchestration/playbook.md` / `docs/orchestration/agent-factory.md`.
 
 ## Coherence-швы (держит оркестратор — НЕ делегировать враздрай)
 - Эти memory-файлы: корневой `CLAUDE.md` + `AGENTS.md` (symlink на него).
@@ -110,4 +110,4 @@ LLM-автогенерацией) / **like** / **follow** / **unfollow**; реж
 - `docker-compose.yml` — имена/порты/env сервисов.
 - Backend: `backend-laravel/routes/api.php`, `app/Providers/AppServiceProvider.php`, `routes/channels.php`.
 - Frontend-навигация: `frontend-vue/src/router/routes.ts`, `src/layouts/AppNavTabs.vue`; барелы `shared/ui/*`, `shared/lib/*`.
-- Инварианты движка автоматизации (счётчик `FOR UPDATE`, `run_at`+диспетчер, CAS-claim, единый TZ) — `AUTOMATION-ARCHITECTURE.md §2`.
+- Инварианты движка автоматизации (счётчик `FOR UPDATE`, `run_at`+диспетчер, CAS-claim, единый TZ) — `docs/automation/architecture.md §2`.
