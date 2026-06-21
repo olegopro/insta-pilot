@@ -82,17 +82,21 @@ shared/
     table-component/
     table-tools-wrapper/
     masonry-grid/        # CSS columns Masonry
-    media-card/          # Карточка поста (thumbnail + overlay)
-    media-display/       # Фото/видео/карусель (Swiper.js)
 
 entities/
   instagram-account/     # InstagramAccount, accountStore, ProfileCard
-  media-post/            # MediaPost, feedStore, searchStore, MEDIA_TYPE constants
-  llm-settings/          # LlmSetting, llmSettingsStore, LLM_PROVIDERS/MODELS constants
+  media-post/            # MediaPost, feedStore, searchStore, MEDIA_TYPE constants;
+                         # ui/media-card (MediaCard), ui/media-display (MediaDisplay, Swiper.js)
+  llm-settings/          # LlmSetting, llmSettingsStore, PROVIDERS/MODELS_BY_PROVIDER constants
   user/                  # User, authStore, token management
   activity-log/          # AccountActivityLog, activityLogStore, sidebarActivityStore,
                          # activityLogTableColumns, activitySummaryTableColumns,
                          # activityLogListDTO, activitySummaryListDTO, apiTypes, types, constants
+  automation-action/     # ACTION_TYPE constants (comment/like/follow/unfollow)
+  automation-parsing/    # automationParsingStore, parsingDraftDTO — черновик парсинга целей
+  automation-settings/   # automationSettingsStore — лимиты, рабочие часы, пресеты фильтров
+  automation-target/     # automationTargetStore, target DTO/columns — цели взаимодействия
+  automation-task/       # automationTaskStore, AutomationTask
 
 features/
   add-instagram-account/ # Добавление аккаунта
@@ -102,22 +106,36 @@ features/
   post-detail/           # PostDetailModal (фото/видео, комментарии, лайки)
   instagram-user/        # InstagramUserModal (профиль пользователя)
   generate-comment/      # useCommentGeneration (WebSocket), GenerationStatus
+  delete-llm-setting/    # DeleteLlmSettingModal
   activity-filter/       # Фильтрация логов (аккаунт, действие, статус, дата)
   activity-live/         # WebSocket-подписка на ActivityLogCreated
+  automation-source-config/    # AutomationSourceConfig — источник целей (хэштег/гео/my_following)
+  automation-filter-config/    # AutomationFilterConfig — фильтры парсинга
+  configure-automation-action/ # ActionTypeSelect, CommentActionConfig
+  configure-automation-limits/ # AutomationLimitsForm
+  configure-working-hours/     # WorkingHoursModal
+  curate-automation-target/    # CurateTargetButton — курирование целей
+  start-automation-task/       # StartAutomationTask
+  automation-task-live/        # useAutomationTaskLive / useParseProgress (WebSocket-прогресс)
 
 widgets/
-  instagram-accounts-list/  # Таблица аккаунтов
   activity-log-table/       # Таблица логов (с разворотом строки, reverse-scroll)
   activity-sidebar/         # Боковая панель с деталями записи лога
   activity-stats-cards/     # Карточки сводной статистики
   activity-summary-table/   # Таблица сводки по действиям
   activity-grouped-stats/   # Сгруппированная статистика
+  automation-account-settings/ # AutomationAccountSettings
+  automation-builder/       # AutomationBuilder
+  automation-launch-cockpit/ # AutomationLaunchCockpit
+  automation-targets-view/  # AutomationTargetsView
+  automation-task-list/     # AutomationTaskList
 
 pages/
   login/                 # LoginPage
-  instagram-accounts/    # InstagramAccountsPage
+  instagram-accounts/    # InstagramAccountsPage (таблица аккаунтов)
   feed/                  # FeedPage (Masonry-лента)
   search/                # SearchPage (хэштеги/гео + комментарии)
+  automation/            # AutomationPage (конструктор/запуск автоматизации)
   llm-settings/          # LlmSettingsPage (admin)
   admin-users/           # AdminUsersPage (admin)
   logs/                  # LogsPage (мониторинг активности, Phase 5)

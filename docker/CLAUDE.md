@@ -3,13 +3,16 @@
 > **Справка по инфраструктуре для `docker/`.** Глобальный контекст и карта документации — в [`../CLAUDE.md`](../CLAUDE.md).
 
 ## Docker Services
-- `vue`          → port 9000 (Vite dev server)
-- `laravel`      → port 8000 (PHP-FPM + Artisan serve)
-- `python`       → port 8001 (FastAPI + instagrapi)
-- `postgres`     → port 5432 (PostgreSQL 16)
-- `redis`        → port 6379 (Queue + Broadcasting)
-- `reverb`       → port 8080 (WebSocket сервер, Laravel Reverb)
-- `queue-worker` → Redis queue worker (обработка Jobs)
+- `vue`              → port 9000 (Vite dev server)
+- `nginx`            → port 8000 (reverse proxy → laravel)
+- `laravel`          → PHP-FPM / artisan serve (внутренний, за nginx)
+- `python`           → port 8001 (FastAPI + instagrapi)
+- `postgres`         → port 5432 (PostgreSQL 16)
+- `redis`            → port 6379 (Queue + Broadcasting)
+- `reverb`           → port 8080 (WebSocket сервер, Laravel Reverb)
+- `queue-worker`     → Redis-воркер очереди `default` (обработка Jobs)
+- `automation-worker` → Redis-воркер очереди `automation`
+- `scheduler`        → `php artisan schedule:work`
 
 ## Environment
 Root `.env`: `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `INSTAGRAM_SALT`

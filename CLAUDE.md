@@ -39,8 +39,8 @@ On-demand доки (по ссылке, НЕ грузятся на старте):
 - `docs/guides/realtime-websocket.md` · `docs/guides/llm-generation.md` · `docs/guides/pinia-store-pattern.md`.
 
 ## Docker Services (кратко; детали — `docker/CLAUDE.md`)
-- `vue` → 9000 · `laravel` → 8000 · `python` → 8001 · `postgres` → 5432 · `redis` → 6379
-- `reverb` → 8080 (WebSocket) · `queue-worker` (очередь `default`) · `automation-worker` (очередь `automation`)
+- `vue` → 9000 · `nginx` → 8000 (reverse proxy → laravel) · `python` → 8001 · `postgres` → 5432 · `redis` → 6379
+- `reverb` → 8080 (WebSocket) · `laravel` (PHP-FPM за nginx) · `queue-worker` (очередь `default`) · `automation-worker` (очередь `automation`) · `scheduler`
 
 ## Environment
 Root `.env`: `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, `INSTAGRAM_SALT`

@@ -20,14 +20,15 @@
 Http/Controllers/             # final class, readonly DI, JsonResponse
 Http/Middleware/               # EnsureUserIsActive и другие
 Models/                       # Eloquent, шифрование через Accessors
-Models/Concerns/              # Trait-ы моделей (HasEncryption)
+Models/Concerns/              # Trait-ы моделей (EncryptsWithSalt)
+Contracts/                    # интерфейсы плагинов (ActionPluginInterface)
 Providers/AppServiceProvider  # все bindings в register()
 Repositories/                 # Interface + Implementation
 Services/                     # Interface + Implementation
-Jobs/                         # Queue jobs (GenerateCommentJob)
+Services/Automation/          # плагины действий, планировщик, rate-limit, рабочие часы
+Jobs/                         # Queue jobs (GenerateCommentJob, ParseTargetsJob, ...)
 Events/                       # Broadcasting events
-Facades/                      # extends Facade → aliases в config/app.php
-Console/                      # Artisan commands
+Console/Commands/             # Artisan commands (PruneActivityLogs, AutomationDispatchCommand)
 ```
 
 ## API Response Format
@@ -68,7 +69,7 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 | is_active    | boolean, default true |                              |
 | created_at / updated_at | timestamps |                            |
 
-Данные хранятся в `backend-laravel/data/device-profiles/device-profiles.json`. Заполняются через `DeviceProfileSeeder`. Назначается аккаунту при добавлении (`device_profile_id`) — передаётся в Python как заголовки запросов.
+Данные хранятся в `backend-laravel/database/seeders/data/device-profiles/device-profiles.json`. Заполняются через `DeviceProfileSeeder`. Назначается аккаунту при добавлении (`device_profile_id`) — передаётся в Python как заголовки запросов.
 
 ## Таблица account_activity_logs
 | Поле              | Тип               | Описание                                 |
@@ -110,6 +111,7 @@ return response()->json(['success' => false, 'error' => 'Описание'], 500
 | `private:comment-generation.{jobId}` | `CommentGenerationProgress` | прогресс генерации (starting → downloading → analyzing → completed/failed) |
 | `private:account-activity.{accountId}` | `ActivityLogCreated` | новая запись лога аккаунта в реальном времени |
 | `private:activity-global.{userId}` | `ActivityLogCreated` | глобальный поток логов пользователя (admin) |
+| `private:automation-task.{taskId}` | `AutomationTaskProgress` | прогресс задачи автоматизации (парсинг/действия) |
 
 ## Тесты (конвенции) — backend
 Запуск (в контейнере): `docker compose exec laravel php artisan test` (sqlite `:memory:`).
