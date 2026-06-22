@@ -55,6 +55,15 @@ final class ExecuteActionItemJob implements ShouldQueue {
         $instagramAttempted = false;
 
         try {
+            // CAS-claim ПЕРВЫМ: только победитель claim резервирует квоту. Проигравший
+            // (диспетчер мог задиспатчить второй job на тот же 'scheduled' item при
+            // медленной очереди) просто выходит — он ничего не резервировал, release не нужен.
+            $claimToken = (string) Str::uuid();
+
+            if (!$this->claim($item, $claimToken)) {
+                return;
+            }
+
             $reserved = $rateLimitGuard->reserve($account, $plugin->limitKey(), $item);
 
             if (!$reserved) {
@@ -69,14 +78,6 @@ final class ExecuteActionItemJob implements ShouldQueue {
                 $reserved = false;
                 $this->reschedule($item, $workingHours->nextOpenSlot($account, now()), 'skip_hours');
                 $this->refreshTaskProgress($task, $item->action_type);
-
-                return;
-            }
-
-            $claimToken = (string) Str::uuid();
-
-            if (!$this->claim($item, $claimToken)) {
-                $rateLimitGuard->release($account, $plugin->limitKey(), $item);
 
                 return;
             }

@@ -64,6 +64,28 @@ final class ActionSchedulerService implements ActionSchedulerServiceInterface {
                 }
             }
 
+            // Для follow/unfollow media_pk=null, поэтому unique-индекс не работает (NULL!=NULL).
+            // Отсеиваем цели, у которых уже есть АКТИВНЫЙ action-item того же типа на этом
+            // аккаунте — предотвращает дубль подписки в полёте, но НЕ блокирует повторный
+            // follow после завершения предыдущего цикла (проверяем только scheduled/running).
+            if (in_array($lockedTask->action_type, ['follow', 'unfollow'], true)) {
+                $userPks = $targets->pluck('target_user_pk')->filter()->all();
+                if ($userPks !== []) {
+                    $activeUserPks = AutomationActionItem::where('instagram_account_id', $lockedTask->instagram_account_id)
+                        ->where('action_type', $lockedTask->action_type)
+                        ->whereIn('status', ['scheduled', 'running'])
+                        ->whereIn('target_user_pk', $userPks)
+                        ->pluck('target_user_pk')
+                        ->all();
+                    if ($activeUserPks !== []) {
+                        $skipPks = array_flip($activeUserPks);
+                        $targets = $targets
+                            ->reject(fn (ParsedTarget $target): bool => $target->target_user_pk !== null && isset($skipPks[$target->target_user_pk]))
+                            ->values();
+                    }
+                }
+            }
+
             $total = $targets->count();
             $skipped = $keptTotal - $total;
             $now = Carbon::now();

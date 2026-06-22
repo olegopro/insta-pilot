@@ -52,6 +52,34 @@ describe('useParseProgress', () => {
 
   afterEach(() => vi.useRealTimers())
 
+  it('completed + items_total===0 → терминал без ожидания backstop', async () => {
+    const onDone = vi.fn<(taskId: number) => Promise<number>>().mockResolvedValue(0)
+    const onSettled = vi.fn()
+    useParseProgress({ onDone, onSettled }).watchParse(TASK_ID)
+
+    // items_total=0: не гонка коммита, а реально 0 целей → force-завершение без backstop
+    listenHandler?.({ ...completedEvent, items_total: 0 })
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(onDone).toHaveBeenCalledWith(TASK_ID)
+    expect(echo.leave).toHaveBeenCalledWith(`automation-task.${String(TASK_ID)}`)
+    expect(onSettled).toHaveBeenCalledWith(TASK_ID)
+    // Backstop (120с) НЕ нужен — уже завершили
+    expect(onSettled).toHaveBeenCalledTimes(1)
+  })
+
+  it('completed + items_total>0 → поведение как раньше (onDone→leave)', async () => {
+    const onDone = vi.fn<(taskId: number) => Promise<number>>().mockResolvedValue(3)
+    useParseProgress({ onDone }).watchParse(TASK_ID)
+
+    listenHandler?.({ ...completedEvent, items_total: 5 })
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(onDone).toHaveBeenCalledWith(TASK_ID)
+    expect(echo.leave).toHaveBeenCalledWith(`automation-task.${String(TASK_ID)}`)
+  })
+
+
   it('поздно пришедшее completed после исчерпания старого бюджета всё равно завершает (нет преждевременного leave)', async () => {
     // Цели появляются только после реального завершения парса (~30с) — все рефетчи до этого дают 0.
     const onDone = vi.fn<(taskId: number) => Promise<number>>().mockResolvedValue(0)
@@ -64,7 +92,7 @@ describe('useParseProgress', () => {
 
     // Парс завершился — теперь рефетч отдаёт цели; запоздавшее WS-событие ведёт к завершению.
     onDone.mockResolvedValue(3)
-    listenHandler?.(completedEvent)
+    listenHandler?.({ ...completedEvent, items_total: 3 })
     await vi.advanceTimersByTimeAsync(0)
 
     expect(echo.leave).toHaveBeenCalledWith(`automation-task.${String(TASK_ID)}`)
@@ -77,7 +105,8 @@ describe('useParseProgress', () => {
       .mockResolvedValue(5)
     useParseProgress({ onDone }).watchParse(TASK_ID)
 
-    listenHandler?.(completedEvent)
+    // items_total>0: цели есть, но ещё не докоммичены → гонка broadcast-vs-commit
+    listenHandler?.({ ...completedEvent, items_total: 5 })
     await vi.advanceTimersByTimeAsync(0)
     // count===0 — это гонка, а не «целей нет»: не завершаемся, канал держим.
     expect(echo.leave).not.toHaveBeenCalled()

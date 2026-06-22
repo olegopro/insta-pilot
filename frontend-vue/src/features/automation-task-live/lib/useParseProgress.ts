@@ -90,7 +90,12 @@ export function useParseProgress(options: ParseProgressOptions) {
       .listen('.AutomationTaskProgress', (event: AutomationTaskProgressEvent) => {
         if (event.current_action !== PARSE_ACTION) return
         FAIL_STATUSES.includes(event.status) && finishFail(taskId)
-        DONE_STATUSES.includes(event.status) && void tryFinish(taskId)
+        if (DONE_STATUSES.includes(event.status)) {
+          // items_total===0 означает «целей нет», не гонку коммита — завершаем сразу (force)
+          event.items_total === 0
+            ? void tryFinish(taskId, true)
+            : void tryFinish(taskId)
+        }
       })
 
     pollHandle = setInterval(() => void tryFinish(taskId), POLL_INTERVAL_MS)
