@@ -5,7 +5,7 @@
 их параллельно, КОГЕРЕНТНО (по линтерам/стилю/FSD), стабильно и при ОГРАНИЧЕННОМ токен-бюджете Kiro.
 
 Это надстройка над уже существующими `playbook.md` (плейбук параллелизма),
-`.claude/skills/parallel-feature-build/SKILL.md` и `.claude/agents/dashboard-builder.md`. Здесь —
+`.claude/skills/parallel-feature-build/SKILL.md` и `docs/orchestration/kiro-worker-brief.md`. Здесь —
 полная топология фабрики, гарантии когерентности, бюджет токенов, верификация, observability,
 безопасность и поэтапный rollout.
 
@@ -121,7 +121,7 @@ Kiro-аккаунтов. Наблюдаемость — на УЖЕ имеюще
         │ очередь воркеров с окном = k живых Kiro-аккаунтов
         ▼                                            ▼
    ┌──────────────────── FAN-OUT (волнами по k) ──────────────────┐
-   │ worker(worktree-1) worker(worktree-2) ... worker(worktree-k) │  ← dashboard-builder
+   │ worker(worktree-1) worker(worktree-2) ... worker(worktree-k) │  ← Kiro-делегат (бриф)
    │ каждый: 1 структура (или батч однотипных) · self-check · NOTES│
    └───────────────┬──────────────────────────────────────────────┘
                    │ condensed summary (1–2k токенов) + ветка
@@ -161,8 +161,8 @@ Kiro-аккаунтов. Наблюдаемость — на УЖЕ имеюще
   merge. НЕ копит полные трейсы воркеров.
 - **Squad** — тематический батч структур (sub-очередь). Это логическая группировка, не отдельный
   агент-координатор (peer-координация запрещена). Squad = единица DAG-зависимостей.
-- **Worker** — `dashboard-builder` (`.claude/agents/dashboard-builder.md`), `isolation: worktree`,
-  строит ОДНУ структуру (или батч однотипных), self-check, отдаёт condensed summary.
+- **Worker** — Kiro-делегат по брифу `docs/orchestration/kiro-worker-brief.md`, в git-worktree
+  (готовит оркестратор), строит ОДНУ структуру (или батч однотипных), self-check, отдаёт condensed summary.
 - **Integrator** — отдельный финальный агент/сам оркестратор: правит seam-файлы по сводкам.
 - **Verifier/coherence** — отдельный проход, трассирует контракты/импорты/типы по стыкам.
 
@@ -256,7 +256,7 @@ pre-commit:
     phpstan:   { root: backend-laravel/, run: "./vendor/bin/phpstan analyse --memory-limit=512M" }
 ```
 
-В контейнере команды гоняются как в `dashboard-builder.md`: `docker compose exec vue npx eslint --fix`,
+В контейнере команды гоняются как в `kiro-worker-brief.md`: `docker compose exec vue npx eslint --fix`,
 `docker compose exec vue npx vue-tsc --noEmit`.
 
 ### 3.6 Design-tokens + shared Quasar как контракт вида
@@ -265,7 +265,7 @@ pre-commit:
 
 - `frontend-vue/src/shared/ui/*` — единственные разрешённые компоненты (уже есть: `page-component`,
   `table-component`, `card-component`, `input-component` и др.). Воркер НИКОГДА не пишет сырой `q-table`
-  — только `TableComponent` (правило из `dashboard-builder.md`).
+  — только `TableComponent` (правило из `kiro-worker-brief.md`).
 - **design-tokens** через Style Dictionary: `tokens.json` → CSS-vars/TS-константы. Воркер не выбирает
   hex/px, а потребляет токены.
 - **Stylelint-правило «raw hex/px запрещены, только `var(--token)`»** — иначе токены бесполезны
@@ -383,7 +383,7 @@ failure-амплификации; с красными гейтами ×1.7–2.5
 |---|---|---|
 | **Изоляция контекста** | Воркер читает 15 файлов в своём окне, отдаёт оркестратору condensed summary 1–2k токенов (что построено / контракты / хвосты / нарушения), НЕ полный трейс | Оркестратор не взрывается; -15x риск |
 | **Retrieval, не дамп** | НЕ векторный RAG. `ripgrep`/`glob` + точечный `Read` + lightweight-идентификаторы (пути из контракта). Не грузить целый слайс | grep свежее RAG (нет дрейфа индекса в worktree), -prompt-токены |
-| **Выбор модели по задаче** | Из 3 рабочих Kiro-моделей: мелочь (git, переименования, тривиальные правки) → дешёвая `glm-5`. Код/логика → `claude-sonnet-4.6` (+ `-agentic` для записи файлов). Макс. качество → `claude-opus-4.8`. `dashboard-builder` уже `model: sonnet` | -стоимость без потери качества кода |
+| **Выбор модели по задаче** | Из 3 рабочих Kiro-моделей: мелочь (git, переименования, тривиальные правки) → дешёвая `glm-5`. Код/логика → `claude-sonnet-4.6` (+ `-agentic` для записи файлов). Макс. качество → `claude-opus-4.8`. Воркер-Kiro по умолчанию `claude-sonnet-4.6`, effort=max | -стоимость без потери качества кода |
 | **Компакция** | У предела окна — суммаризовать (сохранять архитектурные решения/контракты, выкидывать сырые tool-outputs — «tool result clearing»), продолжать с compressed + 5 последних файлов | защита от context rot на длинных структурах |
 | **Кэш (проверить!)** | Статика В НАЧАЛЕ префикса (system + фикс-набор тулов + CONTRACTS + FSD-конвенции), волатильное (session_id/timestamp/задача) В КОНЕЦ. Стабильный набор тулов. **Prompt caching на пути `kiro-cli`/официального Kiro CLI — это поведение бэкенда Kiro; не закладывать cache-экономию как данность, проверить эмпирически** | если кэш есть — до 90% дешевле; если нет — экономия только сокращением контекста |
 | **Окно self-healing** | `W=2–3`: при re-run по красному гейту давать агенту ТОЛЬКО diff+ошибку, не всю историю. Срезает квадратичный член `N(N+1)/2` | главный пожиратель токенов в self-healing |
@@ -427,7 +427,7 @@ partial](https://www.augmentcode.com/guides/git-worktrees-parallel-ai-agent-exec
 ### 6.2 Сериализация швов
 
 Shared-файлы (`src/router/routes.ts`, `src/layouts/AppNavTabs.vue`, бэк `routes/api.php`,
-`AppServiceProvider.php`) воркерам редактировать ЗАПРЕЩЕНО (`dashboard-builder.md` уже это фиксирует).
+`AppServiceProvider.php`) воркерам редактировать ЗАПРЕЩЕНО (`kiro-worker-brief.md` уже это фиксирует).
 Два механизма:
 
 1. **Авто-дискавери по конвенции** (предпочтительно где возможно): роуты/слайсы подхватываются по
@@ -566,7 +566,7 @@ Vue features/agents-cockpit  ← живые тайлы worktree-агентов
   "timestamp": "<ISO8601>",
   "worktree": "<cwd → ветка → тайл>",
   "tool_name": "Edit",
-  "agent_id": "...", "agent_type": "dashboard-builder",
+  "agent_id": "...", "agent_type": "kiro-worker",
   "status": "running|blocked|done|failed",
   "payload": { "raw": "..." }
 }
@@ -663,7 +663,7 @@ SOTA-модели в 63% случаев кодят неоднозначную с
 
 | Фаза | Что построить | Критерий готовности |
 |---|---|---|
-| **MVP-0 (уже есть)** | `dashboard-builder` + `parallel-feature-build` + `playbook.md` + делегаты `kiro-cli` (+ Codex) | 5 дашбордов параллельно из worked-example работают |
+| **MVP-0 (уже есть)** | бриф `kiro-worker-brief.md` + `parallel-feature-build` + `playbook.md` + делегаты `kiro-cli` (+ Codex) | 5 дашбордов параллельно из worked-example работают |
 | **Фаза 1 — гейты** | `lefthook.yml` (§3.5), `steiger` в pre-commit/CI, SAST-гейт (gitleaks/semgrep + Laravel-чеклист) | красный гейт блокирует merge; локальные = CI |
 | **Фаза 2 — контракт** | `dedoc/scramble` + Spectral + `openapi-typescript` кодген в CI; `CONTRACTS.md`-генератор; `hotmeteor/spectator`-тесты | типы из схемы, дрейф бэка ловится |
 | **Фаза 3 — scaffolding** | `frontend-vue/plopfile.mjs` + FSD-шаблоны (идемпотентные); design-tokens (Style Dictionary) + Stylelint-стена | воркер наполняет скелет, не создаёт структуру |
@@ -747,6 +747,6 @@ SOTA-модели в 63% случаев кодят неоднозначную с
 
 - `playbook.md` — детальный плейбук параллелизма (контекст, git, worked-example, делегаты `kiro-cli` (+ Codex))
 - `.claude/skills/parallel-feature-build/SKILL.md` — скилл фан-аута
-- `.claude/agents/dashboard-builder.md` — субагент-исполнитель
+- `docs/orchestration/kiro-worker-brief.md` — бриф Kiro-воркера (исполнитель)
 - `CLAUDE.md` — конвенции проекта (FSD, DTO, API-формат, Reverb, обёртки Quasar)
 - `~/www/kiro-cli-mcp/CLAUDE.md` — механика и границы делегирования Kiro (delegate/reply, модели, прокси, resume)
