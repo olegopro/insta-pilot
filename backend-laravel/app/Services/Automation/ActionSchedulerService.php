@@ -8,15 +8,18 @@ use App\Models\AutomationActionItem;
 use App\Models\AutomationTask;
 use App\Models\ParsedTarget;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 final class ActionSchedulerService implements ActionSchedulerServiceInterface {
+    private const MIN_GAP_SECONDS = 60;
+
     public function __construct(
         private readonly WorkingHoursServiceInterface $workingHours
     ) {}
 
-    public function scheduleTask(AutomationTask $task): void {
-        DB::transaction(function () use ($task): void {
+    public function scheduleTask(AutomationTask $task, ?array $offsets = null): void {
+        DB::transaction(function () use ($task, $offsets): void {
             $lockedTask = AutomationTask::whereKey($task->id)
                 ->lockForUpdate()
                 ->first();
@@ -41,37 +44,130 @@ final class ActionSchedulerService implements ActionSchedulerServiceInterface {
                 ->limit($lockedTask->target_count)
                 ->get();
 
-            $total = $targets->count();
-            $now = Carbon::now();
-            $spacing = $this->spacingSeconds($lockedTask, $total);
-            $runAt = $now->copy()->subSeconds($spacing);
-            $items = [];
+            $keptTotal = $targets->count();
 
-            foreach ($targets as $index => $target) {
-                $baseRunAt = $now->copy()->addSeconds($index * $spacing);
-                $jitteredRunAt = $this->withJitter($baseRunAt, (int) ($lockedTask->jitter_seconds ?? 0));
-                $runAt = $this->antiBurstSlot($jitteredRunAt, $runAt, $spacing);
-
-                if ($lockedTask->respect_working_hours) {
-                    $runAt = $this->workingHours->nextOpenSlot($lockedTask->instagramAccount, $runAt);
+            // Отсеиваем цели, чьё media_pk уже имеет action-item у этого аккаунта с тем же
+            // действием — иначе bulk-insert упирается в unique (account, action_type, media_pk)
+            // и весь батч падает, а задача навсегда зависает в draft.
+            $mediaPks = $targets->pluck('media_pk')->filter()->all();
+            if ($mediaPks !== []) {
+                $existing = AutomationActionItem::where('instagram_account_id', $lockedTask->instagram_account_id)
+                    ->where('action_type', $lockedTask->action_type)
+                    ->whereIn('media_pk', $mediaPks)
+                    ->pluck('media_pk')
+                    ->all();
+                if ($existing !== []) {
+                    $skip = array_flip($existing);
+                    $targets = $targets
+                        ->reject(fn (ParsedTarget $target): bool => $target->media_pk !== null && isset($skip[$target->media_pk]))
+                        ->values();
                 }
-
-                $items[] = $this->itemData($lockedTask, $target, $runAt);
             }
 
-            if ($items !== []) {
-                AutomationActionItem::insert($items);
-            }
+            $total = $targets->count();
+            $skipped = $keptTotal - $total;
+            $now = Carbon::now();
+
+            $items = ($offsets !== null && $offsets !== [])
+                ? $this->buildItemsWithOffsets($lockedTask, $targets, $offsets, $now)
+                : $this->buildItemsEven($lockedTask, $targets, $now);
+
+            $inserted = $items === [] ? 0 : (int) AutomationActionItem::insertOrIgnore($items);
 
             $lockedTask->forceFill([
-                'status' => 'running',
-                'items_total' => $total,
+                'status' => $inserted === 0 ? 'completed' : 'running',
+                'items_total' => $inserted,
                 'items_done' => 0,
                 'items_failed' => 0,
-                'items_skipped' => 0,
-                'started_at' => $lockedTask->started_at ?? now()
+                'items_skipped' => $inserted === 0 ? $skipped : 0,
+                'started_at' => $lockedTask->started_at ?? now(),
+                'finished_at' => $inserted === 0 ? now() : $lockedTask->finished_at
             ])->save();
         });
+    }
+
+    /**
+     * Равномерное распределение (текущее поведение): jitter + анти-burst + рабочие часы.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildItemsEven(AutomationTask $task, Collection $targets, Carbon $now): array {
+        $spacing = $this->spacingSeconds($task, $targets->count());
+        $runAt = $now->copy()->subSeconds($spacing);
+        $items = [];
+
+        foreach ($targets as $index => $target) {
+            $baseRunAt = $now->copy()->addSeconds($index * $spacing);
+            $jitteredRunAt = $this->withJitter($baseRunAt, (int) ($task->jitter_seconds ?? 0));
+            $runAt = $this->antiBurstSlot($jitteredRunAt, $runAt, $spacing);
+
+            if ($task->respect_working_hours) {
+                $runAt = $this->workingHours->nextOpenSlot($task->instagramAccount, $runAt);
+            }
+
+            $items[] = $this->itemData($task, $target, $runAt);
+        }
+
+        return $items;
+    }
+
+    /**
+     * Распределение по заданным пользователем смещениям. Ключ строго parsed_target_id
+     * (дедуп-фильтр мог выкинуть часть целей); цели без ключа уходят на хвост по even-шагу.
+     * БЕЗ jitter/анти-burst, но с enforce минимального зазора 60с и сортировкой по run_at.
+     *
+     * @param array<int, int> $offsets
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildItemsWithOffsets(AutomationTask $task, Collection $targets, array $offsets, Carbon $now): array {
+        $spacing = $this->spacingSeconds($task, $targets->count());
+
+        $keyed = [];
+        foreach ($targets as $target) {
+            if (isset($offsets[$target->id])) {
+                $keyed[] = max(0, (int) $offsets[$target->id]);
+            }
+        }
+        $tailCursor = ($keyed === [] ? 0 : max($keyed)) + $spacing;
+
+        // Пары (target, offsetSeconds): keyed берут смещение из карты, остальные — на хвост.
+        $pairs = [];
+        foreach ($targets as $target) {
+            if (isset($offsets[$target->id])) {
+                $offsetSeconds = max(0, (int) $offsets[$target->id]);
+            } else {
+                $offsetSeconds = $tailCursor;
+                $tailCursor += $spacing;
+            }
+            $pairs[] = [
+                'target' => $target,
+                'offset' => $offsetSeconds
+            ];
+        }
+
+        usort($pairs, static fn (array $left, array $right): int => $left['offset'] <=> $right['offset']);
+
+        $items = [];
+        $previous = null;
+        foreach ($pairs as $pair) {
+            $runAt = $now->copy()->addSeconds($pair['offset']);
+
+            if ($previous !== null) {
+                $minRunAt = $previous->copy()->addSeconds(self::MIN_GAP_SECONDS);
+                if ($runAt->lessThan($minRunAt)) {
+                    $runAt = $minRunAt;
+                }
+            }
+
+            if ($task->respect_working_hours) {
+                $runAt = $this->workingHours->nextOpenSlot($task->instagramAccount, $runAt);
+            }
+
+            $previous = $runAt;
+            $items[] = $this->itemData($task, $pair['target'], $runAt);
+        }
+
+        return $items;
     }
 
     private function spacingSeconds(AutomationTask $task, int $total): int {

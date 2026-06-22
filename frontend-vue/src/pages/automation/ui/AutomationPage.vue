@@ -53,10 +53,11 @@
       // semi_auto: рефетч — источник истины. count===0 (парс ещё идёт / гонка коммита)
       // не считаем терминалом: useParseProgress продолжит поллинг до появления целей.
       await targetStore.fetchTargets(taskId)
-      const count = targetStore.targets.length
-      count > 0 && (isParsing.value = false)
-      return count
+      return targetStore.targets.length
     },
+    // Терминал парсинга (цели получены ИЛИ исчерпан backstop) — снимаем визуальный флаг
+    // загрузки НЕЗАВИСИМО от числа целей: 0 целей даёт пустую таблицу, а не вечную загрузку.
+    onSettled: () => isParsing.value = false,
     onFail: () => {
       isParsing.value = false
       notifyError('Парсинг завершился с ошибкой')
@@ -104,16 +105,37 @@
 
   const goToLaunchHandler = () => builderStep.value = 'launch'
 
-  const launchTaskHandler = () => {
+  const launchTaskHandler = (payload: { offsets: number[]; windowSeconds: number }) => {
     const taskId = taskStore.currentTask?.id
     if (!taskId) return
-    taskStore.startTask(taskId)
-      .then(() => {
+    // Индекс кубика → parsed_target_id: kept-цели в том же порядке, что грузит планировщик.
+    // Бэк ключует run_at строго по parsed_target_id (дедуп может выкинуть часть целей).
+    const schedule = targetStore.keptTargets.map((target, index) => ({
+      parsed_target_id: target.id,
+      offset_seconds: payload.offsets[index] ?? 0
+    }))
+    taskStore.startTask(taskId, { window_seconds: payload.windowSeconds, schedule })
+      .then(async () => {
         notifySuccess('Задача запущена')
+        // Рефетч списка — свежий статус ('scheduling'/'running') и realtime-подписка.
+        await taskStore.fetchTasks().catch(() => notifyError('Не удалось обновить задачи'))
         resetBuilderHandler()
         activeTab.value = 'tasks'
       })
       .catch(() => notifyError('Не удалось запустить задачу'))
+  }
+
+  // Открытие задачи из списка «Задачи»: подтягиваем задачу и её цели, возвращаемся
+  // в конструктор. draft → таблица ревью целей; иначе (есть action-items) → запуск.
+  const openReviewHandler = async (taskId: number) => {
+    try {
+      await taskStore.fetchTask(taskId)
+      await targetStore.fetchTargets(taskId)
+      builderStep.value = taskStore.currentTask?.status === 'draft' ? 'review' : 'launch'
+      activeTab.value = 'builder'
+    } catch {
+      notifyError('Не удалось открыть задачу')
+    }
   }
 
   const resetBuilderHandler = () => {
@@ -206,7 +228,7 @@
 
       <!-- Задачи -->
       <q-tab-panel name="tasks" class="automation-page__panel">
-        <AutomationTaskList />
+        <AutomationTaskList @open="openReviewHandler" />
       </q-tab-panel>
 
       <!-- Настройки -->

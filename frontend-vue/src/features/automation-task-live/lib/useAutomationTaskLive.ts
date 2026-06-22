@@ -16,7 +16,13 @@ export function useAutomationTaskLive() {
     subscribed.add(taskId)
 
     echo.private(`automation-task.${String(taskId)}`)
-      .listen('.AutomationTaskProgress', (event: AutomationTaskProgressEvent) => taskStore.applyProgress(taskId, event))
+      .listen('.AutomationTaskProgress', (event: AutomationTaskProgressEvent) => {
+        // Парс-прогресс приходит на тот же канал (current_action === 'parsing') с items_total
+        // как числом собранных целей — он перетёр бы execution-поля карточки. Эти события
+        // обрабатывает отдельный useParseProgress (шаг ревью), здесь их игнорируем.
+        if (event.current_action === 'parsing') return
+        taskStore.applyProgress(taskId, event)
+      })
   }
 
   const unsubscribe = (taskId: number) => {

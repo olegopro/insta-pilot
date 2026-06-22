@@ -1,10 +1,10 @@
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { useAutomationParsingStore } from '@/entities/automation-parsing'
   import type { AutomationTask } from '@/entities/automation-task'
   import { ACTION_TYPE_OPTIONS, isLlmAction } from '@/entities/automation-action'
   import { CommentActionConfig } from '@/features/configure-automation-action'
-  import { TimeDistributionPreview } from '@/shared/ui/time-distribution-preview'
+  import { TimeDistributionEditor, evenDistribution } from '@/shared/ui/time-distribution-editor'
   import { BadgeComponent } from '@/shared/ui/badge-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
 
@@ -15,10 +15,15 @@
   }>()
 
   const emit = defineEmits<{
-    launch: []
+    launch: [payload: { offsets: number[]; windowSeconds: number }]
   }>()
 
   const parsingStore = useAutomationParsingStore()
+
+  // Окно распределения (сек) — сид из spread_seconds задачи; смещения целей по индексу —
+  // равномерный сид. Дальше пользователь правит таймлайн вручную в редакторе.
+  const windowSeconds = ref(props.task.spreadSeconds || 3600)
+  const offsets = ref<number[]>(evenDistribution(props.keptCount, windowSeconds.value))
 
   // Конфиг комментария (тон/шаблон/use_caption) нужен только для LLM-действий (comment).
   // Для like LLM не задействован — секция настройки скрывается.
@@ -27,6 +32,9 @@
     ACTION_TYPE_OPTIONS.find((option) => option.value === props.task.actionType)?.label
     ?? props.task.actionType)
   const canLaunch = computed(() => props.keptCount > 0)
+
+  // Число целей может измениться (догрузка/курирование) — переинициализируем сид смещений.
+  watch(() => props.keptCount, (count) => offsets.value = evenDistribution(count, windowSeconds.value))
 </script>
 
 <template>
@@ -43,10 +51,9 @@
 
     <section class="cockpit__section">
       <h2 class="cockpit__title">Распределение во времени</h2>
-      <TimeDistributionPreview
-        :count="keptCount"
-        :spread-seconds="task.spreadSeconds || 5400"
-        :jitter-seconds="task.jitterSeconds"
+      <TimeDistributionEditor
+        v-model:offsets="offsets"
+        v-model:window-seconds="windowSeconds"
       />
     </section>
 
@@ -60,7 +67,7 @@
         color="primary"
         :loading="loading"
         :disable="!canLaunch"
-        @click="emit('launch')"
+        @click="emit('launch', { offsets, windowSeconds })"
       />
     </footer>
   </div>

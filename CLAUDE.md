@@ -104,6 +104,24 @@ LLM-автогенерацией) / **like** / **follow** / **unfollow**; реж
 **⚠️ Механизм в режиме теста** — любой сбой/нюанс агента (особенно Kiro CLI) фиксировать в
 `docs/orchestration/retrospective.md`. Детальный fan-out-плейбук — `docs/orchestration/playbook.md` / `docs/orchestration/agent-factory.md`.
 
+## Проверка UI / визуальные регрессии — делегировать через live-check (Playwright)
+Когда пользователь просит «протестировать интерфейс», сообщает «съехало / не туда нажалось / счётчик
+врёт» или просит проверить UX-поведение — НЕ кликать вручную по DevTools, а делегировать прогон субагенту
+(Kiro/Codex; для проверок ок `claude-sonnet-4.6` — быстрее), который гоняет headless-Playwright по ЖИВОМУ
+сайту и возвращает реальные данные (ответы API, кадры WebSocket, состояние DOM/целей) — без моков.
+- Харнес: `frontend-vue/scripts/live-check/automation-live.mjs`. Запуск на ХОСТЕ:
+  `cd frontend-vue && node scripts/live-check/automation-live.mjs` (внутри контейнера `vue` WS до
+  Reverb:8080 недостижим — только хост). Токен — свежий из живого `localStorage('token')`.
+- Chrome DevTools (live-вкладка оркестратора) — только когда пользователь хочет ВИДЕТЬ клики в реальном
+  времени.
+- **Триал-период (первые ~10 делегированных прогонов):** оркестратор ПАРАЛЛЕЛЬНО прогоняет проверку сам и
+  сверяет результат агента ФАКТОМ; каждый прогон + расхождения — в `docs/orchestration/retrospective.md`
+  (там же счётчик прогонов). После обкатки — доверять агенту без дубля.
+- Live-check дёргает живой Instagram (реальный парсинг) — объёмы минимальные, по необходимости; не в CI.
+- **ПЕРЕД live-тестом после правок `app/Jobs/*` или `app/Services/*` — ОБЯЗАТЕЛЬНО `docker compose restart
+  queue-worker automation-worker`:** `queue:work`-демоны кэшируют PHP-код в памяти, тесты гоняют свежий
+  код и маскируют это — а живые воркеры останутся на старом коде (баг: offsets/skip «не применились»).
+
 ## Coherence-швы (держит оркестратор — НЕ делегировать враздрай)
 - Эти memory-файлы: корневой `CLAUDE.md` + `AGENTS.md` (symlink на него).
 - Кросс-сервисные контракты: Laravel API ↔ Python FastAPI ↔ Vue DTO/типы.

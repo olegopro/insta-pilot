@@ -22,13 +22,25 @@ class AutomationTaskRepository implements AutomationTaskRepositoryInterface {
             ->first();
     }
 
+    public function findByIdAndUserWithCollectedTargets(int $id, int $userId): AutomationTask | null {
+        return AutomationTask::withCollectedTargetsCount()
+            ->where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
+    }
+
     public function getByUser(int $userId): Collection {
         return AutomationTask::where('user_id', $userId)
+            ->withCollectedTargetsCount()
             ->orderBy('id', 'desc')
             ->get();
     }
 
     public function updateStatus(int $id, string $status): bool {
         return AutomationTask::where('id', $id)->update(['status' => $status]) > 0;
+    }
+
+    public function updateSpreadSeconds(int $id, int $spreadSeconds): bool {
+        return AutomationTask::where('id', $id)->update(['spread_seconds' => $spreadSeconds]) > 0;
     }
 }

@@ -7,5 +7,9 @@ namespace App\Services\Automation;
 use App\Models\AutomationTask;
 
 interface ActionSchedulerServiceInterface {
-    public function scheduleTask(AutomationTask $task): void;
+    /**
+     * @param array<int, int>|null $offsets Карта parsed_target_id => offset_seconds (от now).
+     *                                       null/пусто — равномерное распределение из spread_seconds.
+     */
+    public function scheduleTask(AutomationTask $task, ?array $offsets = null): void;
 }

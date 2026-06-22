@@ -36,6 +36,7 @@ export interface AutomationTask {
   itemsDone: number
   itemsFailed: number
   itemsSkipped: number
+  collectedTargetsCount: number
   currentAction: Nullable<string>
   startedAt: Nullable<string>
   finishedAt: Nullable<string>

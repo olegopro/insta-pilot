@@ -306,7 +306,10 @@ final class ExecuteActionItemJob implements ShouldQueue {
             $itemsDone,
             $itemsFailed,
             $itemsSkipped,
-            $currentAction
+            in_array($status, [
+                'completed',
+                'failed'
+            ], true) ? null : $currentAction
         ));
     }
 

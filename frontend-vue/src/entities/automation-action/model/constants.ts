@@ -1,3 +1,4 @@
+import type { Nullable } from '@/shared/lib'
 import type { AutomationActionType } from '@/entities/automation-parsing'
 
 // Опция типа действия для UI-выбора в кокпите. disabled — задел под future-действия,
@@ -25,3 +26,18 @@ export const LLM_ACTION_TYPES: AutomationActionType[] = ['comment']
 
 export const isLlmAction = (actionType: AutomationActionType): boolean =>
   LLM_ACTION_TYPES.includes(actionType)
+
+// Локализованные лейблы типов действий для отображения текущего шага задачи.
+export const ACTION_TYPE_LABELS: Record<AutomationActionType, string> = {
+  comment: 'Комментарий',
+  like: 'Лайк',
+  follow: 'Подписка',
+  unfollow: 'Отписка'
+}
+
+// Лейбл текущего действия для карточки задачи. Возвращает null для 'parsing' и
+// неизвестных значений — такие на карточке не показываем.
+export const getActionTypeLabel = (actionType: Nullable<string>): Nullable<string> =>
+  actionType && actionType in ACTION_TYPE_LABELS
+    ? ACTION_TYPE_LABELS[actionType as AutomationActionType]
+    : null

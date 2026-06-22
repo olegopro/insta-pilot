@@ -23,6 +23,9 @@ interface ParseProgressOptions {
   onDone: (taskId: number) => Promise<number>
   // Колбэк ошибки парсинга (status='failed' с current_action='parsing').
   onFail?: (taskId: number) => void
+  // Терминальное завершение парса: цели получены (count>0) ИЛИ исчерпан backstop. Вызывается
+  // один раз, НЕЗАВИСИМО от числа целей — для сброса визуальных флагов даже при 0 целях.
+  onSettled?: (taskId: number) => void
 }
 
 // Подписка на завершение async-парсинга задачи. После dispatch ParseTargetsJob бэк шлёт
@@ -71,6 +74,7 @@ export function useParseProgress(options: ParseProgressOptions) {
     if (count > 0 || force) {
       settled = true
       leave()
+      options.onSettled?.(taskId)
     }
   }
 

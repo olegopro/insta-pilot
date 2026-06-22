@@ -146,7 +146,30 @@ final class AutomationTaskController extends Controller {
             ]);
         }
 
-        ScheduleActionItemsJob::dispatch($id);
+        // Опциональное тело: ручное распределение во времени. Пусто/нет — равномерно
+        // из spread_seconds (обратная совместимость + full_auto через ParseTargetsJob).
+        $validated = $request->validate([
+            'window_seconds'              => 'nullable|integer|min:60',
+            'schedule'                    => 'nullable|array',
+            'schedule.*.parsed_target_id' => 'required_with:schedule|integer',
+            'schedule.*.offset_seconds'   => 'integer|min:0'
+        ]);
+
+        if (isset($validated['window_seconds'])) {
+            $this->taskRepository->updateSpreadSeconds($id, (int) $validated['window_seconds']);
+        }
+
+        $offsets = null;
+        if (!empty($validated['schedule'])) {
+            $offsets = [];
+            foreach ($validated['schedule'] as $entry) {
+                $offsets[(int) $entry['parsed_target_id']] = (int) ($entry['offset_seconds'] ?? 0);
+            }
+        }
+
+        $this->taskRepository->updateStatus($id, 'scheduling');
+
+        ScheduleActionItemsJob::dispatch($id, $offsets);
 
         return response()->json([
             'success' => true,
@@ -166,7 +189,7 @@ final class AutomationTaskController extends Controller {
     }
 
     public function show(int $id, Request $request): JsonResponse {
-        $task = $this->taskRepository->findByIdAndUser($id, $request->user()->id);
+        $task = $this->taskRepository->findByIdAndUserWithCollectedTargets($id, $request->user()->id);
 
         if (!$task) {
             return $this->taskNotFound();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,10 +34,11 @@ class AutomationTask extends Model {
     ];
 
     protected $casts = [
-        'action_config'         => 'array',
-        'respect_working_hours' => 'boolean',
-        'started_at'            => 'datetime',
-        'finished_at'           => 'datetime'
+        'action_config'            => 'array',
+        'respect_working_hours'    => 'boolean',
+        'collected_targets_count'  => 'integer',
+        'started_at'               => 'datetime',
+        'finished_at'              => 'datetime'
     ];
 
     public function user(): BelongsTo {
@@ -53,5 +55,19 @@ class AutomationTask extends Model {
 
     public function actionItems(): HasMany {
         return $this->hasMany(AutomationActionItem::class);
+    }
+
+    // Подзапрос: число спарсенных целей (parsed_targets status='kept') для parse_run этой
+    // задачи — «целей готово к запуску». Без parse_run → 0. Коррелированный подзапрос, без N+1.
+    public function scopeWithCollectedTargetsCount(Builder $query): void {
+        $query
+            ->select('automation_tasks.*')
+            ->selectSub(
+                ParsedTarget::query()
+                    ->selectRaw('count(*)')
+                    ->whereColumn('parsed_targets.parse_run_id', 'automation_tasks.parse_run_id')
+                    ->where('parsed_targets.status', 'kept'),
+                'collected_targets_count'
+            );
     }
 }

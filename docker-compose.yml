@@ -95,6 +95,7 @@ services:
       context: .
       dockerfile: docker/laravel/Dockerfile
     command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90
+    restart: unless-stopped
     volumes:
       - ./backend-laravel:/var/www/html
     env_file:
@@ -110,6 +111,7 @@ services:
       context: .
       dockerfile: docker/laravel/Dockerfile
     command: php artisan schedule:work
+    restart: unless-stopped
     volumes:
       - ./backend-laravel:/var/www/html
     env_file:
@@ -132,6 +134,7 @@ services:
       context: .
       dockerfile: docker/laravel/Dockerfile
     command: php artisan queue:work redis --queue=automation --sleep=3 --tries=3 --timeout=180
+    restart: unless-stopped
     volumes:
       - ./backend-laravel:/var/www/html
     env_file:

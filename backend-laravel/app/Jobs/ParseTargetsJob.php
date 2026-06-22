@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\AutomationActionItem;
 use App\Models\AutomationTask;
 use App\Models\ParseRun;
 use App\Repositories\InstagramAccountRepositoryInterface;
@@ -16,7 +17,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 
-class ParseTargetsJob implements ShouldQueue {
+final class ParseTargetsJob implements ShouldQueue {
     use Dispatchable, InteractsWithQueue, Queueable;
 
     public int $tries = 1;
@@ -25,7 +26,6 @@ class ParseTargetsJob implements ShouldQueue {
     private const PAGE_AMOUNT = 30;
     private const MAX_PAGES = 30;
     private const ENRICH_BATCH = 20;
-    private const OVERSAMPLE = 1.5;
 
     public function __construct(
         public readonly int $parseRunId
@@ -61,8 +61,7 @@ class ParseTargetsJob implements ShouldQueue {
         $parseRun->forceFill(['started_at' => now()])->save();
 
         try {
-            $targetLimit     = max(1, (int) $parseRun->target_limit);
-            $oversampleLimit = (int) ceil($targetLimit * self::OVERSAMPLE);
+            $targetLimit = max(1, (int) $parseRun->target_limit);
 
             if ((string) $parseRun->source_type === 'my_following') {
                 $kept = $this->collectFollowingTargets(
@@ -88,61 +87,25 @@ class ParseTargetsJob implements ShouldQueue {
                 return;
             }
 
-            $candidates = $this->collectCandidates(
+            $task = AutomationTask::where('parse_run_id', $this->parseRunId)->first();
+            $isLikeAction = $task !== null && $task->action_type === 'like';
+            $alreadyActionedMediaPkSet = $isLikeAction ? $this->alreadyActionedMediaPkSet($accountId) : [];
+
+            $kept = $this->collectParsedTargets(
                 $instagramClient,
+                $parsedTargetRepository,
+                $targetFilter,
                 (string) $account->session_data,
                 $accountId,
                 $userId,
                 (string) $parseRun->source_type,
                 $sourceValue,
                 $filters,
-                $oversampleLimit,
+                $targetLimit,
+                $isLikeAction,
+                $alreadyActionedMediaPkSet,
                 $scannedCount
             );
-
-            $kept = 0;
-
-            foreach (array_chunk($candidates, self::ENRICH_BATCH) as $batch) {
-                if ($kept >= $targetLimit) {
-                    break;
-                }
-
-                $enrichResult = $instagramClient->parseTargetsEnrich([
-                    'session_data'       => (string) $account->session_data,
-                    'account_id'         => $accountId,
-                    'targets'            => array_values($batch),
-                    'last_n'             => $this->lastN($filters),
-                    'include_user_media' => true
-                ], $userId);
-
-                if (empty($enrichResult['success'])) {
-                    continue;
-                }
-
-                $enriched = $enrichResult['targets'] ?? [];
-                $verdicts = $targetFilter->applyFilters($enriched, $filters);
-
-                foreach ($verdicts as $verdict) {
-                    if ($kept >= $targetLimit) {
-                        break;
-                    }
-
-                    if (empty($verdict['passed'])) {
-                        continue;
-                    }
-
-                    $data = $this->buildTargetData($verdict['target'], $this->parseRunId, $userId);
-
-                    if ($data === null) {
-                        continue;
-                    }
-
-                    $parsedTargetRepository->create($data);
-                    $kept++;
-                }
-
-                $this->broadcastProgress($this->parseRunId, 'running', $kept);
-            }
 
             $parseRun->forceFill([
                 'scanned_count'   => $scannedCount,
@@ -168,30 +131,34 @@ class ParseTargetsJob implements ShouldQueue {
     }
 
     /**
-     * Собирает уникальных кандидатов страницами с дешёвым follower-пред-отсевом.
+     * Собирает, обогащает и сохраняет цели страницами до достижения target_limit.
      *
      * @param array<string, mixed> $sourceValue
      * @param array<string, mixed> $filters
-     * @return array<int, array<string, mixed>>
+     * @param array<string, bool> $alreadyActionedMediaPkSet
      */
-    private function collectCandidates(
+    private function collectParsedTargets(
         InstagramClientServiceInterface $instagramClient,
+        ParsedTargetRepositoryInterface $parsedTargetRepository,
+        TargetFilterServiceInterface $targetFilter,
         string $sessionData,
         int $accountId,
         int $userId,
         string $sourceType,
         array $sourceValue,
         array $filters,
-        int $oversampleLimit,
+        int $targetLimit,
+        bool $isLikeAction,
+        array &$alreadyActionedMediaPkSet,
         ?int &$scannedCount
-    ): array {
+    ): int {
         $scannedCount = 0;
-        $collected    = [];
+        $kept         = 0;
         $seen         = [];
         $cursor       = null;
         $page         = 0;
 
-        while ($page < self::MAX_PAGES && count($collected) < $oversampleLimit) {
+        while ($page < self::MAX_PAGES && $kept < $targetLimit) {
             $page++;
 
             $params = [
@@ -214,6 +181,8 @@ class ParseTargetsJob implements ShouldQueue {
 
             $pageCandidates = $result['candidates'] ?? [];
             $scannedCount += count($pageCandidates);
+            $cursor = $result['next_max_id'] ?? null;
+            $pageTargets = [];
 
             foreach ($pageCandidates as $candidate) {
                 $userPk = (string) ($candidate['user_pk'] ?? '');
@@ -227,21 +196,99 @@ class ParseTargetsJob implements ShouldQueue {
                 }
 
                 $seen[$userPk] = true;
-                $collected[]   = $candidate;
-
-                if (count($collected) >= $oversampleLimit) {
-                    break;
-                }
+                $pageTargets[] = $candidate;
             }
 
-            $cursor = $result['next_max_id'] ?? null;
+            foreach (array_chunk($pageTargets, self::ENRICH_BATCH) as $batch) {
+                if ($kept >= $targetLimit) {
+                    break;
+                }
+
+                $enrichResult = $instagramClient->parseTargetsEnrich([
+                    'session_data'       => $sessionData,
+                    'account_id'         => $accountId,
+                    'targets'            => array_values($batch),
+                    'last_n'             => $this->lastN($filters),
+                    'include_user_media' => true
+                ], $userId);
+
+                if (empty($enrichResult['success'])) {
+                    continue;
+                }
+
+                $enriched = $enrichResult['targets'] ?? [];
+                $verdicts = $targetFilter->applyFilters($enriched, $filters);
+
+                foreach ($verdicts as $verdict) {
+                    if ($kept >= $targetLimit) {
+                        break;
+                    }
+
+                    if (empty($verdict['passed'])) {
+                        continue;
+                    }
+
+                    $target = $verdict['target'];
+
+                    if ($isLikeAction && $this->shouldSkipLikeTarget($target, $alreadyActionedMediaPkSet)) {
+                        continue;
+                    }
+
+                    $data = $this->buildTargetData($target, $this->parseRunId, $userId);
+
+                    if ($data === null) {
+                        continue;
+                    }
+
+                    $parsedTargetRepository->create($data);
+                    $kept++;
+
+                    $mediaPk = $data['media_pk'] ?? null;
+
+                    if ($isLikeAction && is_string($mediaPk) && $mediaPk !== '') {
+                        $alreadyActionedMediaPkSet[$mediaPk] = true;
+                    }
+                }
+
+                $this->broadcastProgress($this->parseRunId, 'running', $kept);
+            }
 
             if ($cursor === null) {
                 break;
             }
         }
 
-        return $collected;
+        return $kept;
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    private function alreadyActionedMediaPkSet(int $accountId): array {
+        $mediaPks = AutomationActionItem::where('instagram_account_id', $accountId)
+            ->where('action_type', 'like')
+            ->whereNotNull('media_pk')
+            ->pluck('media_pk')
+            ->map(static fn (mixed $mediaPk): string => (string) $mediaPk)
+            ->all();
+
+        return array_fill_keys($mediaPks, true);
+    }
+
+    /**
+     * @param array<string, mixed> $target
+     * @param array<string, bool> $alreadyActionedMediaPkSet
+     */
+    private function shouldSkipLikeTarget(array $target, array $alreadyActionedMediaPkSet): bool {
+        $anchor = is_array($target['anchor_post'] ?? null) ? $target['anchor_post'] : [];
+
+        if (($anchor['has_liked'] ?? null) === true) {
+            return true;
+        }
+
+        $mediaPk = (string) ($anchor['pk'] ?? '');
+
+        return $mediaPk !== '' && isset($alreadyActionedMediaPkSet[$mediaPk]);
     }
 
     private function collectFollowingTargets(

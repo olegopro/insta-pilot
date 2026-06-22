@@ -5,7 +5,8 @@ import { apiData, useApi, type ApiResponseWrapper } from '@/shared/api'
 import type {
   AutomationTaskApi,
   AutomationTasksResponseApi,
-  CreateAutomationTaskRequestApi
+  CreateAutomationTaskRequestApi,
+  StartAutomationTaskRequestApi
 } from '@/entities/automation-task/model/apiTypes'
 import type {
   AutomationTask,
@@ -30,8 +31,8 @@ export const useAutomationTaskStore = defineStore('automationTasks', () => {
     (taskId) => apiData(api.post(`/automation/${String(taskId)}/parse-targets`))
   )
 
-  const startTaskApi = useApi<ApiResponseWrapper<null>, number>(
-    (taskId) => apiData(api.post(`/automation/${String(taskId)}/start`))
+  const startTaskApi = useApi<ApiResponseWrapper<null>, { taskId: number; payload?: StartAutomationTaskRequestApi }>(
+    ({ taskId, payload }) => apiData(api.post(`/automation/${String(taskId)}/start`, payload))
   )
 
   const pauseTaskApi = useApi<ApiResponseWrapper<null>, number>(
@@ -78,7 +79,8 @@ export const useAutomationTaskStore = defineStore('automationTasks', () => {
 
   // Запуск/пауза/продолжение/отмена — fire-and-forget, итоговый статус приходит
   // через realtime applyProgress либо fetchTask после reconnect.
-  const startTask = (taskId: number) => startTaskApi.execute(taskId)
+  const startTask = (taskId: number, payload?: StartAutomationTaskRequestApi) =>
+    startTaskApi.execute(payload ? { taskId, payload } : { taskId })
   const startTaskLoading = computed(() => startTaskApi.loading.value)
 
   const pauseTask = (taskId: number) => pauseTaskApi.execute(taskId)

@@ -18,6 +18,7 @@ class AutomationTaskDTO {
       itemsDone: data.items_done,
       itemsFailed: data.items_failed,
       itemsSkipped: data.items_skipped,
+      collectedTargetsCount: data.collected_targets_count,
       currentAction: data.current_action,
       startedAt: data.started_at,
       finishedAt: data.finished_at,

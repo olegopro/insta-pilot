@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { computed, watch, onMounted } from 'vue'
   import { useAutomationTaskStore } from '@/entities/automation-task'
-  import type { AutomationTask } from '@/entities/automation-task'
+  import type { AutomationTask, AutomationTaskStatus } from '@/entities/automation-task'
   import { useAutomationTaskLive } from '@/features/automation-task-live'
   import { BadgeComponent } from '@/shared/ui/badge-component'
   import { ButtonComponent } from '@/shared/ui/button-component'
@@ -11,13 +11,25 @@
     TASK_STATUS_META,
     isActiveStatus,
     isPausedStatus,
-    isTerminalStatus
+    isTerminalStatus,
+    canCancelStatus,
+    currentActionLabel,
+    emptyTerminalText,
+    taskStatsKind
   } from '@/widgets/automation-task-list/lib/taskStatusMeta'
 
   const taskStore = useAutomationTaskStore()
   const taskLive = useAutomationTaskLive()
 
+  const emit = defineEmits<{ open: [taskId: number] }>()
+
   const tasks = computed<AutomationTask[]>(() => taskStore.tasks)
+
+  // Открывать имеет смысл задачи, у которых живы цели: всё, кроме failed/cancelled.
+  const canOpen = (status: AutomationTaskStatus): boolean =>
+    status !== 'failed' && status !== 'cancelled'
+
+  const openHandler = (task: AutomationTask) => emit('open', task.id)
 
   const progressRatio = (task: AutomationTask): number => {
     if (task.itemsTotal <= 0) return 0
@@ -58,6 +70,8 @@
       v-else
       :key="task.id"
       class="task-card"
+      :class="{ 'task-card--clickable': canOpen(task.status) }"
+      @click="canOpen(task.status) && openHandler(task)"
     >
       <div class="task-card__header">
         <div class="task-card__title">
@@ -76,7 +90,7 @@
             round
             icon="pause"
             color="warning"
-            @click="pauseHandler(task)"
+            @click.stop="pauseHandler(task)"
           >
             <q-tooltip>Пауза</q-tooltip>
           </ButtonComponent>
@@ -86,17 +100,17 @@
             round
             icon="play_arrow"
             color="primary"
-            @click="resumeHandler(task)"
+            @click.stop="resumeHandler(task)"
           >
             <q-tooltip>Продолжить</q-tooltip>
           </ButtonComponent>
           <ButtonComponent
-            v-if="!isTerminalStatus(task.status)"
+            v-if="canCancelStatus(task.status)"
             flat
             round
             icon="stop"
             color="negative"
-            @click="cancelHandler(task)"
+            @click.stop="cancelHandler(task)"
           >
             <q-tooltip>Отменить</q-tooltip>
           </ButtonComponent>
@@ -112,11 +126,19 @@
       />
 
       <div class="task-card__stats">
-        <span>Всего: {{ task.itemsTotal }}</span>
-        <span class="text-positive">Готово: {{ task.itemsDone }}</span>
-        <span class="text-negative">Ошибки: {{ task.itemsFailed }}</span>
-        <span class="text-grey">Пропущено: {{ task.itemsSkipped }}</span>
-        <span v-if="task.currentAction" class="task-card__current">{{ task.currentAction }}</span>
+        <span v-if="taskStatsKind(task) === 'collected'" class="text-grey">
+          Собрано целей: {{ task.collectedTargetsCount }}
+        </span>
+        <span v-else-if="taskStatsKind(task) === 'empty'" class="text-grey">
+          {{ emptyTerminalText(task) }}
+        </span>
+        <template v-else>
+          <span>Всего: {{ task.itemsTotal }}</span>
+          <span class="text-positive">Готово: {{ task.itemsDone }}</span>
+          <span class="text-negative">Ошибки: {{ task.itemsFailed }}</span>
+          <span class="text-grey">Пропущено: {{ task.itemsSkipped }}</span>
+          <span v-if="currentActionLabel(task)" class="task-card__current">{{ currentActionLabel(task) }}</span>
+        </template>
       </div>
     </div>
   </div>
@@ -144,6 +166,10 @@
     display: flex;
     flex-direction: column;
     gap: $spacing-stack-gap;
+  }
+
+  .task-card--clickable {
+    cursor: pointer;
   }
 
   .task-card__header {

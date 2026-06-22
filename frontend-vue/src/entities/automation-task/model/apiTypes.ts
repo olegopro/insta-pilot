@@ -22,6 +22,7 @@ export interface AutomationTaskApi {
   items_done: number
   items_failed: number
   items_skipped: number
+  collected_targets_count: number
   current_action: Nullable<string>
   started_at: Nullable<string>
   finished_at: Nullable<string>
@@ -29,6 +30,18 @@ export interface AutomationTaskApi {
 }
 
 export type AutomationTasksResponseApi = AutomationTaskApi[]
+
+// Тело POST /automation/{id}/start — опциональное ручное распределение во времени.
+// Пусто/нет — равномерно из spread_seconds (обратная совместимость + full_auto).
+export interface AutomationScheduleEntryApi {
+  parsed_target_id: number
+  offset_seconds: number
+}
+
+export interface StartAutomationTaskRequestApi {
+  window_seconds: number
+  schedule: AutomationScheduleEntryApi[]
+}
 
 // Тело POST /automation (создание задачи + запуск парсинга на бэке).
 export interface CreateAutomationTaskRequestApi {

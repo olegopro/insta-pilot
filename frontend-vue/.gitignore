@@ -31,3 +31,6 @@ yarn-error.log*
 
 # local .env files
 .env.local*
+
+# Локальный live-check (headless Playwright отладка): содержит токен и временные скриншоты — не коммитим
+/scripts/live-check/
