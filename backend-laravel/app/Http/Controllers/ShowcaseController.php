@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\InstagramAccount;
 use App\Models\ShowcaseMediaOverlay;
 use App\Repositories\InstagramAccountRepositoryInterface;
 use App\Repositories\ShowcaseOverlayRepositoryInterface;
@@ -29,20 +30,10 @@ final class ShowcaseController extends Controller {
      * @param int $accountId ID аккаунта в системе (не Instagram ID)
      */
     public function profile(Request $request, int $accountId): JsonResponse {
-        $account = $this->accountRepository->findByIdAndUser($accountId, $request->user()->id);
+        $account = $this->resolveAccount($request, $accountId);
 
-        if (!$account) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'Аккаунт не найден'
-            ], 404);
-        }
-
-        if (!$account->session_data) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'Сессия не найдена'
-            ], 422);
+        if ($account instanceof JsonResponse) {
+            return $account;
         }
 
         $result = $this->instagramClient->getOwnProfile($account->session_data, $account->id);
@@ -71,20 +62,10 @@ final class ShowcaseController extends Controller {
      * @param int $accountId ID аккаунта в системе (не Instagram ID)
      */
     public function medias(Request $request, int $accountId): JsonResponse {
-        $account = $this->accountRepository->findByIdAndUser($accountId, $request->user()->id);
+        $account = $this->resolveAccount($request, $accountId);
 
-        if (!$account) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'Аккаунт не найден'
-            ], 404);
-        }
-
-        if (!$account->session_data) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'Сессия не найдена'
-            ], 422);
+        if ($account instanceof JsonResponse) {
+            return $account;
         }
 
         $amount = $request->query('amount') ? (int) $request->query('amount') : 12;
@@ -99,14 +80,21 @@ final class ShowcaseController extends Controller {
             ], 422);
         }
 
-        $overlays = $this->overlayRepository->findForAccount($accountId);
+        $resultPosts = $result['posts'] ?? [];
+
+        // Грузим overlay только для постов текущей страницы (не весь аккаунт).
+        $mediaPks = array_map(
+            static fn (array $post): string => (string) ($post['pk'] ?? ''),
+            $resultPosts
+        );
+        $overlays = $this->overlayRepository->findForMedias($accountId, $mediaPks);
 
         $posts = array_map(
-            fn (array $post): array => array_merge(
+            static fn (array $post): array => array_merge(
                 $post,
-                ['overlay' => $this->overlayFor($overlays->get((string) ($post['pk'] ?? '')))]
+                ['overlay' => ShowcaseMediaOverlay::toContractArray($overlays->get((string) ($post['pk'] ?? '')))]
             ),
-            $result['posts'] ?? []
+            $resultPosts
         );
 
         return response()->json([
@@ -127,20 +115,10 @@ final class ShowcaseController extends Controller {
      * @param string $mediaPk   PK поста Instagram
      */
     public function mediaInfo(Request $request, int $accountId, string $mediaPk): JsonResponse {
-        $account = $this->accountRepository->findByIdAndUser($accountId, $request->user()->id);
+        $account = $this->resolveAccount($request, $accountId);
 
-        if (!$account) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'Аккаунт не найден'
-            ], 404);
-        }
-
-        if (!$account->session_data) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'Сессия не найдена'
-            ], 422);
+        if ($account instanceof JsonResponse) {
+            return $account;
         }
 
         $result = $this->instagramClient->getMediaInfo($account->session_data, $mediaPk, $account->id);
@@ -160,19 +138,26 @@ final class ShowcaseController extends Controller {
     }
 
     /**
-     * Overlay-блок поста в замороженном snake_case-формате контракта.
-     * При отсутствии строки overlay возвращаются дефолтные значения.
-     *
-     * @return array<string, mixed>
+     * Найти собственный аккаунт пользователя ИЛИ вернуть готовый ответ-ошибку.
+     * 404 — аккаунт не найден/чужой; 422 — нет session_data.
      */
-    private function overlayFor(?ShowcaseMediaOverlay $overlay): array {
-        return [
-            'board_position'  => $overlay?->board_position,
-            'is_ad'           => $overlay?->is_ad ?? false,
-            'is_tracked'      => $overlay?->is_tracked ?? false,
-            'is_hidden_local' => $overlay?->is_hidden_local ?? false,
-            'note'            => $overlay?->note,
-            'labels'          => $overlay?->labels
-        ];
+    private function resolveAccount(Request $request, int $accountId): InstagramAccount | JsonResponse {
+        $account = $this->accountRepository->findByIdAndUser($accountId, $request->user()->id);
+
+        if (!$account) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Аккаунт не найден'
+            ], 404);
+        }
+
+        if (!$account->session_data) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Сессия не найдена'
+            ], 422);
+        }
+
+        return $account;
     }
 }

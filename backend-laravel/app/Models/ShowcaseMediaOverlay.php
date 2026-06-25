@@ -45,4 +45,25 @@ class ShowcaseMediaOverlay extends Model {
     public function user(): BelongsTo {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Overlay-блок поста в замороженном snake_case-формате контракта —
+     * единый источник сериализации для чтения (ShowcaseController) и
+     * записи (ShowcaseOverlayController).
+     *
+     * При $overlay === null отдаются дефолты (как у поста без локальной
+     * обёртки): board_position/note/labels — null, флаги — false.
+     *
+     * @return array<string, mixed>
+     */
+    public static function toContractArray(?self $overlay): array {
+        return [
+            'board_position'  => $overlay?->board_position,
+            'is_ad'           => $overlay?->is_ad ?? false,
+            'is_tracked'      => $overlay?->is_tracked ?? false,
+            'is_hidden_local' => $overlay?->is_hidden_local ?? false,
+            'note'            => $overlay?->note,
+            'labels'          => $overlay?->labels
+        ];
+    }
 }

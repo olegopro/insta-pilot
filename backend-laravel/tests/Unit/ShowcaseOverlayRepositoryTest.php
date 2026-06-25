@@ -122,13 +122,13 @@ class ShowcaseOverlayRepositoryTest extends TestCase {
         $this->assertTrue($overlay->is_ad);
     }
 
-    // ─── findForAccount ──────────────────────────────────────────────────────
+    // ─── findForMedias ─────────────────────────────────────────────────────────
 
-    public function test_find_for_account_returns_collection_keyed_by_media_pk(): void {
+    public function test_find_for_medias_returns_collection_keyed_by_media_pk(): void {
         $this->repository->upsertFlags($this->account->id, $this->user->id, '111', ['is_ad' => true]);
         $this->repository->upsertFlags($this->account->id, $this->user->id, '222', ['is_tracked' => true]);
 
-        $result = $this->repository->findForAccount($this->account->id);
+        $result = $this->repository->findForMedias($this->account->id, ['111', '222']);
 
         $this->assertCount(2, $result);
         $this->assertTrue($result->has('111'));
@@ -137,20 +137,39 @@ class ShowcaseOverlayRepositoryTest extends TestCase {
         $this->assertTrue($result->get('222')->is_tracked);
     }
 
-    public function test_find_for_account_returns_only_that_accounts_overlays(): void {
+    public function test_find_for_medias_returns_only_that_accounts_overlays(): void {
         $otherAccount = InstagramAccount::factory()->create(['user_id' => $this->user->id]);
         $this->repository->upsertFlags($this->account->id, $this->user->id, '111', ['is_ad' => true]);
         $this->repository->upsertFlags($otherAccount->id, $this->user->id, '999', ['is_ad' => true]);
 
-        $result = $this->repository->findForAccount($this->account->id);
+        $result = $this->repository->findForMedias($this->account->id, ['111', '999']);
 
         $this->assertCount(1, $result);
         $this->assertTrue($result->has('111'));
         $this->assertFalse($result->has('999'));
     }
 
-    public function test_find_for_account_returns_empty_when_no_overlays(): void {
-        $result = $this->repository->findForAccount($this->account->id);
+    public function test_find_for_medias_returns_only_requested_media_pks(): void {
+        $this->repository->upsertFlags($this->account->id, $this->user->id, '111', ['is_ad' => true]);
+        $this->repository->upsertFlags($this->account->id, $this->user->id, '222', ['is_tracked' => true]);
+
+        $result = $this->repository->findForMedias($this->account->id, ['111']);
+
+        $this->assertCount(1, $result);
+        $this->assertTrue($result->has('111'));
+        $this->assertFalse($result->has('222'));
+    }
+
+    public function test_find_for_medias_returns_empty_when_no_overlays(): void {
+        $result = $this->repository->findForMedias($this->account->id, ['111']);
+
+        $this->assertTrue($result->isEmpty());
+    }
+
+    public function test_find_for_medias_returns_empty_for_empty_media_pks(): void {
+        $this->repository->upsertFlags($this->account->id, $this->user->id, '111', ['is_ad' => true]);
+
+        $result = $this->repository->findForMedias($this->account->id, []);
 
         $this->assertTrue($result->isEmpty());
     }

@@ -9,11 +9,13 @@ use Illuminate\Support\Collection;
 
 interface ShowcaseOverlayRepositoryInterface {
     /**
-     * Все overlay аккаунта, индексированные по media_pk.
+     * Overlay постов текущей страницы, индексированные по media_pk.
+     * Грузит только строки для переданных media_pk (не весь аккаунт).
      *
+     * @param array<int, string> $mediaPks
      * @return Collection<string, ShowcaseMediaOverlay>
      */
-    public function findForAccount(int $accountId): Collection;
+    public function findForMedias(int $accountId, array $mediaPks): Collection;
 
     /**
      * Создать/обновить overlay-флаги поста. Заполняются только

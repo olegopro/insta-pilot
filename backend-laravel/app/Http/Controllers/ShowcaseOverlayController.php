@@ -50,7 +50,7 @@ final class ShowcaseOverlayController extends Controller {
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatOverlay($overlay),
+            'data'    => ShowcaseMediaOverlay::toContractArray($overlay),
             'message' => 'OK'
         ]);
     }
@@ -82,21 +82,5 @@ final class ShowcaseOverlayController extends Controller {
             'success' => true,
             'message' => 'OK'
         ]);
-    }
-
-    /**
-     * Overlay-блок в замороженном snake_case-формате контракта.
-     *
-     * @return array<string, mixed>
-     */
-    private function formatOverlay(ShowcaseMediaOverlay $overlay): array {
-        return [
-            'board_position'  => $overlay->board_position,
-            'is_ad'           => $overlay->is_ad,
-            'is_tracked'      => $overlay->is_tracked,
-            'is_hidden_local' => $overlay->is_hidden_local,
-            'note'            => $overlay->note,
-            'labels'          => $overlay->labels
-        ];
     }
 }
