@@ -63,6 +63,62 @@ def _build_pagination_params(cl: Client, max_id: str, seen_posts: list[str]) -> 
 
 # ─── Media serialization ──────────────────────────────────────────────────────
 
+def _base_media_payload(
+    *,
+    pk: str,
+    media_id: str,
+    code: str,
+    taken_at: str,
+    media_type: int,
+    thumbnail_url: Optional[str],
+    video_url: Optional[str],
+    caption_text: str,
+    like_count: int,
+    comment_count: int,
+    view_count: int,
+    has_liked: bool,
+    user: dict,
+    resources: list,
+    location_name: Optional[str],
+    location_pk,
+    thumbnail_width,
+    thumbnail_height,
+    video_width,
+    video_height,
+) -> dict:
+    """
+    Единый контракт медиа-поста (snake_case) — общий набор/порядок полей для
+    _serialize_media (raw dict) и _serialize_media_obj (instagrapi-модель).
+
+    Каждый сериализатор резолвит значения по-своему (разные формы входа), но
+    итоговый набор полей определён здесь — это замороженный контракт с
+    Laravel/Vue DTO. Специфику (is_pinned) добавляет _serialize_media_obj
+    поверх этого набора.
+    """
+    return {
+        "pk": pk,
+        "id": media_id,
+        "code": code,
+        "taken_at": taken_at,
+        "media_type": media_type,
+        "thumbnail_url": thumbnail_url,
+        "video_url": video_url,
+        "caption_text": caption_text,
+        "like_count": like_count,
+        "comment_count": comment_count,
+        "view_count": view_count,
+        "has_liked": has_liked,
+        "user": user,
+        "resources": resources,
+        "location_name": location_name,
+        "location_pk": location_pk,
+        "thumbnail_width": thumbnail_width,
+        "thumbnail_height": thumbnail_height,
+        "video_width": video_width,
+        "video_height": video_height,
+    }
+
+
 def _serialize_media(media_dict: dict) -> Optional[dict]:
     """
     Нормализует сырой медиа-объект Instagram API в единый формат.
@@ -125,35 +181,35 @@ def _serialize_media(media_dict: dict) -> Optional[dict]:
 
     location = media_dict.get("location") or {}
 
-    return {
-        "pk": str(media_dict.get("pk", "")),
-        "id": str(media_dict.get("id", "")),
-        "code": media_dict.get("code", ""),
-        "taken_at": taken_at,
-        "media_type": media_type,
-        "thumbnail_url": thumbnail_url,
-        "video_url": video_url,
-        "caption_text": caption_text,
-        "like_count": media_dict.get("like_count", 0),
-        "comment_count": media_dict.get("comment_count", 0),
+    return _base_media_payload(
+        pk=str(media_dict.get("pk", "")),
+        media_id=str(media_dict.get("id", "")),
+        code=media_dict.get("code", ""),
+        taken_at=taken_at,
+        media_type=media_type,
+        thumbnail_url=thumbnail_url,
+        video_url=video_url,
+        caption_text=caption_text,
+        like_count=media_dict.get("like_count", 0),
+        comment_count=media_dict.get("comment_count", 0),
         # view_count — у видео называется view_count_at_producer или play_count
-        "view_count": media_dict.get("view_count_at_producer") or media_dict.get("play_count") or 0,
-        "has_liked": bool(media_dict.get("has_liked", False)),
-        "user": {
+        view_count=media_dict.get("view_count_at_producer") or media_dict.get("play_count") or 0,
+        has_liked=bool(media_dict.get("has_liked", False)),
+        user={
             "pk": str(user.get("pk", "")),
             "username": user.get("username", ""),
             "full_name": user.get("full_name", ""),
             "profile_pic_url": user.get("profile_pic_url"),
         },
-        "resources": resources,
-        "location_name": location.get("name") if isinstance(location, dict) else None,
-        "location_pk": location.get("pk") if isinstance(location, dict) else None,
-        "thumbnail_width": candidates[0].get("width") if candidates else media_dict.get("original_width"),
-        "thumbnail_height": candidates[0].get("height") if candidates else media_dict.get("original_height"),
+        resources=resources,
+        location_name=location.get("name") if isinstance(location, dict) else None,
+        location_pk=location.get("pk") if isinstance(location, dict) else None,
+        thumbnail_width=candidates[0].get("width") if candidates else media_dict.get("original_width"),
+        thumbnail_height=candidates[0].get("height") if candidates else media_dict.get("original_height"),
         # Размеры видео совпадают с оригинальными только для видео-постов
-        "video_width": media_dict.get("original_width") if media_type == 2 else None,
-        "video_height": media_dict.get("original_height") if media_type == 2 else None,
-    }
+        video_width=media_dict.get("original_width") if media_type == 2 else None,
+        video_height=media_dict.get("original_height") if media_type == 2 else None,
+    )
 
 
 def _media_to_dict(media) -> dict:
@@ -238,33 +294,35 @@ def _serialize_media_obj(media) -> Optional[dict]:
     thumb_h = first_candidate.get("height")
 
     return {
-        "pk": str(data.get("pk", "") or ""),
-        "id": str(data.get("id", "") or ""),
-        "code": data.get("code", "") or "",
-        "taken_at": taken_at,
-        "media_type": media_type,
-        "thumbnail_url": str(thumbnail_url) if thumbnail_url else None,
-        "video_url": str(video_url) if video_url else None,
-        "caption_text": data.get("caption_text", "") or "",
-        "like_count": data.get("like_count", 0) or 0,
-        "comment_count": data.get("comment_count", 0) or 0,
-        # view_count — у видео может приходить как view_count или play_count
-        "view_count": data.get("view_count") or data.get("play_count") or 0,
-        "has_liked": bool(data.get("has_liked", False)),
-        "user": {
-            "pk": str(user.get("pk", "") or ""),
-            "username": user.get("username", "") or "",
-            "full_name": user.get("full_name", "") or "",
-            "profile_pic_url": str(user_pic) if user_pic else None,
-        },
-        "resources": resources,
-        "location_name": location_name,
-        "location_pk": location_pk,
-        "thumbnail_width": thumb_w,
-        "thumbnail_height": thumb_h,
-        # Размеры видео берём из thumbnail-кандидата (оригинальные размеры кадра)
-        "video_width": thumb_w if media_type == 2 else None,
-        "video_height": thumb_h if media_type == 2 else None,
+        **_base_media_payload(
+            pk=str(data.get("pk", "") or ""),
+            media_id=str(data.get("id", "") or ""),
+            code=data.get("code", "") or "",
+            taken_at=taken_at,
+            media_type=media_type,
+            thumbnail_url=str(thumbnail_url) if thumbnail_url else None,
+            video_url=str(video_url) if video_url else None,
+            caption_text=data.get("caption_text", "") or "",
+            like_count=data.get("like_count", 0) or 0,
+            comment_count=data.get("comment_count", 0) or 0,
+            # view_count — у видео может приходить как view_count или play_count
+            view_count=data.get("view_count") or data.get("play_count") or 0,
+            has_liked=bool(data.get("has_liked", False)),
+            user={
+                "pk": str(user.get("pk", "") or ""),
+                "username": user.get("username", "") or "",
+                "full_name": user.get("full_name", "") or "",
+                "profile_pic_url": str(user_pic) if user_pic else None,
+            },
+            resources=resources,
+            location_name=location_name,
+            location_pk=location_pk,
+            thumbnail_width=thumb_w,
+            thumbnail_height=thumb_h,
+            # Размеры видео берём из thumbnail-кандидата (оригинальные размеры кадра)
+            video_width=thumb_w if media_type == 2 else None,
+            video_height=thumb_h if media_type == 2 else None,
+        ),
         # Phase 1 read-only: признак закрепления недоступен — заглушка
         "is_pinned": False,
     }
