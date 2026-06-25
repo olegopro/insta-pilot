@@ -12,6 +12,7 @@ use App\Repositories\ParsedTargetRepositoryInterface;
 use App\Repositories\ParseRunRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 final class AutomationTaskController extends Controller {
     public function __construct(
@@ -43,33 +44,37 @@ final class AutomationTaskController extends Controller {
 
         $filters = $validated['filters'] ?? [];
 
-        $parseRun = $this->parseRunRepository->create([
-            'user_id'              => $userId,
-            'instagram_account_id' => $account->id,
-            'mode'                 => $validated['mode'],
-            'source_type'          => $validated['source']['type'],
-            'source_value'         => $validated['source']['value'],
-            'filters_snapshot'     => $filters,
-            'target_limit'         => (int) $validated['target_count'],
-            'status'               => 'pending'
-        ]);
+        // parse_run + task создаём атомарно: падение создания task не должно
+        // оставить orphan parse_run.
+        return DB::transaction(function () use ($userId, $account, $validated, $filters): JsonResponse {
+            $parseRun = $this->parseRunRepository->create([
+                'user_id'              => $userId,
+                'instagram_account_id' => $account->id,
+                'mode'                 => $validated['mode'],
+                'source_type'          => $validated['source']['type'],
+                'source_value'         => $validated['source']['value'],
+                'filters_snapshot'     => $filters,
+                'target_limit'         => (int) $validated['target_count'],
+                'status'               => 'pending'
+            ]);
 
-        $task = $this->taskRepository->create([
-            'user_id'              => $userId,
-            'instagram_account_id' => $account->id,
-            'parse_run_id'         => $parseRun->id,
-            'mode'                 => $validated['mode'],
-            'action_type'          => $validated['action_type'],
-            'action_config'        => $validated['action_config'] ?? [],
-            'target_count'         => (int) $validated['target_count'],
-            'status'               => 'draft'
-        ]);
+            $task = $this->taskRepository->create([
+                'user_id'              => $userId,
+                'instagram_account_id' => $account->id,
+                'parse_run_id'         => $parseRun->id,
+                'mode'                 => $validated['mode'],
+                'action_type'          => $validated['action_type'],
+                'action_config'        => $validated['action_config'] ?? [],
+                'target_count'         => (int) $validated['target_count'],
+                'status'               => 'draft'
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'data'    => $task,
-            'message' => 'Задача создана'
-        ]);
+            return response()->json([
+                'success' => true,
+                'data'    => $task,
+                'message' => 'Задача создана'
+            ]);
+        });
     }
 
     public function parseTargets(int $id, Request $request): JsonResponse {
@@ -136,34 +141,37 @@ final class AutomationTaskController extends Controller {
         }
 
         // Новый парс-ран — копия источника, но status='pending' и без целей:
-        // клон собирает собственный набор целей заново.
-        $parseRun = $this->parseRunRepository->create([
-            'user_id'              => $userId,
-            'instagram_account_id' => $sourceRun->instagram_account_id,
-            'mode'                 => $sourceRun->mode,
-            'source_type'          => $sourceRun->source_type,
-            'source_value'         => $sourceRun->source_value,
-            'filters_snapshot'     => $sourceRun->filters_snapshot,
-            'target_limit'         => $sourceRun->target_limit,
-            'status'               => 'pending'
-        ]);
+        // клон собирает собственный набор целей заново. parse_run + newTask
+        // создаём атомарно, чтобы не оставить orphan parse_run.
+        return DB::transaction(function () use ($userId, $task, $sourceRun): JsonResponse {
+            $parseRun = $this->parseRunRepository->create([
+                'user_id'              => $userId,
+                'instagram_account_id' => $sourceRun->instagram_account_id,
+                'mode'                 => $sourceRun->mode,
+                'source_type'          => $sourceRun->source_type,
+                'source_value'         => $sourceRun->source_value,
+                'filters_snapshot'     => $sourceRun->filters_snapshot,
+                'target_limit'         => $sourceRun->target_limit,
+                'status'               => 'pending'
+            ]);
 
-        $newTask = $this->taskRepository->create([
-            'user_id'              => $userId,
-            'instagram_account_id' => $task->instagram_account_id,
-            'parse_run_id'         => $parseRun->id,
-            'mode'                 => $task->mode,
-            'action_type'          => $task->action_type,
-            'action_config'        => $task->action_config ?? [],
-            'target_count'         => $task->target_count,
-            'status'               => 'draft'
-        ]);
+            $newTask = $this->taskRepository->create([
+                'user_id'              => $userId,
+                'instagram_account_id' => $task->instagram_account_id,
+                'parse_run_id'         => $parseRun->id,
+                'mode'                 => $task->mode,
+                'action_type'          => $task->action_type,
+                'action_config'        => $task->action_config ?? [],
+                'target_count'         => $task->target_count,
+                'status'               => 'draft'
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'data'    => $newTask,
-            'message' => 'Задача склонирована'
-        ]);
+            return response()->json([
+                'success' => true,
+                'data'    => $newTask,
+                'message' => 'Задача склонирована'
+            ]);
+        });
     }
 
     public function targets(int $id, Request $request): JsonResponse {
@@ -301,7 +309,22 @@ final class AutomationTaskController extends Controller {
             ], 422);
         }
 
-        $this->taskRepository->delete($id);
+        // Каскадно чистим связанные orphan-записи: parse_run — родитель task
+        // (FK его не удаляет), parsed_targets ссылаются на parse_run. Порядок
+        // важен из-за FK: цели → task → parse_run.
+        $parseRunId = $task->parse_run_id !== null ? (int) $task->parse_run_id : null;
+
+        DB::transaction(function () use ($id, $parseRunId): void {
+            if ($parseRunId !== null) {
+                $this->parsedTargetRepository->deleteByParseRun($parseRunId);
+            }
+
+            $this->taskRepository->delete($id);
+
+            if ($parseRunId !== null) {
+                $this->parseRunRepository->delete($parseRunId);
+            }
+        });
 
         return response()->json([
             'success' => true,

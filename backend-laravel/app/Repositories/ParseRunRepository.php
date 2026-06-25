@@ -46,4 +46,8 @@ class ParseRunRepository implements ParseRunRepositoryInterface {
             'finished_at'     => null
         ]) > 0;
     }
+
+    public function delete(int $id): bool {
+        return ParseRun::where('id', $id)->delete() > 0;
+    }
 }
