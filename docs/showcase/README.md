@@ -31,18 +31,19 @@
 |---|------|--------|--------|--------------------------|
 | — | Паутина доков | ✅ закоммичена | `ce33d60` | — |
 | 0 | [verify](phases/phase-0-verify.md) | 🟡 read-only ✅, mutate ⏸ | `ced8489` | read-feasibility доказана живьём (12 постов, media_info, insights=бизнес; `user_info`→429); reversible edit/archive/pin ждут согласованный пост |
-| 1 | [grid](phases/phase-1-grid.md) | ✅ собрана + live + UI-скриншот | `a514d91`, `18d4dbe` | ⚠ showcase-роут в `routes/api.php` НЕ закоммичен (общий с automation). UX-нюанс: контент гейтится профилем (на throttled-аккаунте долгий спиннер) — кандидат на доводку |
-| 2 | [overlay](phases/phase-2-overlay.md) | ✅ собрана + live | `2bb0d72` | overlay-роуты (PATCH/PUT) в `routes/api.php` не закоммичены (общий файл); UX-фикс гейтинга профилем сделан здесь |
+| 1 | [grid](phases/phase-1-grid.md) | ✅ собрана + live + UI-скриншот | `a514d91`, `18d4dbe` | роуты закоммичены (`49d7704`); UX-нюанс гейтинга профилем пофикшен в Phase 2 |
+| 2 | [overlay](phases/phase-2-overlay.md) | ✅ собрана + live | `2bb0d72` | overlay-роуты закоммичены (`49d7704`); UX-фикс гейтинга профилем сделан здесь |
 | 3 | [mutations](phases/phase-3-mutations.md) | ⬜ | — | |
 | 4 | [ads/autopost](phases/phase-4-ads-autopost.md) | ⬜ | — | 4B автопостинг — опц. |
 | 5 | [analytics](phases/phase-5-analytics.md) | ⬜ | — | 5B insights = бизнес (future) |
 
 **Сейчас ждём:** выбор шага — **Phase 3** (реальные IG-мутации edit/archive/delete/pin; для live-проверки
 нужен `media_pk`, можно совместить с Phase 0 mutate) ИЛИ **Phase 4** (пометка реклама/tracked — overlay-флаги
-уже в БД). Phase 1–2 собраны и live-проверены (скриншоты). ⚠ `routes/api.php` (showcase GET+overlay роуты)
-не закоммичены — общий файл, уйдут с automation-коммитом.
+уже в БД). Phase 1–2 собраны и live-проверены (скриншоты). **Рабочее дерево чистое — всё закоммичено
+(включая automation-фичу и общий `routes/api.php`).**
 
 **Лог решений (свежие — сверху):**
+- **2026-06-25** — рабочее дерево полностью закоммичено по запросу владельца: automation-фича (клонирование/перепарс/фаза парсинга/UX) — `f54a080` (verify BE 300 / FE 461 тестов зелёные); общие `routes/api.php` (showcase + automation роуты) + `retrospective.md` — `chore 49d7704`. Незакоммиченных файлов не осталось.
 - **2026-06-25** — Phase 2 ✅ (`2bb0d72`): fan-out Kiro ×2 (Laravel overlay + FE drag/work-area). FE-делегат **таймаутнул 600с** на store-тесте → дописан `reply`-resume (реализация уже была чистой: eslint+vue-tsc). Контракт-развилка путей (delegate-тест `/medias`+POST vs контракт `/media`+PUT) сведена оркестратором под заморозку. Live: клик→выбор поста в рабочую область, фикс гейтинга профилем, 0 console-ошибок. Laravel 33 / FE 18 тестов.
 - **2026-06-25** — Phase 1 UI live-check (Playwright + скриншот): профиль + сетка работают, 12/12 превью грузятся, 0 console-ошибок. Поймал и пофиксил баг: `ShowcaseGrid` `loading=lazy → eager` (lazy давал пустые плитки в headless) — `18d4dbe`. Наблюдение: страница гейтит весь контент профилем (throttled-аккаунт → долгий спиннер); кандидат на UX-доводку (рендерить сетку независимо от профиля). Харнес `scripts/live-check/showcase-live.mjs` — gitignored (как `automation-live.mjs`), локальный.
 - **2026-06-25** — Phase 1 ✅ (`a514d91`): fan-out Kiro ×3 (opus/max — Python/Laravel/FE по непересекающимся слоям), замороженный контракт удержан без рассинхрона. Проверено: Laravel 17 / Python 117 тестов, vue-tsc чисто по showcase, live-roundtrip (medias 6 постов, профиль graceful). Граблина: python без `--reload` → нужен рестарт контейнера, чтобы подхватить новые эндпоинты.

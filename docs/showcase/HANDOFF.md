@@ -7,7 +7,7 @@
 
 - **Фазы 0, 1, 2 — готовы, проверены живьём** (тесты + UI-скриншоты Playwright), закоммичены на `main` (10 showcase-коммитов).
 - Все showcase-коммиты — **строго по своим путям**, изолированы от параллельной automation-задачи (другой терминал). Конфликтов нет.
-- **ЕДИНСТВЕННЫЙ общий файл — `backend-laravel/routes/api.php`**: showcase-роуты есть в рабочем дереве, но **НЕ закоммичены** (чтобы не утащить automation-WIP). Точные строки для восстановления — ниже (раздел «routes/api.php»).
+- **Рабочее дерево ЧИСТОЕ — всё закоммичено** (`git status` пустой). `routes/api.php` (showcase-роуты + automation clone/destroy) и `retrospective.md` — в коммите `49d7704`; automation-фича (клонирование/фаза парсинга/UX) — в `f54a080`. Конфликтов нет.
 - Codex весь день недоступен (402); реализацию делали Kiro-делегаты, независимое мнение — Context7.
 
 ## Что сделано (по фазам)
@@ -42,9 +42,9 @@
 - `frontend-vue/src/` — `entities/showcase-media/**`, `widgets/{phone-frame,showcase-grid,showcase-work-area}/**`, `features/{edit-showcase-note,reorder-showcase-grid}/**`, `pages/showcase/**`, `router/routes.ts` (+`/showcase`), `layouts/AppNavTabs.vue` (+«Витрина»)
 - `frontend-vue/package.json` + `package-lock.json` (+`vuedraggable`)
 
-### ⚠️ НЕ закоммичено — ОБЩИЙ файл `backend-laravel/routes/api.php`
+### ✅ ЗАКОММИЧЕНО — `backend-laravel/routes/api.php` (`49d7704`)
 
-Showcase-роуты добавлены в рабочее дерево, но **НЕ в коммит** (файл параллельно правит automation-задача — её `clone`-роут). Уйдут в репо вместе с коммитом automation. **Если потеряются (reset/stash) — восстановить:**
+Ранее был единственным незакоммиченным общим файлом; теперь закоммичен вместе с `retrospective.md` (showcase-роуты + automation clone/destroy в одном коммите). Showcase-роуты для справки (если когда-нибудь понадобится восстановить):
 
 Импорты (среди `use App\Http\Controllers\*`):
 ```php
@@ -63,9 +63,9 @@ use App\Http\Controllers\ShowcaseOverlayController;
     });
 ```
 
-### 🚫 НЕ закоммичено — automation-WIP (НЕ showcase, не трогалось)
+### ✅ ЗАКОММИЧЕНО — automation-фича (`f54a080`)
 
-Параллельная задача (другой терминал): `app/{Jobs,Http/Controllers,Repositories,Models,Events}/Automation*` и связанное, `frontend-vue/src/**/automation*`, плюс `docs/orchestration/retrospective.md` (общий — там есть и showcase-запись, но файл оставлен нетронутым). Эти файлы showcase-коммиты не включали.
+Параллельная задача (другой терминал) — клонирование/перепарс задач + индикатор фазы парсинга + UX карточек: `app/{Jobs,Http/Controllers,Repositories,Models,Events}/Automation*` и связанное, `frontend-vue/src/**/automation*`. Закоммичена отдельным `feat(automation)` (showcase-коммиты её не включали; verify — BE 300 / FE 461 тестов зелёные).
 
 ### 📦 Local-only (gitignored — в репо НЕ попадут; содержат секреты)
 
