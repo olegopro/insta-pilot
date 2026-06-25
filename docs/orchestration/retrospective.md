@@ -210,6 +210,36 @@ per-account spacing/429 — вторичный лимит (throttle-guard). Па
     opus был разовым транзиентом — opus/max возвращён как основной делегат для тяжёлых задач (throttle-guard
     страхует от реального rate-limit, которого пока не было).
 
+- **2026-06-25 — диагностика «задача semi_auto уходит в Черновик» (batch ×2 Kiro ‖ + Codex).** Явный
+  запрос пользователя на параллель. `delegate_batch` [`claude-sonnet-4.6` FE-trace + `glm-5` BE-trace],
+  обе в одной workdir; параллель сработала.
+  - **Kiro — обе OK, вердикты сошлись с оркестратором: BY DESIGN.** sonnet: путь запуска исправен —
+    клик по draft-карточке → `openReviewHandler` → step `review` → «К запуску» → `AutomationLaunchCockpit`
+    → `taskStore.startTask` → `POST /automation/{id}/start`; `canLaunch = keptCount > 0`; отдельной кнопки
+    «Запустить» в списке НЕТ (управление через клик по карточке). glm: карта переходов draft→scheduling
+    (`start()`) → running/completed (`ActionSchedulerService`: `insertOrIgnore`, 0→completed / N→running)
+    → completed/failed (`ExecuteActionItemJob::refreshTaskProgress`); edge 0 целей → `completed` без
+    поясняющего текста (мелкий UX). Обе note: session_id не извлечён (две задачи в одной workdir).
+  - **⚠️ СБОЙ Codex — `402 Payment Required {"code":"deactivated_workspace"}`** (priority/xhigh,
+    read-only). Codex-канал СЕЙЧАС НЕРАБОЧИЙ — workspace деактивирован (оплата ChatGPT/Codex). Второе
+    независимое мнение в этом прогоне дали два Kiro вместо Codex. До восстановления оплаты Codex недоступен.
+
+- **2026-06-25 — research-фаза новой фичи «Витрина» (feasibility + паутина доков `docs/showcase/`).**
+  Параллельный ресёрч-fan-out ДО любого кода: Context7 (`/subzeroid/instagrapi`) + субагент Explore
+  (инвентаризация feed/media-стека) + попытка Codex.
+  - **⚠️ СБОЙ Codex повторно — `402 deactivated_workspace`** (priority/xhigh, read-only). Подтверждает:
+    канал нерабочий с утра 2026-06-25. Крукс-вердикт осуществимости вынесен по Context7 + анализу
+    оркестратора без независимого Codex-мнения (пометить как непроверенное вторым каналом до Phase 0 live).
+  - **Context7 — ценный канал для feasibility:** офиц. дока instagrapi дала точный список методов
+    (`media_edit/archive/unarchive/delete/pin/unpin`, `user_medias_paginated`, `archive_medias`,
+    `insights_*` только для бизнеса) и подтвердила КЛЮЧЕВОЕ: произвольного reorder сетки в API НЕТ
+    (только pin ≤3). Это перевернуло наивную задумку «drag→save→в аккаунт» в «локальная доска + pin».
+  - **Explore-субагент — чисто:** полная карта существующего стека (Python endpoints, Laravel-прокси,
+    FE media-post/feed, отсутствие DnD-либы) без дампов — то, что нужно для заморозки контрактов.
+  - Итог: написана паутина `docs/showcase/` (README+feasibility+architecture+data-model+api-contracts+
+    phase-0..5+checklist), контракты заморожены ДО fan-out (durable-урок №1). Реализация — по фазам с
+    gate-проверками; делегирование Kiro начнётся с Phase 0 verify-скрипта.
+
 ---
 
 ## Что улучшить в следующей оркестрации

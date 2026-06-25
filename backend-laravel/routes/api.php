@@ -15,6 +15,8 @@ use App\Http\Controllers\InstagramUserController;
 use App\Http\Controllers\LlmSettingsController;
 use App\Http\Controllers\ProxyImageController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ShowcaseController;
+use App\Http\Controllers\ShowcaseOverlayController;
 use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +60,15 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
         Route::post('/{accountId}/like', [FeedController::class, 'like']);
     });
 
+    // Showcase (Витрина) — собственный профиль/сетка
+    Route::prefix('showcase')->group(function () {
+        Route::get('/{accountId}/profile', [ShowcaseController::class, 'profile']);
+        Route::get('/{accountId}/medias', [ShowcaseController::class, 'medias']);
+        Route::get('/{accountId}/media/{mediaPk}', [ShowcaseController::class, 'mediaInfo']);
+        Route::patch('/{accountId}/media/{mediaPk}/overlay', [ShowcaseOverlayController::class, 'updateOverlay']);
+        Route::put('/{accountId}/board/order', [ShowcaseOverlayController::class, 'reorderBoard']);
+    });
+
     // Instagram users
     Route::get('/instagram-user/{accountId}/{userPk}', [InstagramUserController::class, 'show']);
 
@@ -89,6 +100,8 @@ Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function (
         Route::post('/{id}/pause', [AutomationTaskController::class, 'pause']);
         Route::post('/{id}/resume', [AutomationTaskController::class, 'resume']);
         Route::post('/{id}/cancel', [AutomationTaskController::class, 'cancel']);
+        Route::post('/{id}/clone', [AutomationTaskController::class, 'clone']);
+        Route::delete('/{id}', [AutomationTaskController::class, 'destroy']);
     });
 
     // Automation settings (per account)
