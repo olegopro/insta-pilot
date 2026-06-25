@@ -43,7 +43,7 @@
 без логирования чувствительного. Сериализация постов — переиспользовать `_serialize_media`.
 
 Новые endpoint'ы (точные сигнатуры — `api-contracts.md`):
-- `POST /profile/info` — `cl.user_info(cl.user_id)` → профиль владельца.
+- `POST /profile/info` — `cl.account_info()` (надёжно для своего профиля) → counts/bio/avatar. **НЕ `user_info(cl.user_id)`** — на live-прогоне Phase 0 он ловит 429 на self_profile-эндпоинте; фолбэк — блок `user` из `user_medias`.
 - `POST /profile/medias` — `cl.user_medias_paginated(cl.user_id, amount, end_cursor)` → сетка + курсор.
 - `POST /media/info` — `cl.media_info_v1(media_pk)` → свежий снимок поста (для refresh-verify).
 - `POST /media/edit` — `cl.media_edit(media_id, caption, …)`.

@@ -50,7 +50,34 @@ edit подписи / archive / delete / pin.
 | Аналитика по своим постам | Личный аккаунт: **counts-lite** (likes/comments/views из `user_medias` + динамика снимков). Полные insights — только бизнес-аккаунт (future). |
 | Умный автопостинг | **Реально** (`*_upload`), но риск-зона (anti-ban) — отдельная опциональная фаза, не в фундаменте. |
 
-## Нюансы, которые проверит Phase 0 (на живом аккаунте)
+## Phase 0 — фактические результаты (live, аккаунт desyatnikov_666, 2026-06-25)
+
+Прогон `python-service/scripts/verify_showcase_ops.py --read-only` на живом аккаунте
+(`user_id=72679971819`; сессия рабочая, хотя `is_active=0`):
+
+| Проверка | Результат | Вывод |
+|---|---|---|
+| `user_medias_paginated(uid, 12)` | ✅ 12 постов | забор своей сетки работает |
+| `_fetch_user_medias_raw` + `_serialize_media` | ✅ 12 сериализовано | проектный путь сериализации годится для своих постов (TODO о форме `feed/user/{pk}/` снят для этого аккаунта) |
+| `media_info_v1(pk)` | ✅ pk/code/media_type/counts/caption | снимок поста работает |
+| `user_info(cl.user_id)` | ✗ **429** → фолбэк в public GraphQL (HTML) | для шапки профиля **НЕ** использовать `user_info(uid)`; брать `account_info()` или блок `user` из `user_medias` |
+| `insights_media_feed_all(1)` | ✅ **реальные insights** (impressions=256, reach=245, video_views=65, save/share/profile_actions) | аккаунт **бизнес/проф** → полные insights доступны; Phase 5 для него ≠ только counts-lite |
+
+Уточнения формата (зафиксировано):
+- **`is_pinned` НЕ присутствует** ни в pydantic-модели `Media`, ни в текущем `_serialize_media`. Чтобы
+  показывать закрепление — добавить поле в сериализатор и наблюдать представление pinned в raw-ответе
+  при ФАКТИЧЕСКОМ pin (Phase 3, когда будет закреплённый пост).
+- Сериализованный пост = формат `_serialize_media` (`helpers.py`): pk, id, code, taken_at, media_type,
+  thumbnail_url/width/height, video_url/width/height, caption_text, like/comment/view_count, has_liked,
+  user{pk,username,full_name,profile_pic_url}, resources[], location_name/pk. Совпадает с `MediaPostApi`.
+
+**Статус гейта:** read-feasibility доказана живьём → **Phase 1 (read-only сетка) разблокирована**.
+Reversible-мутации (edit/archive/pin) ещё НЕ прогнаны (ждут согласованный пост) — это гейт Phase 3, не Phase 1.
+
+## Нюансы Phase 0 — статус после live-прогона
+
+> Обновлено live-прогоном `--read-only`: п.1 (форма/сериализация) и п.7 (insights) — проверены (см. раздел выше);
+> п.2 (pinned) и п.3–6 (мутации/delete) — на reversible-этапе (гейт Phase 3).
 
 1. **Форма ответа `user_medias`.** `user_medias_paginated` отдаёт `Media`-модели (pydantic), а проектный
    `_serialize_media` (`helpers.py`) написан под raw-dict из `private_request`. Phase 0 фиксирует, какой

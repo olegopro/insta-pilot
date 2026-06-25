@@ -27,18 +27,19 @@
 | # | Фаза | Статус | Коммит | Что осталось до закрытия |
 |---|------|--------|--------|--------------------------|
 | — | Паутина доков | ✅ закоммичена | `ce33d60` | — |
-| 0 | [verify](phases/phase-0-verify.md) | 🟡 скрипт готов | `ced8489` (скрипт) | прогон на живом аккаунте (нужен тестовый аккаунт + согласие на reversible); зафиксировать формат ответов / `is_pinned` |
+| 0 | [verify](phases/phase-0-verify.md) | 🟡 read-only ✅, mutate ⏸ | `ced8489` | read-feasibility доказана живьём (12 постов, media_info, insights=бизнес; `user_info`→429); reversible edit/archive/pin ждут согласованный пост |
 | 1 | [grid](phases/phase-1-grid.md) | ⬜ | — | стартует ПОСЛЕ гейта Phase 0 |
 | 2 | [overlay](phases/phase-2-overlay.md) | ⬜ | — | |
 | 3 | [mutations](phases/phase-3-mutations.md) | ⬜ | — | |
 | 4 | [ads/autopost](phases/phase-4-ads-autopost.md) | ⬜ | — | 4B автопостинг — опц. |
 | 5 | [analytics](phases/phase-5-analytics.md) | ⬜ | — | 5B insights = бизнес (future) |
 
-**Сейчас ждём:** владелец указывает тестовый IG-аккаунт (id/логин) → прогон Phase 0 `--read-only` →
-фиксация `is_pinned` и пути сериализации в [`feasibility.md`](feasibility.md) / [`api-contracts.md`](api-contracts.md)
-→ согласование поста (`media_pk`) для reversible-мутаций → гейт → Phase 1.
+**Сейчас ждём:** владелец указывает пост (`media_pk`) для reversible-мутаций (edit/archive/pin) — гейт
+Phase 3. **Read-feasibility уже доказана живьём** → Phase 1 (read-only сетка) можно стартовать параллельно
+(массовый fan-out Kiro ×3).
 
 **Лог решений (свежие — сверху):**
+- **2026-06-25** — Phase 0 `--read-only` ✅ на live (аккаунт desyatnikov_666): own grid / `media_info_v1` / `_serialize_media` работают; `user_info(self)`→429 (брать `account_info`); `insights_media_feed_all` вернул реальные данные → аккаунт **бизнес/проф**. Детали — [`feasibility.md`](feasibility.md) §«Phase 0 — фактические результаты».
 - **2026-06-25** — коммиты: `ce33d60` `docs(showcase)` (паутина + трекер), `ced8489` `chore(showcase)` (Phase 0 verify-скрипт); стейджились строго showcase-пути, параллельная automation-работа не затронута.
 - **2026-06-25** — процесс: ветка одна (`main`), коммиты группами scope `showcase`; состояние плана ведётся в этом разделе (для продолжения в новых чатах).
 - **2026-06-25** — развилки: архитектура = «доска-планировщик + реальные мутации»; объём = «фундамент по шагам»; меню «Витрина», slug `showcase`. Codex недоступен (402 `deactivated_workspace`).

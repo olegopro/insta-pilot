@@ -57,7 +57,7 @@ IG-факт — как `MediaPostApi` (переиспользуем сериал
   "thumbnail_url": "...", "thumbnail_width": 0, "thumbnail_height": 0,
   "video_url": null, "resources": [],
   "caption_text": "...", "like_count": 0, "comment_count": 0, "view_count": 0,
-  "is_pinned": false,        // ← как IG отдаёт pinned — зафиксировать в Phase 0
+  "is_pinned": false,        // Phase 0 live: НЕ в _serialize_media и не в pydantic Media — ДОБАВИТЬ в сериализатор; представление pinned наблюдать при реальном pin (Phase 3)
   // ── overlay (локально; дефолты если строки нет) ──
   "overlay": {
     "board_position": null,
