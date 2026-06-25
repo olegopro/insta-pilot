@@ -28,17 +28,18 @@
 |---|------|--------|--------|--------------------------|
 | — | Паутина доков | ✅ закоммичена | `ce33d60` | — |
 | 0 | [verify](phases/phase-0-verify.md) | 🟡 read-only ✅, mutate ⏸ | `ced8489` | read-feasibility доказана живьём (12 постов, media_info, insights=бизнес; `user_info`→429); reversible edit/archive/pin ждут согласованный пост |
-| 1 | [grid](phases/phase-1-grid.md) | ⬜ | — | стартует ПОСЛЕ гейта Phase 0 |
+| 1 | [grid](phases/phase-1-grid.md) | ✅ собрана + live | `a514d91` | ⚠ showcase-роут в `routes/api.php` НЕ закоммичен (файл общий с automation) — в рабочем дереве есть, уйдёт с коммитом automation |
 | 2 | [overlay](phases/phase-2-overlay.md) | ⬜ | — | |
 | 3 | [mutations](phases/phase-3-mutations.md) | ⬜ | — | |
 | 4 | [ads/autopost](phases/phase-4-ads-autopost.md) | ⬜ | — | 4B автопостинг — опц. |
 | 5 | [analytics](phases/phase-5-analytics.md) | ⬜ | — | 5B insights = бизнес (future) |
 
-**Сейчас ждём:** владелец указывает пост (`media_pk`) для reversible-мутаций (edit/archive/pin) — гейт
-Phase 3. **Read-feasibility уже доказана живьём** → Phase 1 (read-only сетка) можно стартовать параллельно
-(массовый fan-out Kiro ×3).
+**Сейчас ждём:** выбор следующего шага — **Phase 2** (overlay/доска/drag, fan-out Kiro) ИЛИ дозакрыть
+**Phase 0 mutate** (нужен `media_pk` для reversible edit/archive/pin). Phase 1 собрана и live-проверена.
+⚠ Не забыть: showcase-роут в `routes/api.php` не закоммичен (общий файл — уйдёт с automation-коммитом).
 
 **Лог решений (свежие — сверху):**
+- **2026-06-25** — Phase 1 ✅ (`a514d91`): fan-out Kiro ×3 (opus/max — Python/Laravel/FE по непересекающимся слоям), замороженный контракт удержан без рассинхрона. Проверено: Laravel 17 / Python 117 тестов, vue-tsc чисто по showcase, live-roundtrip (medias 6 постов, профиль graceful). Граблина: python без `--reload` → нужен рестарт контейнера, чтобы подхватить новые эндпоинты.
 - **2026-06-25** — Phase 0 `--read-only` ✅ на live (аккаунт desyatnikov_666): own grid / `media_info_v1` / `_serialize_media` работают; `user_info(self)`→429 (брать `account_info`); `insights_media_feed_all` вернул реальные данные → аккаунт **бизнес/проф**. Детали — [`feasibility.md`](feasibility.md) §«Phase 0 — фактические результаты».
 - **2026-06-25** — коммиты: `ce33d60` `docs(showcase)` (паутина + трекер), `ced8489` `chore(showcase)` (Phase 0 verify-скрипт); стейджились строго showcase-пути, параллельная automation-работа не затронута.
 - **2026-06-25** — процесс: ветка одна (`main`), коммиты группами scope `showcase`; состояние плана ведётся в этом разделе (для продолжения в новых чатах).
