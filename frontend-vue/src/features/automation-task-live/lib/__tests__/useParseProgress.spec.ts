@@ -41,7 +41,11 @@ const completedEvent: AutomationTaskProgressEvent = {
   current_action: 'parsing'
 }
 
-const failedEvent: AutomationTaskProgressEvent = { ...completedEvent, status: 'failed' }
+const failedEvent: AutomationTaskProgressEvent = {
+  ...completedEvent,
+  status:        'failed',
+  error_message: 'Instagram требует подтверждение входа (challenge/checkpoint)'
+}
 
 describe('useParseProgress', () => {
   beforeEach(() => {
@@ -125,7 +129,7 @@ describe('useParseProgress', () => {
     listenHandler?.(failedEvent)
     await vi.advanceTimersByTimeAsync(0)
 
-    expect(onFail).toHaveBeenCalledWith(TASK_ID)
+    expect(onFail).toHaveBeenCalledWith(TASK_ID, 'Instagram требует подтверждение входа (challenge/checkpoint)')
     expect(echo.leave).toHaveBeenCalledWith(`automation-task.${String(TASK_ID)}`)
   })
 

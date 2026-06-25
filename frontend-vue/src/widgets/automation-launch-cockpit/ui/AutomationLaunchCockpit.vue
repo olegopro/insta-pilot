@@ -3,6 +3,7 @@
   import { useAutomationParsingStore } from '@/entities/automation-parsing'
   import type { AutomationTask } from '@/entities/automation-task'
   import { ACTION_TYPE_OPTIONS, isLlmAction } from '@/entities/automation-action'
+  import { getActionTypeLabel } from '@/entities/automation-action'
   import { CommentActionConfig } from '@/features/configure-automation-action'
   import { TimeDistributionEditor, evenDistribution } from '@/shared/ui/time-distribution-editor'
   import { BadgeComponent } from '@/shared/ui/badge-component'
@@ -33,6 +34,12 @@
     ?? props.task.actionType)
   const canLaunch = computed(() => props.keptCount > 0)
 
+  // Сводка перед запуском: лейбл действия (через getActionTypeLabel из entities/automation-action,
+  // с фолбэком на сырое значение) и окно распределения в минутах из текущего windowSeconds.
+  const summaryActionLabel = computed(() =>
+    getActionTypeLabel(props.task.actionType) ?? props.task.actionType)
+  const windowMinutes = computed(() => Math.max(1, Math.round(windowSeconds.value / 60)))
+
   // Число целей может измениться (догрузка/курирование) — переинициализируем сид смещений.
   watch(() => props.keptCount, (count) => offsets.value = evenDistribution(count, windowSeconds.value))
 </script>
@@ -58,9 +65,11 @@
     </section>
 
     <footer class="cockpit__footer">
-      <div class="cockpit__summary">
-        <BadgeComponent :label="`Целей к запуску: ${String(keptCount)}`" color="primary" size="md" />
-      </div>
+      <p class="cockpit__summary">
+        Будет выполнено <strong>{{ keptCount }}</strong> действий ·
+        тип: <strong>{{ summaryActionLabel }}</strong> ·
+        в течение <strong>{{ windowMinutes }}</strong> мин
+      </p>
       <ButtonComponent
         label="Запустить задачу"
         icon="rocket_launch"
@@ -110,5 +119,16 @@
     justify-content: space-between;
     gap: $spacing-section-gap;
     flex-wrap: wrap;
+  }
+
+  .cockpit__summary {
+    margin: 0;
+    font-size: $font-size-base;
+    color: $content-secondary;
+
+    strong {
+      color: $content-primary;
+      font-weight: $font-weight-semibold;
+    }
   }
 </style>

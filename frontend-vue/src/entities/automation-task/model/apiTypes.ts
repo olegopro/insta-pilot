@@ -23,6 +23,10 @@ export interface AutomationTaskApi {
   items_failed: number
   items_skipped: number
   collected_targets_count: number
+  // Фаза сбора целей. Опциональны: бэк добавляет их по контракту, на старых задачах/до
+  // выката бэка могут отсутствовать → DTO деградирует к null.
+  parse_status?: Nullable<'parsing' | 'done' | 'failed'>
+  parse_error?: Nullable<string>
   current_action: Nullable<string>
   started_at: Nullable<string>
   finished_at: Nullable<string>

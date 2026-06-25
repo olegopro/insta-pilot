@@ -24,6 +24,7 @@ class AutomationTaskRepository implements AutomationTaskRepositoryInterface {
 
     public function findByIdAndUserWithCollectedTargets(int $id, int $userId): AutomationTask | null {
         return AutomationTask::withCollectedTargetsCount()
+            ->withParsePhase()
             ->where('id', $id)
             ->where('user_id', $userId)
             ->first();
@@ -32,6 +33,7 @@ class AutomationTaskRepository implements AutomationTaskRepositoryInterface {
     public function getByUser(int $userId): Collection {
         return AutomationTask::where('user_id', $userId)
             ->withCollectedTargetsCount()
+            ->withParsePhase()
             ->orderBy('id', 'desc')
             ->get();
     }
@@ -42,5 +44,9 @@ class AutomationTaskRepository implements AutomationTaskRepositoryInterface {
 
     public function updateSpreadSeconds(int $id, int $spreadSeconds): bool {
         return AutomationTask::where('id', $id)->update(['spread_seconds' => $spreadSeconds]) > 0;
+    }
+
+    public function delete(int $id): bool {
+        return AutomationTask::where('id', $id)->delete() > 0;
     }
 }

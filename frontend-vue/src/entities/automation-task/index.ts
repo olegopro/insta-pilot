@@ -3,6 +3,7 @@ export { default as automationTaskDTO } from './model/automationTaskDTO'
 export type {
   AutomationTask,
   AutomationTaskStatus,
+  AutomationParseStatus,
   AutomationTaskProgressEvent,
   CommentActionConfig
 } from './model/types'

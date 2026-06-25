@@ -15,4 +15,5 @@ interface AutomationTaskRepositoryInterface {
     public function getByUser(int $userId): Collection;
     public function updateStatus(int $id, string $status): bool;
     public function updateSpreadSeconds(int $id, int $spreadSeconds): bool;
+    public function delete(int $id): bool;
 }

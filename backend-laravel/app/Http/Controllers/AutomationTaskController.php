@@ -86,12 +86,83 @@ final class AutomationTaskController extends Controller {
             ], 422);
         }
 
-        ParseTargetsJob::dispatch((int) $task->parse_run_id);
+        // Перепарсить можно только черновик: запущенную/завершённую задачу
+        // пересобирать нельзя (её цели уже могли быть распланированы в действия).
+        if ($task->status !== 'draft') {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Перепарсить цели можно только для задачи-черновика'
+            ], 422);
+        }
+
+        $parseRunId = (int) $task->parse_run_id;
+
+        // Идемпотентный перезапуск: сбрасываем статус и счётчики парс-рана и удаляем
+        // ранее собранные цели — повтор/клон соберёт их заново с чистого листа.
+        $this->parseRunRepository->reset($parseRunId);
+        $this->parsedTargetRepository->deleteByParseRun($parseRunId);
+
+        ParseTargetsJob::dispatch($parseRunId);
 
         return response()->json([
             'success' => true,
-            'data'    => ['parse_run_id' => (int) $task->parse_run_id],
+            'data'    => ['parse_run_id' => $parseRunId],
             'message' => 'Парсинг целей запущен'
+        ]);
+    }
+
+    public function clone(int $id, Request $request): JsonResponse {
+        $userId = $request->user()->id;
+        $task   = $this->taskRepository->findByIdAndUser($id, $userId);
+
+        if (!$task) {
+            return $this->taskNotFound();
+        }
+
+        if ($task->parse_run_id === null) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'У задачи нет связанного парс-рана'
+            ], 422);
+        }
+
+        $sourceRun = $this->parseRunRepository->findById((int) $task->parse_run_id);
+
+        if (!$sourceRun) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Связанный парс-ран не найден'
+            ], 422);
+        }
+
+        // Новый парс-ран — копия источника, но status='pending' и без целей:
+        // клон собирает собственный набор целей заново.
+        $parseRun = $this->parseRunRepository->create([
+            'user_id'              => $userId,
+            'instagram_account_id' => $sourceRun->instagram_account_id,
+            'mode'                 => $sourceRun->mode,
+            'source_type'          => $sourceRun->source_type,
+            'source_value'         => $sourceRun->source_value,
+            'filters_snapshot'     => $sourceRun->filters_snapshot,
+            'target_limit'         => $sourceRun->target_limit,
+            'status'               => 'pending'
+        ]);
+
+        $newTask = $this->taskRepository->create([
+            'user_id'              => $userId,
+            'instagram_account_id' => $task->instagram_account_id,
+            'parse_run_id'         => $parseRun->id,
+            'mode'                 => $task->mode,
+            'action_type'          => $task->action_type,
+            'action_config'        => $task->action_config ?? [],
+            'target_count'         => $task->target_count,
+            'status'               => 'draft'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $newTask,
+            'message' => 'Задача склонирована'
         ]);
     }
 
@@ -214,6 +285,29 @@ final class AutomationTaskController extends Controller {
 
     public function cancel(int $id, Request $request): JsonResponse {
         return $this->changeTaskStatus($id, 'cancelled', 'Задача отменена', $request);
+    }
+
+    public function destroy(int $id, Request $request): JsonResponse {
+        $task = $this->taskRepository->findByIdAndUser($id, $request->user()->id);
+
+        if (!$task) {
+            return $this->taskNotFound();
+        }
+
+        if (in_array($task->status, ['running', 'scheduling'], true)) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Сначала отмените задачу'
+            ], 422);
+        }
+
+        $this->taskRepository->delete($id);
+
+        return response()->json([
+            'success' => true,
+            'data'    => ['id' => $id],
+            'message' => 'Задача удалена'
+        ]);
     }
 
     private function changeTargetStatus(int $id, int $targetId, string $status, Request $request): JsonResponse {

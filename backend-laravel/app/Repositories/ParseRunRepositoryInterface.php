@@ -13,4 +13,5 @@ interface ParseRunRepositoryInterface {
     public function findByIdAndUser(int $id, int $userId): ParseRun | null;
     public function getByUser(int $userId): Collection;
     public function updateStatus(int $id, string $status, ?string $errorMessage = null): bool;
+    public function reset(int $id): bool;
 }

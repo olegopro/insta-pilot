@@ -17,10 +17,14 @@ export function useAutomationTaskLive() {
 
     echo.private(`automation-task.${String(taskId)}`)
       .listen('.AutomationTaskProgress', (event: AutomationTaskProgressEvent) => {
-        // Парс-прогресс приходит на тот же канал (current_action === 'parsing') с items_total
-        // как числом собранных целей — он перетёр бы execution-поля карточки. Эти события
-        // обрабатывает отдельный useParseProgress (шаг ревью), здесь их игнорируем.
-        if (event.current_action === 'parsing') return
+        // Парс-прогресс приходит на тот же канал (current_action === 'parsing'): он несёт
+        // фазу сбора целей, а не execution-счётчики. Роутим его в applyParseProgress —
+        // карточка реактивно меняет фазу (parsing → done/failed) без рефетча. Детальный
+        // flow review-шага (рефетч целей) держит отдельный useParseProgress.
+        if (event.current_action === 'parsing') {
+          taskStore.applyParseProgress(taskId, event)
+          return
+        }
         taskStore.applyProgress(taskId, event)
       })
   }

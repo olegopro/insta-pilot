@@ -41,3 +41,16 @@ export const getActionTypeLabel = (actionType: Nullable<string>): Nullable<strin
   actionType && actionType in ACTION_TYPE_LABELS
     ? ACTION_TYPE_LABELS[actionType as AutomationActionType]
     : null
+
+// Иконки типов действий (material-symbols) — для декоративного watermark карточки задачи.
+export const ACTION_TYPE_ICONS: Record<AutomationActionType, string> = {
+  comment: 'chat_bubble',
+  like: 'favorite',
+  follow: 'person_add',
+  unfollow: 'person_remove'
+}
+
+// Иконка типа действия для карточки. Берётся по task.actionType (всегда валидный
+// AutomationActionType), поэтому возвращает гарантированную строку.
+export const getActionTypeIcon = (actionType: AutomationActionType): string =>
+  ACTION_TYPE_ICONS[actionType]

@@ -24,9 +24,10 @@ vi.mock('@/shared/lib', () => ({
 }))
 
 const applyProgress = vi.fn()
+const applyParseProgress = vi.fn()
 
 vi.mock('@/entities/automation-task', () => ({
-  useAutomationTaskStore: () => ({ applyProgress })
+  useAutomationTaskStore: () => ({ applyProgress, applyParseProgress })
 }))
 
 import { useAutomationTaskLive } from '@/features/automation-task-live/lib/useAutomationTaskLive'
@@ -47,10 +48,12 @@ describe('useAutomationTaskLive — фильтр parsing', () => {
     listenHandler = null
   })
 
-  it('событие с current_action=parsing НЕ вызывает applyProgress', () => {
+  it('событие с current_action=parsing роутится в applyParseProgress, не в applyProgress', () => {
     useAutomationTaskLive().subscribe(1)
-    listenHandler?.(makeEvent({ current_action: 'parsing' }))
+    const event = makeEvent({ current_action: 'parsing' })
+    listenHandler?.(event)
     expect(applyProgress).not.toHaveBeenCalled()
+    expect(applyParseProgress).toHaveBeenCalledWith(1, event)
   })
 
   it('обычное событие (current_action=like) применяется через applyProgress', () => {
@@ -58,6 +61,7 @@ describe('useAutomationTaskLive — фильтр parsing', () => {
     const event = makeEvent({ current_action: 'like' })
     listenHandler?.(event)
     expect(applyProgress).toHaveBeenCalledWith(1, event)
+    expect(applyParseProgress).not.toHaveBeenCalled()
   })
 
   it('событие current_action=null (терминал) применяется через applyProgress', () => {

@@ -126,6 +126,81 @@ final class ParseTargetsJobTest extends TestCase {
         ];
     }
 
+    /**
+     * Неуспех parseTargetsCandidates различается по содержимому ответа: реальная ошибка
+     * (есть error/error_code — challenge/auth/…) делает parse_run failed с понятным
+     * сообщением; штатно пустой источник (success=false без признаков ошибки) — мягко
+     * завершается как completed без error_message.
+     *
+     * @param array<string, mixed> $candidatesResult
+     */
+    #[DataProvider('candidatesUnsuccessProvider')]
+    public function test_candidates_unsuccess_distinguishes_real_error_from_empty_source(
+        array $candidatesResult,
+        string $expectedStatus,
+        bool $expectThrow,
+        ?string $messageContains
+    ): void {
+        $user = User::factory()->create();
+        $account = InstagramAccount::factory()->create([
+            'user_id' => $user->id,
+            'session_data' => '{"session":"ok"}'
+        ]);
+        $parseRun = $this->makeParseRun($user, $account);
+        $this->makeTask($user, $account, $parseRun->id, 'like');
+
+        $mock = $this->mock(InstagramClientServiceInterface::class);
+        $mock->shouldReceive('parseTargetsCandidates')->once()->andReturn($candidatesResult);
+        $mock->shouldReceive('parseTargetsEnrich')->never();
+
+        $job = new ParseTargetsJob((int) $parseRun->id);
+        $invoke = fn (): null => $job->handle(
+            app(ParseRunRepositoryInterface::class),
+            app(ParsedTargetRepositoryInterface::class),
+            app(InstagramAccountRepositoryInterface::class),
+            app(InstagramClientServiceInterface::class),
+            app(TargetFilterServiceInterface::class)
+        );
+
+        if ($expectThrow) {
+            try {
+                $invoke();
+                $this->fail('Ожидалось исключение при реальной ошибке источника');
+            } catch (\RuntimeException $e) {
+                $messageContains !== null && $this->assertStringContainsString($messageContains, $e->getMessage());
+            }
+        } else {
+            $invoke();
+        }
+
+        $parseRun->refresh();
+        $this->assertSame($expectedStatus, $parseRun->status);
+        $expectThrow
+            ? $this->assertNotEmpty($parseRun->error_message)
+            : $this->assertNull($parseRun->error_message);
+    }
+
+    public static function candidatesUnsuccessProvider(): array {
+        return [
+            'challenge_required → failed с сообщением о верификации' => [
+                [
+                    'success' => false,
+                    'error' => 'challenge_required',
+                    'error_code' => 'challenge_required'
+                ],
+                'failed',
+                true,
+                'подтверждение входа'
+            ],
+            'пустой источник без признаков ошибки → completed без сообщения' => [
+                ['success' => false],
+                'completed',
+                false,
+                null
+            ]
+        ];
+    }
+
     private function makeParseRun(User $user, InstagramAccount $account): ParseRun {
         return ParseRun::create([
             'user_id' => $user->id,

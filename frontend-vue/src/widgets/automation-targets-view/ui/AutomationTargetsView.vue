@@ -5,6 +5,7 @@
   import { MasonryGrid } from '@/shared/ui/masonry-grid'
   import { InputComponent } from '@/shared/ui/input-component'
   import { BadgeComponent } from '@/shared/ui/badge-component'
+  import { EmptyStateComponent } from '@/shared/ui/empty-state-component'
   import { useSearchQuery, useFilterColumns } from '@/shared/lib'
   import { MediaCard } from '@/entities/media-post'
   import type { MediaPost } from '@/entities/media-post'
@@ -22,6 +23,7 @@
     targets: AutomationTarget[]
     loading?: boolean
     curatingId?: number | null
+    readonly?: boolean
   }>()
 
   const emit = defineEmits<{
@@ -38,6 +40,14 @@
 
   const { columns, columnsVisibleNames } = useFilterColumns(automationTargetTableColumns)
   const { searchText } = useSearchQuery()
+
+  // Read-only режим (просмотр запущенной/завершённой задачи): прячем колонку действий
+  // в таблице и кнопки курирования в плитке — курировать уже нельзя.
+  const visibleColumns = computed<string[]>(() =>
+    props.readonly
+      ? columnsVisibleNames.value.filter((name) => name !== 'actions')
+      : columnsVisibleNames.value
+  )
 
   const rows = computed<AutomationTargetRowModel[]>(() => automationTargetListDTO.toLocal(props.targets))
   const mediaPosts = computed<MediaPost[]>(() => targetsToMediaPosts(props.targets))
@@ -65,86 +75,101 @@
 
 <template>
   <div class="targets-view">
-    <div class="targets-view__toolbar">
-      <div class="targets-view__counters">
-        <BadgeComponent :label="`Оставлено: ${String(keptCount)}`" color="positive" size="md" />
-        <BadgeComponent v-if="trashedCount > 0" :label="`В корзине: ${String(trashedCount)}`" color="grey" outline size="md" />
-      </div>
-
-      <div class="targets-view__controls">
-        <InputComponent
-          v-model="searchText"
-          dense
-          outlined
-          placeholder="Поиск по аккаунтам"
-          clearable
-          style="min-width: 220px"
-        >
-          <template #prepend>
-            <q-icon name="search" />
-          </template>
-        </InputComponent>
-
-        <SegmentedControlComponent v-model="viewMode" :options="viewModeOptions" />
-      </div>
+    <!-- Идёт сбор целей: пока целей нет и активна загрузка — спиннер вместо пустой таблицы -->
+    <div v-if="loading && targets.length === 0" class="targets-view__status">
+      <q-spinner size="40px" color="primary" />
+      <span class="targets-view__status-text">Идёт сбор целей…</span>
     </div>
 
-    <TableComponent
-      v-if="viewMode === 'table'"
-      :rows="rows"
-      :columns="columns"
-      :visible-columns="columnsVisibleNames"
-      :filter="searchText"
-      :loading="loading"
-      row-key="id"
-      no-data-label="Нет целей"
-    >
-      <template #body-cell-username="{ row }">
-        <q-td>
-          <span :class="{ 'targets-view__trashed': row.status === 'trashed' }">{{ row.username }}</span>
-        </q-td>
-      </template>
+    <!-- Пусто без загрузки: внятный empty state -->
+    <EmptyStateComponent
+      v-else-if="targets.length === 0"
+      icon="group_off"
+      text="Целей пока нет"
+    />
 
-      <template #body-cell-status="{ row }">
-        <q-td class="text-center">
-          <BadgeComponent
-            :label="row.status === 'kept' ? 'Оставлен' : 'В корзине'"
-            :color="row.status === 'kept' ? 'positive' : 'grey'"
-            :outline="row.status === 'trashed'"
-            size="sm"
-          />
-        </q-td>
-      </template>
+    <template v-else>
+      <div class="targets-view__toolbar">
+        <div class="targets-view__counters">
+          <BadgeComponent :label="`Оставлено: ${String(keptCount)}`" color="positive" size="md" />
+          <BadgeComponent v-if="trashedCount > 0" :label="`В корзине: ${String(trashedCount)}`" color="grey" outline size="md" />
+        </div>
 
-      <template #body-cell-actions="{ row }">
-        <q-td class="text-center">
-          <CurateTargetButton
-            :status="row.status"
-            :loading="curatingId === row.id"
-            @exclude="curateRowHandler(row)"
-            @restore="curateRowHandler(row)"
-          />
-        </q-td>
-      </template>
-    </TableComponent>
+        <div class="targets-view__controls">
+          <InputComponent
+            v-model="searchText"
+            dense
+            outlined
+            placeholder="Поиск по аккаунтам"
+            clearable
+            style="min-width: 220px"
+          >
+            <template #prepend>
+              <q-icon name="search" />
+            </template>
+          </InputComponent>
 
-    <div v-else class="targets-view__tiles">
-      <MasonryGrid :items="mediaPosts" :get-item-height="getPostHeight">
-        <template #default="{ item }">
-          <div class="tile">
-            <MediaCard :key="item.pk" :post="item" is-mock />
-            <div class="tile__actions">
-              <CurateTargetButton
-                :status="statusByPk.get(item.user.pk)?.status ?? 'kept'"
-                :loading="curatingId === statusByPk.get(item.user.pk)?.id"
-                @exclude="curateTileHandler(item)"
-                @restore="curateTileHandler(item)"
-              />
-            </div>
-          </div>
+          <SegmentedControlComponent v-model="viewMode" :options="viewModeOptions" />
+        </div>
+      </div>
+
+      <TableComponent
+        v-if="viewMode === 'table'"
+        :rows="rows"
+        :columns="columns"
+        :visible-columns="visibleColumns"
+        :filter="searchText"
+        :loading="loading"
+        row-key="id"
+        no-data-label="Нет целей"
+      >
+        <template #body-cell-username="{ row }">
+          <q-td>
+            <span :class="{ 'targets-view__trashed': row.status === 'trashed' }">{{ row.username }}</span>
+          </q-td>
         </template>
-      </MasonryGrid>
-    </div>
+
+        <template #body-cell-status="{ row }">
+          <q-td class="text-center">
+            <BadgeComponent
+              :label="row.status === 'kept' ? 'Оставлен' : 'В корзине'"
+              :color="row.status === 'kept' ? 'positive' : 'grey'"
+              :outline="row.status === 'trashed'"
+              size="sm"
+            />
+          </q-td>
+        </template>
+
+        <template #body-cell-actions="{ row }">
+          <q-td class="text-center">
+            <CurateTargetButton
+              :status="row.status"
+              :loading="curatingId === row.id"
+              @exclude="curateRowHandler(row)"
+              @restore="curateRowHandler(row)"
+            />
+          </q-td>
+        </template>
+      </TableComponent>
+
+      <div v-else class="targets-view__tiles">
+        <MasonryGrid :items="mediaPosts" :get-item-height="getPostHeight">
+          <template #default="{ item }">
+            <div class="tile">
+              <MediaCard :key="item.pk" :post="item" is-mock />
+              <div v-if="!readonly" class="tile__actions">
+                <CurateTargetButton
+                  :status="statusByPk.get(item.user.pk)?.status ?? 'kept'"
+                  :loading="curatingId === statusByPk.get(item.user.pk)?.id"
+                  @exclude="curateTileHandler(item)"
+                  @restore="curateTileHandler(item)"
+                />
+              </div>
+            </div>
+          </template>
+        </MasonryGrid>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -153,6 +178,20 @@
     display: flex;
     flex-direction: column;
     gap: $spacing-stack-gap;
+  }
+
+  .targets-view__status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $indent-m;
+    padding: $spacing-section-gap;
+    color: $content-secondary;
+  }
+
+  .targets-view__status-text {
+    font-size: $font-size-base;
   }
 
   .targets-view__toolbar {

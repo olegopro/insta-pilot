@@ -19,7 +19,8 @@ final class AutomationTaskProgress implements ShouldBroadcastNow {
         public readonly int $itemsDone,
         public readonly int $itemsFailed,
         public readonly int $itemsSkipped,
-        public readonly ?string $currentAction = null
+        public readonly ?string $currentAction = null,
+        public readonly ?string $errorMessage = null
     ) {}
 
     public function broadcastOn(): PrivateChannel {
@@ -34,7 +35,8 @@ final class AutomationTaskProgress implements ShouldBroadcastNow {
             'items_done' => $this->itemsDone,
             'items_failed' => $this->itemsFailed,
             'items_skipped' => $this->itemsSkipped,
-            'current_action' => $this->currentAction
+            'current_action' => $this->currentAction,
+            'error_message' => $this->errorMessage
         ];
     }
 

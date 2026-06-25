@@ -34,4 +34,16 @@ class ParseRunRepository implements ParseRunRepositoryInterface {
 
         return ParseRun::where('id', $id)->update($data) > 0;
     }
+
+    public function reset(int $id): bool {
+        return ParseRun::where('id', $id)->update([
+            'status'          => 'pending',
+            'error_message'   => null,
+            'scanned_count'   => 0,
+            'collected_count' => 0,
+            'next_cursor'     => null,
+            'started_at'      => null,
+            'finished_at'     => null
+        ]) > 0;
+    }
 }

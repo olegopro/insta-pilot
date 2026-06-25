@@ -29,6 +29,10 @@ class ParsedTargetRepository implements ParsedTargetRepositoryInterface {
         return $query->orderBy('id')->get();
     }
 
+    public function deleteByParseRun(int $parseRunId): int {
+        return ParsedTarget::where('parse_run_id', $parseRunId)->delete();
+    }
+
     public function updateStatus(int $id, string $status): bool {
         return ParsedTarget::where('id', $id)->update(['status' => $status]) > 0;
     }

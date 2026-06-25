@@ -19,6 +19,8 @@ class AutomationTaskDTO {
       itemsFailed: data.items_failed,
       itemsSkipped: data.items_skipped,
       collectedTargetsCount: data.collected_targets_count,
+      parseStatus: data.parse_status ?? null,
+      parseError: data.parse_error ?? null,
       currentAction: data.current_action,
       startedAt: data.started_at,
       finishedAt: data.finished_at,

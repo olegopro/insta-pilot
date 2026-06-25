@@ -19,6 +19,8 @@ const makeApi = (overrides: Partial<AutomationTaskApi> = {}): AutomationTaskApi 
   items_failed: 0,
   items_skipped: 0,
   collected_targets_count: 2,
+  parse_status: null,
+  parse_error: null,
   current_action: null,
   started_at: null,
   finished_at: null,
@@ -44,6 +46,8 @@ describe('automationTaskDTO.toLocal — маппинг snake→camel', () => {
       itemsFailed: 0,
       itemsSkipped: 0,
       collectedTargetsCount: 2,
+      parseStatus: null,
+      parseError: null,
       currentAction: null,
       startedAt: null,
       finishedAt: null,
@@ -54,6 +58,21 @@ describe('automationTaskDTO.toLocal — маппинг snake→camel', () => {
   })
 
   it('маппит collected_targets_count → collectedTargetsCount', () => expect(automationTaskDTO.toLocal(makeApi({ collected_targets_count: 5 })).collectedTargetsCount).toBe(5))
+
+  it('маппит parse_status → parseStatus и parse_error → parseError', () => {
+    const task = automationTaskDTO.toLocal(makeApi({ parse_status: 'failed', parse_error: 'challenge_required' }))
+    expect(task.parseStatus).toBe('failed')
+    expect(task.parseError).toBe('challenge_required')
+  })
+
+  it('деградирует parse_status/parse_error к null если бэк их не прислал', () => {
+    const withoutParse = makeApi()
+    delete withoutParse.parse_status
+    delete withoutParse.parse_error
+    const task = automationTaskDTO.toLocal(withoutParse)
+    expect(task.parseStatus).toBeNull()
+    expect(task.parseError).toBeNull()
+  })
 
   it('toLocalList применяет маппинг к каждому элементу', () => {
     const result = automationTaskDTO.toLocalList([

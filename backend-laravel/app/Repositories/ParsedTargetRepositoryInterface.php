@@ -12,5 +12,6 @@ interface ParsedTargetRepositoryInterface {
     public function createMany(array $items): bool;
     public function findByIdAndUser(int $id, int $userId): ParsedTarget | null;
     public function getByParseRun(int $parseRunId, ?string $status = null): Collection;
+    public function deleteByParseRun(int $parseRunId): int;
     public function updateStatus(int $id, string $status): bool;
 }

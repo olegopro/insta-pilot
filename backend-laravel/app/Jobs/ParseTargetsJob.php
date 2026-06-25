@@ -27,6 +27,11 @@ final class ParseTargetsJob implements ShouldQueue {
     private const MAX_PAGES = 30;
     private const ENRICH_BATCH = 20;
 
+    /**
+     * Коды Instagram, при которых сессия фактически потеряна — дальнейший сбор бессмыслен.
+     */
+    private const FATAL_ERROR_CODES = ['challenge_required', 'login_required'];
+
     public function __construct(
         public readonly int $parseRunId
     ) {}
@@ -124,10 +129,63 @@ final class ParseTargetsJob implements ShouldQueue {
                 'finished_at'   => now()
             ])->save();
 
-            $this->broadcastProgress($this->parseRunId, 'failed', 0);
+            $this->broadcastProgress($this->parseRunId, 'failed', 0, $e->getMessage());
 
             throw $e;
         }
+    }
+
+    /**
+     * Бросает исключение, если неуспех источника — РЕАЛЬНАЯ ошибка Instagram, а не штатный
+     * конец данных. Признак ошибки — наличие error_code или непустого error в ответе Python
+     * (InstagramClientService возвращает тело ответа «как есть», включая эти поля). Пустой
+     * источник без признаков ошибки — не ошибка: возвращаемся, вызывающий делает мягкий break.
+     *
+     * @param array<string, mixed>|null $result
+     */
+    private function failOnSourceError(?array $result): void {
+        $errorCode = $result === null ? null : ($result['error_code'] ?? null);
+        $rawError  = $result === null ? null : ($result['error'] ?? null);
+
+        if ($errorCode === null && !(is_string($rawError) && $rawError !== '')) {
+            return;
+        }
+
+        throw new \RuntimeException($this->humanizeInstagramError(
+            is_string($errorCode) ? $errorCode : '',
+            is_string($rawError) ? $rawError : null
+        ));
+    }
+
+    /**
+     * Бросает исключение только на фатальных кодах (challenge/login) — для enrich, где сбой
+     * отдельного батча не должен валить весь прогон, а потеря сессии — должна.
+     *
+     * @param array<string, mixed>|null $result
+     */
+    private function failOnFatalError(?array $result): void {
+        $errorCode = $result === null ? null : ($result['error_code'] ?? null);
+
+        if (!is_string($errorCode) || !in_array($errorCode, self::FATAL_ERROR_CODES, true)) {
+            return;
+        }
+
+        throw new \RuntimeException($this->humanizeInstagramError($errorCode, null));
+    }
+
+    /**
+     * Человекочитаемое русское сообщение по коду ошибки Instagram.
+     */
+    private function humanizeInstagramError(string $errorCode, ?string $rawError): string {
+        return match ($errorCode) {
+            'challenge_required' => 'Instagram требует подтверждение входа (challenge/checkpoint). Пройдите верификацию аккаунта в приложении Instagram с тем же прокси и обновите сессию, затем повторите.',
+            'login_required'     => 'Сессия Instagram недействительна — требуется повторный вход. Обновите сессию аккаунта и повторите.',
+            'rate_limited'       => 'Instagram временно ограничил частоту запросов (rate limit). Подождите и повторите позже.',
+            'timeout'            => 'Превышено время ожидания ответа Instagram. Повторите позже.',
+            default              => is_string($rawError) && $rawError !== ''
+                ? "Ошибка Instagram при сборе целей: {$rawError}"
+                : 'Не удалось собрать цели: Instagram вернул ошибку без описания'
+        };
     }
 
     /**
@@ -176,6 +234,12 @@ final class ParseTargetsJob implements ShouldQueue {
             $result = $instagramClient->parseTargetsCandidates($params, $userId);
 
             if (empty($result['success'])) {
+                // Различаем РЕАЛЬНУЮ ошибку источника (challenge/auth/rate-limit/http-провал)
+                // и штатный конец данных. Ошибку НЕ проглатываем — бросаем исключение, чтобы
+                // catch в handle() пометил parse_run как failed с понятным сообщением. Пустой
+                // источник без признаков ошибки — мягкий выход с уже собранным kept.
+                $this->failOnSourceError(is_array($result) ? $result : null);
+
                 break;
             }
 
@@ -213,6 +277,11 @@ final class ParseTargetsJob implements ShouldQueue {
                 ], $userId);
 
                 if (empty($enrichResult['success'])) {
+                    // Фатальные коды (challenge/login) на enrich — тоже не молчим: при потере
+                    // сессии дальнейший сбор бессмыслен и пользователь должен видеть причину.
+                    // Прочие сбои отдельного батча не валят прогон — мягко пропускаем.
+                    $this->failOnFatalError(is_array($enrichResult) ? $enrichResult : null);
+
                     continue;
                 }
 
@@ -303,7 +372,9 @@ final class ParseTargetsJob implements ShouldQueue {
         $result = $instagramClient->getFollowing($sessionData, $accountId, $targetLimit, $userId);
 
         if (empty($result['success'])) {
-            throw new \RuntimeException((string) ($result['error'] ?? 'Не удалось получить список подписок'));
+            $this->failOnSourceError(is_array($result) ? $result : null);
+
+            throw new \RuntimeException('Не удалось получить список подписок');
         }
 
         $users        = array_slice($result['users'] ?? [], 0, $targetLimit);
@@ -457,7 +528,7 @@ final class ParseTargetsJob implements ShouldQueue {
         ];
     }
 
-    private function broadcastProgress(int $parseRunId, string $status, int $kept): void {
+    private function broadcastProgress(int $parseRunId, string $status, int $kept, ?string $errorMessage = null): void {
         if (!class_exists('App\Events\AutomationTaskProgress')) {
             return;
         }
@@ -471,7 +542,8 @@ final class ParseTargetsJob implements ShouldQueue {
             0,
             0,
             0,
-            'parsing'
+            'parsing',
+            $errorMessage
         ));
     }
 

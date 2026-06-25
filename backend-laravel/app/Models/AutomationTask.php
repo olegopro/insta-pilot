@@ -70,4 +70,22 @@ class AutomationTask extends Model {
                 'collected_targets_count'
             );
     }
+
+    // Фаза сбора целей, производная от связанного parse_run (для фронта: «идёт сбор / готово /
+    // ошибка»). Два коррелированных подзапроса, без N+1 — применять ПОСЛЕ withCollectedTargetsCount
+    // (та задаёт базовый select automation_tasks.*).
+    //   parse_status: pending|running → 'parsing'; completed → 'done'; failed → 'failed'; иначе null.
+    //   parse_error:  error_message при failed; иначе null.
+    public function scopeWithParsePhase(Builder $query): void {
+        $query->addSelect([
+            'parse_status' => ParseRun::query()
+                ->selectRaw("case when parse_runs.status in ('pending', 'running') then 'parsing' when parse_runs.status = 'completed' then 'done' when parse_runs.status = 'failed' then 'failed' end")
+                ->whereColumn('parse_runs.id', 'automation_tasks.parse_run_id')
+                ->limit(1),
+            'parse_error' => ParseRun::query()
+                ->selectRaw("case when parse_runs.status = 'failed' then parse_runs.error_message end")
+                ->whereColumn('parse_runs.id', 'automation_tasks.parse_run_id')
+                ->limit(1)
+        ]);
+    }
 }

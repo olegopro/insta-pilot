@@ -21,8 +21,9 @@ interface ParseProgressOptions {
   // Рефетч целей задачи (источник истины после завершения парсинга). Возвращает количество
   // полученных целей: >0 — терминальный успех парса (цели закоммичены и доступны).
   onDone: (taskId: number) => Promise<number>
-  // Колбэк ошибки парсинга (status='failed' с current_action='parsing').
-  onFail?: (taskId: number) => void
+  // Колбэк ошибки парсинга (status='failed' с current_action='parsing'). message — текст
+  // причины из события (например, требование верификации аккаунта), если бэк его прислал.
+  onFail?: (taskId: number, message?: string | null) => void
   // Терминальное завершение парса: цели получены (count>0) ИЛИ исчерпан backstop. Вызывается
   // один раз, НЕЗАВИСИМО от числа целей — для сброса визуальных флагов даже при 0 целях.
   onSettled?: (taskId: number) => void
@@ -54,11 +55,11 @@ export function useParseProgress(options: ParseProgressOptions) {
     }
   }
 
-  const finishFail = (taskId: number) => {
+  const finishFail = (taskId: number, message?: string | null) => {
     if (settled) return
     settled = true
     leave()
-    options.onFail?.(taskId)
+    options.onFail?.(taskId, message)
   }
 
   // Пытается терминально завершить парс: рефетчит цели и, если они получены (count>0),
@@ -89,7 +90,7 @@ export function useParseProgress(options: ParseProgressOptions) {
     echo.private(`automation-task.${String(taskId)}`)
       .listen('.AutomationTaskProgress', (event: AutomationTaskProgressEvent) => {
         if (event.current_action !== PARSE_ACTION) return
-        FAIL_STATUSES.includes(event.status) && finishFail(taskId)
+        FAIL_STATUSES.includes(event.status) && finishFail(taskId, event.error_message)
         if (DONE_STATUSES.includes(event.status)) {
           // items_total===0 означает «целей нет», не гонку коммита — завершаем сразу (force)
           event.items_total === 0
