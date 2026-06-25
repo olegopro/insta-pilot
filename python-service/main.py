@@ -19,6 +19,9 @@ insta-pilot — Python FastAPI service.
   POST /search/hashtag        — поиск постов по хэштегу
   POST /search/locations      — поиск геолокаций по названию
   POST /search/location       — посты по конкретной геолокации
+  POST /profile/info          — профиль залогиненного аккаунта (self, read-only)
+  POST /profile/medias        — посты залогиненного аккаунта (курсорная пагинация)
+  POST /media/info            — детальная информация о посте по media_pk
 
 Многопоточность:
   Один uvicorn worker + asyncio.to_thread для каждого instagrapi-вызова.
@@ -47,6 +50,7 @@ from helpers import (
     _instagram_response_debug,
     _paginate_feed,
     _serialize_comment,
+    _serialize_media_obj,
     _serialize_target_user,
 )
 from lock import account_lock
@@ -66,10 +70,15 @@ from schemas import (
     LoginResponse,
     MediaLikeRequest,
     MediaLikeResponse,
+    MediaInfoRequest,
+    MediaInfoResponse,
     ParseCandidatesRequest,
     ParseCandidatesResponse,
     ParseEnrichRequest,
     ParseEnrichResponse,
+    ProfileInfoResponse,
+    ProfileMediasRequest,
+    ProfileMediasResponse,
     SearchHashtagRequest,
     SearchLocationRequest,
     SearchLocationsRequest,
@@ -886,6 +895,170 @@ async def parse_targets_enrich(data: ParseEnrichRequest):
             errors=errors,
             debug_info=debug_info,
         )
+
+    async with account_lock(data.session_data):
+        return await asyncio.to_thread(_run)
+
+
+# ─── Showcase (Phase 1, read-only) ─────────────────────────────────────────────
+
+@app.post("/profile/info", response_model=ProfileInfoResponse)
+async def profile_info(data: SessionRequest):
+    """
+    Профиль залогиненного аккаунта (собственный self-профиль) — Phase 1, read-only.
+
+    Стратегия с фолбэком:
+      1. cl.user_info(cl.user_id) — полная карточка со счётчиками
+         (media/follower/following).
+      2. При ЛЮБОЙ ошибке (на self-профиле часто прилетает 429) — фолбэк на
+         cl.account_info(): берём identity (username/full_name/avatar/bio/флаги),
+         а счётчики оставляем нулевыми, т.к. account_info их не отдаёт.
+
+    Если и фолбэк падает — исключение уходит в глобальный обработчик и возвращается
+    предсказуемый JSON без traceback.
+    """
+    def _run():
+        cl = _make_client(data.session_data)
+        user_pk = str(cl.user_id)
+        media_count = 0
+        follower_count = 0
+        following_count = 0
+
+        try:
+            user = cl.user_info(cl.user_id)
+            user_pk = str(getattr(user, "pk", user_pk) or user_pk)
+            username = getattr(user, "username", None)
+            full_name = getattr(user, "full_name", None)
+            profile_pic_url = getattr(user, "profile_pic_url", None)
+            biography = getattr(user, "biography", "") or ""
+            media_count = getattr(user, "media_count", 0) or 0
+            follower_count = getattr(user, "follower_count", 0) or 0
+            following_count = getattr(user, "following_count", 0) or 0
+            is_private = bool(getattr(user, "is_private", False))
+            is_verified = bool(getattr(user, "is_verified", False))
+            source = "user_info"
+            fallback_reason = None
+        except Exception as exc:
+            # Фолбэк на identity без счётчиков — не пробрасываем 429 наружу
+            fallback_reason = error_to_code(exc)
+            account = cl.account_info()
+            user_pk = str(getattr(account, "pk", user_pk) or user_pk)
+            username = getattr(account, "username", None)
+            full_name = getattr(account, "full_name", None)
+            profile_pic_url = getattr(account, "profile_pic_url", None)
+            biography = getattr(account, "biography", "") or ""
+            is_private = bool(getattr(account, "is_private", False))
+            is_verified = bool(getattr(account, "is_verified", False))
+            source = "account_info_fallback"
+
+        debug_info = {
+            "instagram_request": {
+                "method": "user_info -> account_info (fallback)",
+                "user_pk": user_pk,
+                "source": source,
+                "fallback_reason": fallback_reason,
+            },
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+
+        return ProfileInfoResponse(
+            success=True,
+            user_pk=user_pk,
+            username=username,
+            full_name=full_name,
+            profile_pic_url=str(profile_pic_url) if profile_pic_url else None,
+            biography=biography,
+            media_count=media_count,
+            follower_count=follower_count,
+            following_count=following_count,
+            is_private=is_private,
+            is_verified=is_verified,
+            debug_info=debug_info,
+        )
+
+    async with account_lock(data.session_data):
+        return await asyncio.to_thread(_run)
+
+
+@app.post("/profile/medias", response_model=ProfileMediasResponse)
+async def profile_medias(data: ProfileMediasRequest):
+    """
+    Посты залогиненного аккаунта с курсорной пагинацией — Phase 1, read-only.
+
+    Использует cl.user_medias_paginated(cl.user_id, amount, end_cursor), который
+    возвращает (List[Media], next_end_cursor). Каждый пост сериализуется в тот же
+    набор полей, что и _serialize_media, плюс заглушка is_pinned=False.
+
+    more_available = есть непустой next_cursor.
+    """
+    def _run():
+        cl = _make_client(data.session_data)
+        amount = max(min(data.amount, 50), 1)
+
+        medias, next_cursor = cl.user_medias_paginated(
+            cl.user_id,
+            amount=amount,
+            end_cursor=data.end_cursor or "",
+        )
+
+        posts = []
+        for media in (medias or []):
+            serialized = _serialize_media_obj(media)
+            if serialized and serialized["pk"]:
+                posts.append(serialized)
+
+        next_cursor = next_cursor or None
+        more_available = bool(next_cursor)
+
+        debug_info = {
+            "instagram_request": {
+                "method": "user_medias_paginated",
+                "user_pk": str(cl.user_id),
+                "amount": amount,
+                "is_pagination": bool(data.end_cursor),
+            },
+            "instagram_response": {
+                "status": "ok",
+                "results_count": len(posts),
+                "has_next_cursor": more_available,
+            },
+        }
+
+        return ProfileMediasResponse(
+            success=True,
+            posts=posts,
+            next_cursor=next_cursor,
+            more_available=more_available,
+            debug_info=debug_info,
+        )
+
+    async with account_lock(data.session_data):
+        return await asyncio.to_thread(_run)
+
+
+@app.post("/media/info", response_model=MediaInfoResponse)
+async def media_info(data: MediaInfoRequest):
+    """
+    Детальная информация о посте по media_pk — Phase 1, read-only.
+
+    Использует cl.media_info_v1(media_pk) (private mobile API) и сериализует
+    результат в тот же формат поста, что и /profile/medias (+ is_pinned=False).
+    """
+    def _run():
+        cl = _make_client(data.session_data)
+
+        media = cl.media_info_v1(data.media_pk)
+        post = _serialize_media_obj(media)
+
+        debug_info = {
+            "instagram_request": {
+                "method": "media_info_v1",
+                "media_pk": data.media_pk,
+            },
+            "instagram_response": _instagram_response_debug(getattr(cl, "last_json", None)),
+        }
+
+        return MediaInfoResponse(success=True, post=post, debug_info=debug_info)
 
     async with account_lock(data.session_data):
         return await asyncio.to_thread(_run)

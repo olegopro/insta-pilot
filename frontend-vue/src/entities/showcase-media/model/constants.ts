@@ -1,0 +1,1 @@
+export const SHOWCASE_MEDIAS_AMOUNT = 33

@@ -13,6 +13,7 @@
   >
     <q-route-tab to="/" label="Аккаунты" exact />
     <q-route-tab to="/feed" label="Лента" />
+    <q-route-tab to="/showcase" label="Витрина" />
     <q-route-tab to="/search" label="Поиск" />
     <q-route-tab to="/automation" label="Автоматизация" />
     <q-route-tab to="/logs" label="Логи" />

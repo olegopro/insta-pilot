@@ -156,6 +156,120 @@ def _serialize_media(media_dict: dict) -> Optional[dict]:
     }
 
 
+def _media_to_dict(media) -> dict:
+    """
+    Приводит instagrapi-модель Media к dict.
+    Поддерживает pydantic v2 (model_dump), v1 (dict) и уже готовый dict.
+    """
+    if media is None:
+        return {}
+    if isinstance(media, dict):
+        return media
+    if hasattr(media, "model_dump"):
+        return media.model_dump()
+    if hasattr(media, "dict"):
+        return media.dict()
+    return {}
+
+
+def _serialize_media_obj(media) -> Optional[dict]:
+    """
+    Нормализует instagrapi-модель Media (из user_medias_paginated / media_info_v1)
+    в ТОТ ЖЕ набор полей, что отдаёт _serialize_media для raw-dict, ПЛЮС заглушку
+    is_pinned (private API self-профиля не отдаёт признак закрепления — Phase 1).
+
+    Модель instagrapi уже разобрана (thumbnail_url, resources, user, location —
+    готовые поля), поэтому читаем из model_dump(), а не из сырого image_versions2.
+    """
+    data = _media_to_dict(media)
+    if not data:
+        return None
+
+    media_type = data.get("media_type", 1) or 1
+
+    # Кандидаты image_versions2 — фолбэк для thumbnail и источник его размеров
+    iv2 = data.get("image_versions2") or {}
+    candidates = (iv2.get("candidates") if isinstance(iv2, dict) else None) or []
+    first_candidate = candidates[0] if candidates else {}
+
+    thumbnail_url = data.get("thumbnail_url") or first_candidate.get("url")
+
+    # video_url — только для видео (media_type == 2)
+    video_url = data.get("video_url") if media_type == 2 else None
+
+    # Элементы карусели (media_type == 8)
+    resources = []
+    for res in (data.get("resources") or []):
+        res = res if isinstance(res, dict) else {}
+        res_type = res.get("media_type", 1) or 1
+        res_video = res.get("video_url") if res_type == 2 else None
+        resources.append({
+            "pk": str(res.get("pk", "") or ""),
+            "media_type": res_type,
+            "thumbnail_url": str(res["thumbnail_url"]) if res.get("thumbnail_url") else None,
+            "video_url": str(res_video) if res_video else None,
+            "width": res.get("width"),
+            "height": res.get("height"),
+        })
+
+    user = data.get("user") or {}
+    user_pic = user.get("profile_pic_url")
+
+    # taken_at: datetime | unix timestamp → ISO 8601 UTC
+    taken_at_raw = data.get("taken_at")
+    if isinstance(taken_at_raw, datetime.datetime):
+        taken_at_dt = (
+            taken_at_raw if taken_at_raw.tzinfo
+            else taken_at_raw.replace(tzinfo=datetime.timezone.utc)
+        )
+        taken_at = taken_at_dt.astimezone(datetime.timezone.utc).isoformat()
+    elif isinstance(taken_at_raw, (int, float)) and taken_at_raw:
+        taken_at = datetime.datetime.fromtimestamp(taken_at_raw, tz=datetime.timezone.utc).isoformat()
+    elif taken_at_raw:
+        taken_at = str(taken_at_raw)
+    else:
+        taken_at = ""
+
+    location = data.get("location") or {}
+    location_name = location.get("name") if isinstance(location, dict) else None
+    location_pk = location.get("pk") if isinstance(location, dict) else None
+
+    thumb_w = first_candidate.get("width")
+    thumb_h = first_candidate.get("height")
+
+    return {
+        "pk": str(data.get("pk", "") or ""),
+        "id": str(data.get("id", "") or ""),
+        "code": data.get("code", "") or "",
+        "taken_at": taken_at,
+        "media_type": media_type,
+        "thumbnail_url": str(thumbnail_url) if thumbnail_url else None,
+        "video_url": str(video_url) if video_url else None,
+        "caption_text": data.get("caption_text", "") or "",
+        "like_count": data.get("like_count", 0) or 0,
+        "comment_count": data.get("comment_count", 0) or 0,
+        # view_count — у видео может приходить как view_count или play_count
+        "view_count": data.get("view_count") or data.get("play_count") or 0,
+        "has_liked": bool(data.get("has_liked", False)),
+        "user": {
+            "pk": str(user.get("pk", "") or ""),
+            "username": user.get("username", "") or "",
+            "full_name": user.get("full_name", "") or "",
+            "profile_pic_url": str(user_pic) if user_pic else None,
+        },
+        "resources": resources,
+        "location_name": location_name,
+        "location_pk": location_pk,
+        "thumbnail_width": thumb_w,
+        "thumbnail_height": thumb_h,
+        # Размеры видео берём из thumbnail-кандидата (оригинальные размеры кадра)
+        "video_width": thumb_w if media_type == 2 else None,
+        "video_height": thumb_h if media_type == 2 else None,
+        # Phase 1 read-only: признак закрепления недоступен — заглушка
+        "is_pinned": False,
+    }
+
+
 # ─── Comment serialization ────────────────────────────────────────────────────
 
 def _serialize_comment(raw: dict) -> dict:

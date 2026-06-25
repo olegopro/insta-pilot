@@ -18,6 +18,7 @@ from helpers import (
     _parse_sections_cursor,
     _serialize_comment,
     _serialize_media,
+    _serialize_media_obj,
 )
 
 
@@ -563,3 +564,140 @@ class TestFetchSections:
         posts, cursor = _fetch_sections(cl, "endpoint/", {}, None, 30)
         assert cursor is None
         assert posts == []
+
+
+# ─── _serialize_media_obj (instagrapi Media-модель) ────────────────────────────
+
+import datetime
+from types import SimpleNamespace
+
+
+def make_media_model_dump(
+    pk="111111",
+    media_id="111111_999999",
+    media_type=1,
+    thumbnail_url="https://cdn.example.com/photo.jpg",
+    **kwargs,
+) -> dict:
+    """
+    dict в форме instagrapi Media.model_dump():
+    разобранные поля (thumbnail_url, user, resources) + image_versions2.candidates.
+    """
+    base = {
+        "pk": pk,
+        "id": media_id,
+        "code": "ABC123",
+        # model_dump отдаёт datetime-объект, не unix
+        "taken_at": datetime.datetime(2023, 11, 14, 22, 13, 20, tzinfo=datetime.timezone.utc),
+        "media_type": media_type,
+        "thumbnail_url": thumbnail_url,
+        "image_versions2": {"candidates": [{"url": thumbnail_url, "width": 1080, "height": 1350}]},
+        "caption_text": "Test caption",
+        "like_count": 42,
+        "comment_count": 5,
+        "view_count": 0,
+        "has_liked": False,
+        "user": {
+            "pk": "999999",
+            "username": "testuser",
+            "full_name": "Test User",
+            "profile_pic_url": "https://cdn.example.com/avatar.jpg",
+        },
+        "resources": [],
+        "location": None,
+    }
+    base.update(kwargs)
+    return base
+
+
+class TestSerializeMediaObj:
+    def test_photo_basic_fields(self):
+        result = _serialize_media_obj(make_media_model_dump())
+
+        assert result["pk"] == "111111"
+        assert result["id"] == "111111_999999"
+        assert result["code"] == "ABC123"
+        assert result["media_type"] == 1
+        assert result["thumbnail_url"] == "https://cdn.example.com/photo.jpg"
+        assert result["video_url"] is None
+        assert result["caption_text"] == "Test caption"
+        assert result["like_count"] == 42
+        assert result["comment_count"] == 5
+        assert result["has_liked"] is False
+        assert result["user"]["pk"] == "999999"
+        assert result["user"]["username"] == "testuser"
+        assert result["thumbnail_width"] == 1080
+        assert result["thumbnail_height"] == 1350
+
+    def test_taken_at_datetime_to_iso_utc(self):
+        result = _serialize_media_obj(make_media_model_dump())
+        assert result["taken_at"] == "2023-11-14T22:13:20+00:00"
+
+    def test_is_pinned_stub_always_false(self):
+        result = _serialize_media_obj(make_media_model_dump())
+        assert result["is_pinned"] is False
+
+    def test_field_set_matches_serialize_media_plus_is_pinned(self):
+        raw_media = make_media(media_type=1)
+        legacy = _serialize_media(raw_media)
+        obj = _serialize_media_obj(make_media_model_dump())
+        assert set(obj.keys()) == set(legacy.keys()) | {"is_pinned"}
+
+    def test_video_sets_video_url_and_dimensions(self):
+        data = make_media_model_dump(
+            media_type=2,
+            video_url="https://cdn.example.com/clip.mp4",
+            view_count=999,
+        )
+        result = _serialize_media_obj(data)
+        assert result["media_type"] == 2
+        assert result["video_url"] == "https://cdn.example.com/clip.mp4"
+        assert result["view_count"] == 999
+        assert result["video_width"] == 1080
+        assert result["video_height"] == 1350
+
+    def test_view_count_falls_back_to_play_count(self):
+        data = make_media_model_dump(media_type=2, view_count=0, play_count=555)
+        result = _serialize_media_obj(data)
+        assert result["view_count"] == 555
+
+    def test_carousel_resources(self):
+        data = make_media_model_dump(
+            media_type=8,
+            resources=[
+                {"pk": "r1", "media_type": 1, "thumbnail_url": "https://cdn/r1.jpg", "video_url": None, "width": 640, "height": 640},
+                {"pk": "r2", "media_type": 2, "thumbnail_url": "https://cdn/r2.jpg", "video_url": "https://cdn/r2.mp4", "width": 720, "height": 720},
+            ],
+        )
+        result = _serialize_media_obj(data)
+        assert len(result["resources"]) == 2
+        assert result["resources"][0]["pk"] == "r1"
+        assert result["resources"][1]["media_type"] == 2
+        assert result["resources"][1]["video_url"] == "https://cdn/r2.mp4"
+
+    def test_location_fields(self):
+        data = make_media_model_dump(location={"pk": 555, "name": "Coffee Shop"})
+        result = _serialize_media_obj(data)
+        assert result["location_name"] == "Coffee Shop"
+        assert result["location_pk"] == 555
+
+    def test_none_returns_none(self):
+        assert _serialize_media_obj(None) is None
+
+    def test_accepts_object_with_model_dump(self):
+        payload = make_media_model_dump()
+
+        class FakeMedia:
+            def model_dump(self):
+                return payload
+
+        result = _serialize_media_obj(FakeMedia())
+        assert result["pk"] == "111111"
+
+    def test_thumbnail_fallback_to_image_versions2(self):
+        data = make_media_model_dump(thumbnail_url=None)
+        # У модели thumbnail_url=None → берём url из image_versions2.candidates
+        data["image_versions2"] = {"candidates": [{"url": "https://cdn.example.com/fallback.jpg", "width": 640, "height": 640}]}
+        result = _serialize_media_obj(data)
+        assert result["thumbnail_url"] == "https://cdn.example.com/fallback.jpg"
+        assert result["thumbnail_width"] == 640

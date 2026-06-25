@@ -677,3 +677,199 @@ class TestCommonErrorBehavior:
         assert body["success"] is False
         assert body["error_code"] == "error"
         assert "Traceback" not in body["error"]
+
+
+# ─── POST /profile/info ───────────────────────────────────────────────────────
+
+class TestProfileInfo:
+    def _make_user(self):
+        user = MagicMock()
+        user.pk = "123456789"
+        user.username = "selfuser"
+        user.full_name = "Self User"
+        user.profile_pic_url = "https://cdn.example.com/me.jpg"
+        user.biography = "my bio"
+        user.media_count = 30
+        user.follower_count = 1000
+        user.following_count = 200
+        user.is_private = False
+        user.is_verified = True
+        return user
+
+    def test_success_via_user_info(self, client):
+        mock_cl = make_mock_client(user_id=123456789)
+        mock_cl.user_info.return_value = self._make_user()
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/profile/info", json=SESSION_PAYLOAD)
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["success"] is True
+        assert body["user_pk"] == "123456789"
+        assert body["username"] == "selfuser"
+        assert body["media_count"] == 30
+        assert body["follower_count"] == 1000
+        assert body["following_count"] == 200
+        assert body["is_verified"] is True
+        assert body["debug_info"]["instagram_request"]["source"] == "user_info"
+
+    def test_fallback_to_account_info_on_error(self, client):
+        mock_cl = make_mock_client(user_id=123456789)
+        mock_cl.user_info.side_effect = PleaseWaitFewMinutes()
+        account = MagicMock()
+        account.pk = "123456789"
+        account.username = "selfuser"
+        account.full_name = "Self User"
+        account.profile_pic_url = "https://cdn.example.com/me.jpg"
+        account.biography = "my bio"
+        account.is_private = False
+        account.is_verified = True
+        mock_cl.account_info.return_value = account
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/profile/info", json=SESSION_PAYLOAD)
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["success"] is True
+        assert body["username"] == "selfuser"
+        # счётчики недоступны через account_info → остаются 0
+        assert body["media_count"] == 0
+        assert body["follower_count"] == 0
+        assert body["following_count"] == 0
+        debug = body["debug_info"]["instagram_request"]
+        assert debug["source"] == "account_info_fallback"
+        assert debug["fallback_reason"] == "rate_limited"
+
+    def test_both_fail_returns_predictable_error(self, client):
+        mock_cl = make_mock_client(user_id=123456789)
+        mock_cl.user_info.side_effect = PleaseWaitFewMinutes()
+        mock_cl.account_info.side_effect = LoginRequired()
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/profile/info", json=SESSION_PAYLOAD)
+
+        assert resp.status_code == 401
+        body = resp.json()
+        assert body["success"] is False
+        assert body["error_code"] == "login_required"
+        assert "Traceback" not in body["error"]
+
+    def test_missing_session_data_returns_422(self, client):
+        resp = client.post("/profile/info", json={})
+        assert resp.status_code == 422
+
+
+# ─── POST /profile/medias ─────────────────────────────────────────────────────
+
+def make_media_dump(pk="111", media_id="111_999", media_type=1) -> dict:
+    """dict в форме instagrapi Media.model_dump()."""
+    return {
+        "pk": pk,
+        "id": media_id,
+        "code": "ABC123",
+        "taken_at": 1700000000,
+        "media_type": media_type,
+        "thumbnail_url": "https://cdn.example.com/photo.jpg",
+        "image_versions2": {"candidates": [{"url": "https://cdn.example.com/photo.jpg", "width": 1080, "height": 1080}]},
+        "caption_text": "Caption",
+        "like_count": 10,
+        "comment_count": 2,
+        "view_count": 0,
+        "has_liked": False,
+        "user": {"pk": "999", "username": "selfuser", "full_name": "Self", "profile_pic_url": None},
+        "resources": [],
+        "location": None,
+    }
+
+
+class TestProfileMedias:
+    def test_success_with_cursor(self, client):
+        mock_cl = make_mock_client(user_id=999)
+        mock_cl.user_medias_paginated.return_value = (
+            [make_media_dump("111"), make_media_dump("222", "222_999")],
+            "next_cursor_xyz",
+        )
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/profile/medias", json={**SESSION_PAYLOAD, "amount": 2})
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["success"] is True
+        assert len(body["posts"]) == 2
+        assert body["posts"][0]["pk"] == "111"
+        assert body["posts"][0]["is_pinned"] is False
+        assert body["next_cursor"] == "next_cursor_xyz"
+        assert body["more_available"] is True
+        # проверяем дефолт amount и проброс end_cursor
+        mock_cl.user_medias_paginated.assert_called_once_with(999, amount=2, end_cursor="")
+
+    def test_empty_cursor_means_no_more(self, client):
+        mock_cl = make_mock_client(user_id=999)
+        mock_cl.user_medias_paginated.return_value = ([make_media_dump("111")], "")
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/profile/medias", json=SESSION_PAYLOAD)
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["next_cursor"] is None
+        assert body["more_available"] is False
+
+    def test_passes_end_cursor(self, client):
+        mock_cl = make_mock_client(user_id=999)
+        mock_cl.user_medias_paginated.return_value = ([], "")
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/profile/medias", json={**SESSION_PAYLOAD, "end_cursor": "abc"})
+
+        assert resp.status_code == 200
+        mock_cl.user_medias_paginated.assert_called_once_with(999, amount=12, end_cursor="abc")
+
+    def test_rate_limited_returns_429(self, client):
+        mock_cl = make_mock_client(user_id=999)
+        mock_cl.user_medias_paginated.side_effect = ClientThrottledError()
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/profile/medias", json=SESSION_PAYLOAD)
+
+        assert resp.status_code == 429
+        assert resp.json()["error_code"] == "rate_limited"
+
+    def test_missing_session_data_returns_422(self, client):
+        resp = client.post("/profile/medias", json={"amount": 5})
+        assert resp.status_code == 422
+
+
+# ─── POST /media/info ─────────────────────────────────────────────────────────
+
+class TestMediaInfo:
+    def test_success(self, client):
+        mock_cl = make_mock_client()
+        mock_cl.media_info_v1.return_value = make_media_dump("333", "333_999")
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/media/info", json={**SESSION_PAYLOAD, "media_pk": "333"})
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["success"] is True
+        assert body["post"]["pk"] == "333"
+        assert body["post"]["is_pinned"] is False
+        mock_cl.media_info_v1.assert_called_once_with("333")
+
+    def test_login_required_returns_401(self, client):
+        mock_cl = make_mock_client()
+        mock_cl.media_info_v1.side_effect = LoginRequired()
+
+        with patch("main._make_client", return_value=mock_cl):
+            resp = client.post("/media/info", json={**SESSION_PAYLOAD, "media_pk": "333"})
+
+        assert resp.status_code == 401
+        assert resp.json()["error_code"] == "login_required"
+
+    def test_missing_media_pk_returns_422(self, client):
+        resp = client.post("/media/info", json=SESSION_PAYLOAD)
+        assert resp.status_code == 422

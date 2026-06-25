@@ -837,6 +837,156 @@ class InstagramClientService implements InstagramClientServiceInterface {
         return $result;
     }
 
+    /**
+     * Витрина (Phase 1) — профиль собственного аккаунта.
+     *
+     * @param string   $sessionData JSON сессии instagrapi (расшифрованный)
+     * @param int|null $accountId   ID аккаунта для логирования (null → лог не пишется)
+     */
+    public function getOwnProfile(string $sessionData, ?int $accountId = null, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
+        $start    = microtime(true);
+        $endpoint = '/profile/info';
+
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", ['session_data' => $sessionData]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        if ($accountId !== null) {
+            $this->activityLogger->log(
+                accountId:       $accountId,
+                userId:          $userId,
+                action:          'fetch_own_profile',
+                status:          $isSuccess ? 'success' : $this->detectStatus($result),
+                httpCode:        $response->status(),
+                endpoint:        $endpoint,
+                requestPayload:  [
+                    'python_request' => ['endpoint' => $endpoint],
+                ],
+                responseSummary: $isSuccess ? [
+                    'username'        => $result['username'] ?? null,
+                    'media_count'     => $result['media_count'] ?? null,
+                    'python_response' => ['http_code' => $response->status()],
+                ] : null,
+                errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+                errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+                durationMs:      $durationMs,
+            );
+        }
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
+        return $result;
+    }
+
+    /**
+     * Витрина (Phase 1) — страница медиа собственного аккаунта.
+     *
+     * @param string      $sessionData JSON сессии instagrapi (расшифрованный)
+     * @param string|null $endCursor   Курсор следующей страницы из предыдущего ответа
+     * @param int         $amount      Сколько постов запросить
+     * @param int|null    $accountId   ID аккаунта для логирования (null → лог не пишется)
+     */
+    public function getOwnMedias(string $sessionData, ?string $endCursor = null, int $amount = 12, ?int $accountId = null, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
+        $start    = microtime(true);
+        $endpoint = '/profile/medias';
+        $payload  = [
+            'session_data' => $sessionData,
+            'amount'       => $amount,
+        ];
+
+        $endCursor !== null && $payload['end_cursor'] = $endCursor;
+
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", $payload);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        if ($accountId !== null) {
+            $this->activityLogger->log(
+                accountId:       $accountId,
+                userId:          $userId,
+                action:          'fetch_own_medias',
+                status:          $isSuccess ? 'success' : $this->detectStatus($result),
+                httpCode:        $response->status(),
+                endpoint:        $endpoint,
+                requestPayload:  [
+                    'amount'         => $amount,
+                    'end_cursor'     => $endCursor,
+                    'python_request' => [
+                        'endpoint'   => $endpoint,
+                        'amount'     => $amount,
+                        'end_cursor' => $endCursor,
+                    ],
+                ],
+                responseSummary: $isSuccess ? [
+                    'items_count'     => count($result['posts'] ?? []),
+                    'has_more'        => $result['more_available'] ?? false,
+                    'python_response' => [
+                        'http_code'   => $response->status(),
+                        'items_count' => count($result['posts'] ?? []),
+                    ],
+                ] : null,
+                errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+                errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+                durationMs:      $durationMs,
+            );
+        }
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
+        return $result;
+    }
+
+    /**
+     * Витрина (Phase 1) — детали одного поста собственного аккаунта.
+     *
+     * @param string   $sessionData JSON сессии instagrapi (расшифрованный)
+     * @param string   $mediaPk     PK поста Instagram
+     * @param int|null $accountId   ID аккаунта для логирования (null → лог не пишется)
+     */
+    public function getMediaInfo(string $sessionData, string $mediaPk, ?int $accountId = null, ?int $userId = null): array {
+        $userId ??= (int) auth()->id();
+        $start    = microtime(true);
+        $endpoint = '/media/info';
+
+        $response   = Http::timeout(30)->post("$this->pythonUrl$endpoint", [
+            'session_data' => $sessionData,
+            'media_pk'     => $mediaPk,
+        ]);
+        $durationMs = (int) ((microtime(true) - $start) * 1000);
+        $result     = $response->json();
+        $isSuccess  = $response->successful();
+
+        if ($accountId !== null) {
+            $this->activityLogger->log(
+                accountId:       $accountId,
+                userId:          $userId,
+                action:          'fetch_media_info',
+                status:          $isSuccess ? 'success' : $this->detectStatus($result),
+                httpCode:        $response->status(),
+                endpoint:        $endpoint,
+                requestPayload:  [
+                    'media_pk'       => $mediaPk,
+                    'python_request' => ['endpoint' => $endpoint, 'media_pk' => $mediaPk],
+                ],
+                responseSummary: $isSuccess ? [
+                    'media_pk'        => $mediaPk,
+                    'python_response' => ['http_code' => $response->status()],
+                ] : null,
+                errorMessage:    $isSuccess ? null : ($result['error'] ?? null),
+                errorCode:       $isSuccess ? null : ($result['error_code'] ?? null),
+                durationMs:      $durationMs,
+            );
+        }
+
+        $isSuccess || $this->maybeDeactivateAccount($result, $accountId);
+
+        return $result;
+    }
+
     private function detectStatus(array $result): string {
         $code = $result['error_code'] ?? null;
 

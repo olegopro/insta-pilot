@@ -225,3 +225,53 @@ class FetchCommentRepliesResponse(BaseModel):
     child_comment_count: int = 0
     error: Optional[str] = None
     error_code: Optional[str] = None
+
+
+# ─── Showcase (Phase 1, read-only) ────────────────────────────────────────────
+
+class ProfileInfoResponse(BaseModel):
+    """Профиль залогиненного аккаунта (собственный self-профиль)."""
+    success: bool
+    user_pk: Optional[str] = None
+    username: Optional[str] = None
+    full_name: Optional[str] = None
+    profile_pic_url: Optional[str] = None
+    biography: Optional[str] = None
+    media_count: Optional[int] = 0
+    follower_count: Optional[int] = 0
+    following_count: Optional[int] = 0
+    is_private: Optional[bool] = None
+    is_verified: Optional[bool] = None
+    error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
+
+
+class ProfileMediasRequest(SessionRequest):
+    # Сколько постов запросить за страницу
+    amount: int = 12
+    # Курсор пагинации (end_cursor из предыдущего ответа)
+    end_cursor: Optional[str] = None
+
+
+class ProfileMediasResponse(BaseModel):
+    success: bool
+    posts: List[dict] = []
+    next_cursor: Optional[str] = None
+    more_available: bool = False
+    error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
+
+
+class MediaInfoRequest(SessionRequest):
+    # Числовой идентификатор медиа
+    media_pk: str
+
+
+class MediaInfoResponse(BaseModel):
+    success: bool
+    post: Optional[dict] = None
+    error: Optional[str] = None
+    error_code: Optional[str] = None
+    debug_info: Optional[dict] = None
