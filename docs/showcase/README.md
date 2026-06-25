@@ -28,17 +28,19 @@
 |---|------|--------|--------|--------------------------|
 | — | Паутина доков | ✅ закоммичена | `ce33d60` | — |
 | 0 | [verify](phases/phase-0-verify.md) | 🟡 read-only ✅, mutate ⏸ | `ced8489` | read-feasibility доказана живьём (12 постов, media_info, insights=бизнес; `user_info`→429); reversible edit/archive/pin ждут согласованный пост |
-| 1 | [grid](phases/phase-1-grid.md) | ✅ собрана + live | `a514d91` | ⚠ showcase-роут в `routes/api.php` НЕ закоммичен (файл общий с automation) — в рабочем дереве есть, уйдёт с коммитом automation |
+| 1 | [grid](phases/phase-1-grid.md) | ✅ собрана + live + UI-скриншот | `a514d91`, `18d4dbe` | ⚠ showcase-роут в `routes/api.php` НЕ закоммичен (общий с automation). UX-нюанс: контент гейтится профилем (на throttled-аккаунте долгий спиннер) — кандидат на доводку |
 | 2 | [overlay](phases/phase-2-overlay.md) | ⬜ | — | |
 | 3 | [mutations](phases/phase-3-mutations.md) | ⬜ | — | |
 | 4 | [ads/autopost](phases/phase-4-ads-autopost.md) | ⬜ | — | 4B автопостинг — опц. |
 | 5 | [analytics](phases/phase-5-analytics.md) | ⬜ | — | 5B insights = бизнес (future) |
 
-**Сейчас ждём:** выбор следующего шага — **Phase 2** (overlay/доска/drag, fan-out Kiro) ИЛИ дозакрыть
-**Phase 0 mutate** (нужен `media_pk` для reversible edit/archive/pin). Phase 1 собрана и live-проверена.
+**Сейчас ждём:** выбор следующего шага — **Phase 2** (overlay/доска/drag, fan-out Kiro), дозакрыть
+**Phase 0 mutate** (нужен `media_pk`), либо мелкая **UX-доводка Phase 1** (рендерить сетку независимо от
+профиля — сейчас весь контент за спиннером профиля). Phase 1 собрана и live-проверена (скриншот).
 ⚠ Не забыть: showcase-роут в `routes/api.php` не закоммичен (общий файл — уйдёт с automation-коммитом).
 
 **Лог решений (свежие — сверху):**
+- **2026-06-25** — Phase 1 UI live-check (Playwright + скриншот): профиль + сетка работают, 12/12 превью грузятся, 0 console-ошибок. Поймал и пофиксил баг: `ShowcaseGrid` `loading=lazy → eager` (lazy давал пустые плитки в headless) — `18d4dbe`. Наблюдение: страница гейтит весь контент профилем (throttled-аккаунт → долгий спиннер); кандидат на UX-доводку (рендерить сетку независимо от профиля). Харнес `scripts/live-check/showcase-live.mjs` — gitignored (как `automation-live.mjs`), локальный.
 - **2026-06-25** — Phase 1 ✅ (`a514d91`): fan-out Kiro ×3 (opus/max — Python/Laravel/FE по непересекающимся слоям), замороженный контракт удержан без рассинхрона. Проверено: Laravel 17 / Python 117 тестов, vue-tsc чисто по showcase, live-roundtrip (medias 6 постов, профиль graceful). Граблина: python без `--reload` → нужен рестарт контейнера, чтобы подхватить новые эндпоинты.
 - **2026-06-25** — Phase 0 `--read-only` ✅ на live (аккаунт desyatnikov_666): own grid / `media_info_v1` / `_serialize_media` работают; `user_info(self)`→429 (брать `account_info`); `insights_media_feed_all` вернул реальные данные → аккаунт **бизнес/проф**. Детали — [`feasibility.md`](feasibility.md) §«Phase 0 — фактические результаты».
 - **2026-06-25** — коммиты: `ce33d60` `docs(showcase)` (паутина + трекер), `ced8489` `chore(showcase)` (Phase 0 verify-скрипт); стейджились строго showcase-пути, параллельная automation-работа не затронута.
