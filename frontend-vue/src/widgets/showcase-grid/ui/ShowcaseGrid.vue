@@ -25,7 +25,7 @@
         :src="media.post.thumbnailUrl"
         :alt="media.post.captionText"
         class="thumbnail"
-        loading="lazy"
+        loading="eager"
       >
       <div v-else class="placeholder">
         <q-icon name="image" size="32px" color="grey-4" />
