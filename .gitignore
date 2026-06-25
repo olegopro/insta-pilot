@@ -38,3 +38,6 @@ backend-laravel/session_*.json
 
 # Kilo
 .kilo/
+
+# Kiro CLI — служебные LSP/настройки агента, машинно-генерённые
+.kiro/
