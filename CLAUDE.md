@@ -33,6 +33,7 @@ insta-pilot/
 On-demand доки (по ссылке, НЕ грузятся на старте):
 - `docs/automation/architecture.md` — слои движка автоматизации, 9 таблиц, канонические инварианты (§2), статус реализации (§11).
 - `docs/automation/plan.md` — поэтапный план (Phase 0 → MVP → …).
+- `docs/showcase/README.md` — **«Витрина»** (design): редактор своей сетки профиля (phone-sim) + локальная обёртка-планировщик + реальные IG-мутации (edit/archive/delete/pin) + аналитика. Диспетчер паутины: `feasibility.md` (что реально в IG vs локально), `architecture.md`, `data-model.md`, `api-contracts.md`, `phases/phase-0..5`. Инвариант: произвольный порядок сетки в IG невозможен (только pin ≤3) — drag = локальная доска. **Текущее состояние многошагового плана (для продолжения в НОВЫХ чатах) — §«Состояние плана» в начале README: single source of truth, обновляется по ходу.**
 - `docs/orchestration/playbook.md` / `docs/orchestration/agent-factory.md` — детальный плейбук параллельного fan-out.
 - `docs/orchestration/retrospective.md` — живой монитор-лог мультиагентных прогонов (kiro-cli + Codex + Claude-Agent).
 - `docs/debug-protocol.md` — чек-лист ручных проверок с живым IG-аккаунтом.
