@@ -22,6 +22,8 @@ use App\Repositories\ParsedTargetRepository;
 use App\Repositories\ParsedTargetRepositoryInterface;
 use App\Repositories\ParseRunRepository;
 use App\Repositories\ParseRunRepositoryInterface;
+use App\Repositories\ShowcaseOverlayRepository;
+use App\Repositories\ShowcaseOverlayRepositoryInterface;
 use App\Repositories\UserRepository;
 use App\Repositories\UserRepositoryInterface;
 use App\Repositories\WorkingHoursRepository;
@@ -113,6 +115,11 @@ class AppServiceProvider extends ServiceProvider {
         $this->app->bind(
             ParsedTargetRepositoryInterface::class,
             ParsedTargetRepository::class
+        );
+
+        $this->app->bind(
+            ShowcaseOverlayRepositoryInterface::class,
+            ShowcaseOverlayRepository::class
         );
 
         $this->app->bind(

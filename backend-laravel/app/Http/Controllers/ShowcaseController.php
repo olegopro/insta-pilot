@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\ShowcaseMediaOverlay;
 use App\Repositories\InstagramAccountRepositoryInterface;
+use App\Repositories\ShowcaseOverlayRepositoryInterface;
 use App\Services\InstagramClientServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Витрина (showcase), Phase 1 — read-only обёртка над собственным
- * профилем/медиа аккаунта. Данные читаются из Python и отдаются как есть;
- * overlay-блок постов в Phase 1 содержит дефолтные значения (Phase 2
- * наполнит их из БД).
+ * Витрина (showcase) — read-only обёртка над собственным профилем/медиа
+ * аккаунта. Данные читаются из Python и отдаются как есть; к каждому посту
+ * примешивается overlay-блок (Phase 2 наполняет его локальными данными из БД).
  */
 final class ShowcaseController extends Controller {
     public function __construct(
         private readonly InstagramClientServiceInterface $instagramClient,
-        private readonly InstagramAccountRepositoryInterface $accountRepository
+        private readonly InstagramAccountRepositoryInterface $accountRepository,
+        private readonly ShowcaseOverlayRepositoryInterface $overlayRepository
     ) {}
 
     /**
@@ -62,8 +64,9 @@ final class ShowcaseController extends Controller {
     /**
      * Страница медиа собственного аккаунта.
      *
-     * К каждому посту примешивается дефолтный overlay-блок: в Phase 1 он
-     * содержит пустые значения, в Phase 2 будет наполняться из БД.
+     * К каждому посту примешивается overlay-блок: локальные пользовательские
+     * флаги/заметки/метки и порядок из БД (`showcase_media_overlays`). Если
+     * для поста нет строки overlay — отдаются дефолтные значения.
      *
      * @param int $accountId ID аккаунта в системе (не Instagram ID)
      */
@@ -96,8 +99,13 @@ final class ShowcaseController extends Controller {
             ], 422);
         }
 
+        $overlays = $this->overlayRepository->findForAccount($accountId);
+
         $posts = array_map(
-            fn (array $post): array => array_merge($post, ['overlay' => $this->defaultOverlay()]),
+            fn (array $post): array => array_merge(
+                $post,
+                ['overlay' => $this->overlayFor($overlays->get((string) ($post['pk'] ?? '')))]
+            ),
             $result['posts'] ?? []
         );
 
@@ -152,18 +160,19 @@ final class ShowcaseController extends Controller {
     }
 
     /**
-     * Дефолтный overlay-блок поста (Phase 1). Phase 2 наполнит из БД.
+     * Overlay-блок поста в замороженном snake_case-формате контракта.
+     * При отсутствии строки overlay возвращаются дефолтные значения.
      *
      * @return array<string, mixed>
      */
-    private function defaultOverlay(): array {
+    private function overlayFor(?ShowcaseMediaOverlay $overlay): array {
         return [
-            'board_position'  => null,
-            'is_ad'           => false,
-            'is_tracked'      => false,
-            'is_hidden_local' => false,
-            'note'            => null,
-            'labels'          => null
+            'board_position'  => $overlay?->board_position,
+            'is_ad'           => $overlay?->is_ad ?? false,
+            'is_tracked'      => $overlay?->is_tracked ?? false,
+            'is_hidden_local' => $overlay?->is_hidden_local ?? false,
+            'note'            => $overlay?->note,
+            'labels'          => $overlay?->labels
         ];
     }
 }

@@ -1,5 +1,17 @@
-import type { ShowcaseProfileApi, ShowcaseOverlayApi, ShowcaseMediaApi } from '@/entities/showcase-media/model/apiTypes'
-import type { ShowcaseProfile, ShowcaseOverlay, ShowcaseMedia } from '@/entities/showcase-media/model/types'
+import type {
+  ShowcaseProfileApi,
+  ShowcaseOverlayApi,
+  ShowcaseMediaApi,
+  ShowcaseOverlayPatchApi,
+  ShowcaseBoardOrderItemApi
+} from '@/entities/showcase-media/model/apiTypes'
+import type {
+  ShowcaseProfile,
+  ShowcaseOverlay,
+  ShowcaseMedia,
+  ShowcaseOverlayPatch,
+  ShowcaseBoardOrderItem
+} from '@/entities/showcase-media/model/types'
 import { proxyImageUrl } from '@/shared/lib'
 import mediaPostDTO from '@/entities/media-post/model/mediaPostDTO'
 
@@ -40,6 +52,20 @@ class ShowcaseMediaDTO {
 
   toLocal(data: ShowcaseMediaApi[]): ShowcaseMedia[] {
     return data.map((media) => this.toLocalMedia(media))
+  }
+
+  toApiOverlayPatch(patch: ShowcaseOverlayPatch): ShowcaseOverlayPatchApi {
+    const body: ShowcaseOverlayPatchApi = {}
+    if (patch.isAd !== undefined) body.is_ad = patch.isAd
+    if (patch.isTracked !== undefined) body.is_tracked = patch.isTracked
+    if (patch.isHiddenLocal !== undefined) body.is_hidden_local = patch.isHiddenLocal
+    if (patch.note !== undefined) body.note = patch.note
+    if (patch.labels !== undefined) body.labels = patch.labels
+    return body
+  }
+
+  toApiBoardOrder(order: ShowcaseBoardOrderItem[]): ShowcaseBoardOrderItemApi[] {
+    return order.map((item) => ({ media_pk: item.mediaPk, position: item.position }))
   }
 }
 

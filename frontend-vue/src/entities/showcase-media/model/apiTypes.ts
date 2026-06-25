@@ -33,3 +33,20 @@ export interface ShowcaseMediasResponseApi {
   next_cursor: Nullable<string>
   more_available: boolean
 }
+
+export interface ShowcaseOverlayPatchApi {
+  is_ad?: boolean
+  is_tracked?: boolean
+  is_hidden_local?: boolean
+  note?: Nullable<string>
+  labels?: Nullable<string[]>
+}
+
+export interface ShowcaseBoardOrderItemApi {
+  media_pk: string
+  position: number
+}
+
+export interface ShowcaseBoardOrderRequestApi {
+  order: ShowcaseBoardOrderItemApi[]
+}

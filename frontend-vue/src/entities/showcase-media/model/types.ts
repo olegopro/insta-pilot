@@ -28,3 +28,10 @@ export interface ShowcaseMedia {
   isPinned: boolean
   overlay: ShowcaseOverlay
 }
+
+export type ShowcaseOverlayPatch = Partial<Pick<ShowcaseOverlay, 'isAd' | 'isTracked' | 'isHiddenLocal' | 'note' | 'labels'>>
+
+export interface ShowcaseBoardOrderItem {
+  mediaPk: string
+  position: number
+}

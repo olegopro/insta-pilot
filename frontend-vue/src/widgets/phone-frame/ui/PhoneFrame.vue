@@ -5,13 +5,30 @@
 
   defineProps<{
     profile: Nullable<ShowcaseProfile>
+    loading?: boolean
   }>()
 </script>
 
 <template>
   <div class="phone-frame">
     <div class="phone-screen">
-      <header v-if="profile" class="profile-header">
+      <div v-if="loading && !profile" class="profile-header">
+        <div class="profile-top">
+          <q-skeleton type="QAvatar" size="86px" />
+          <div class="profile-counters">
+            <q-skeleton type="text" width="40px" />
+            <q-skeleton type="text" width="40px" />
+            <q-skeleton type="text" width="40px" />
+          </div>
+        </div>
+        <div class="profile-meta">
+          <q-skeleton type="text" width="160px" />
+          <q-skeleton type="text" width="100px" />
+          <q-skeleton type="text" width="80%" />
+        </div>
+      </div>
+
+      <header v-else-if="profile" class="profile-header">
         <div class="profile-top">
           <q-avatar size="86px" class="profile-avatar">
             <img v-if="profile.profilePicUrl" :src="profile.profilePicUrl" :alt="profile.username">
